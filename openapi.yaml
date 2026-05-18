@@ -1,0 +1,1750 @@
+openapi: 3.1.0
+info:
+  title: SkillProof REST API
+  version: 0.1.0
+  summary: API for verified junior hiring workflows.
+  description: |
+    SkillProof helps HR teams improve junior job ads, generate role-specific
+    assessments, collect candidate submissions, evaluate answers against an
+    explicit rubric, and rank candidates with evidence.
+
+    The MVP targets the Junior Frontend Developer role.
+servers:
+  - url: https://api.skillproof.example/v1
+    description: Production placeholder
+  - url: http://localhost:3000/v1
+    description: Local development
+security:
+  - bearerAuth: []
+tags:
+  - name: Health
+  - name: Auth
+  - name: Jobs
+  - name: AI Orchestration
+  - name: Assessments
+  - name: Applications
+  - name: Results
+  - name: Candidate
+  - name: Sandbox
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Check API health.
+      security: []
+      responses:
+        "200":
+          description: API is available.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthCheck"
+              examples:
+                ok:
+                  value:
+                    status: ok
+                    service: skillproof-api
+                    version: 0.1.0
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register an HR or candidate account.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+            examples:
+              hr:
+                value:
+                  role: hr
+                  email: marion@acme-saas.com
+                  password: CorrectHorseBatteryStaple!42
+                  fullName: Marion Lefebvre
+                  companyName: Acme SaaS
+              candidate:
+                value:
+                  role: candidate
+                  email: sofiane@example.com
+                  password: CorrectHorseBatteryStaple!42
+                  fullName: Sofiane Khelifi
+      responses:
+        "201":
+          description: Account created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+              examples:
+                created:
+                  value:
+                    accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example
+                    refreshToken: 9b7f2d0c-2c7e-44af-820c-1770660ff001
+                    user:
+                      id: usr_01HXHR
+                      role: hr
+                      email: marion@acme-saas.com
+                      fullName: Marion Lefebvre
+                      companyName: Acme SaaS
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in and receive JWT credentials.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            examples:
+              hr:
+                value:
+                  email: marion@acme-saas.com
+                  password: CorrectHorseBatteryStaple!42
+      responses:
+        "200":
+          description: Login successful.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+              examples:
+                loggedIn:
+                  value:
+                    accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example
+                    refreshToken: 9b7f2d0c-2c7e-44af-820c-1770660ff001
+                    user:
+                      id: usr_01HXHR
+                      role: hr
+                      email: marion@acme-saas.com
+                      fullName: Marion Lefebvre
+                      companyName: Acme SaaS
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Exchange a refresh token for a new access token.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+            examples:
+              refresh:
+                value:
+                  refreshToken: 9b7f2d0c-2c7e-44af-820c-1770660ff001
+      responses:
+        "200":
+          description: Token refreshed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accessToken]
+                properties:
+                  accessToken:
+                    type: string
+              examples:
+                refreshed:
+                  value:
+                    accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refreshed
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Return the authenticated user profile.
+      responses:
+        "200":
+          description: Current user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              examples:
+                me:
+                  value:
+                    id: usr_01HXHR
+                    role: hr
+                    email: marion@acme-saas.com
+                    fullName: Marion Lefebvre
+                    companyName: Acme SaaS
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke the current refresh token.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+            examples:
+              logout:
+                value:
+                  refreshToken: 9b7f2d0c-2c7e-44af-820c-1770660ff001
+      responses:
+        "204":
+          description: Logged out.
+
+  /jobs:
+    get:
+      tags: [Jobs]
+      summary: List jobs visible to the authenticated user.
+      description: HR users see their company's jobs. Candidates see published jobs.
+      parameters:
+        - $ref: "#/components/parameters/StatusQuery"
+        - $ref: "#/components/parameters/LocationQuery"
+        - $ref: "#/components/parameters/DiplomaRequiredQuery"
+        - $ref: "#/components/parameters/PageQuery"
+        - $ref: "#/components/parameters/PageSizeQuery"
+      responses:
+        "200":
+          description: Job list.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobListResponse"
+              examples:
+                jobs:
+                  value:
+                    data:
+                      - id: job_01JFE
+                        title: Junior Frontend Developer
+                        companyName: Acme SaaS
+                        location: Paris, France
+                        workMode: hybrid
+                        status: published
+                        diplomaRequired: false
+                        createdAt: "2026-05-18T09:30:00Z"
+                    pagination:
+                      page: 1
+                      pageSize: 20
+                      total: 1
+    post:
+      tags: [Jobs]
+      summary: Create a draft job.
+      description: HR-only route.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJobRequest"
+            examples:
+              juniorFrontend:
+                value:
+                  title: Junior Frontend Developer
+                  location: Paris, France
+                  workMode: hybrid
+                  diplomaRequired: false
+                  rawAd: |
+                    We are hiring a junior frontend developer to join our SaaS team.
+                    You will build React interfaces with TypeScript and work with
+                    designers and backend engineers.
+      responses:
+        "201":
+          description: Draft job created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+              examples:
+                created:
+                  value:
+                    id: job_01JFE
+                    title: Junior Frontend Developer
+                    companyName: Acme SaaS
+                    location: Paris, France
+                    workMode: hybrid
+                    status: draft
+                    diplomaRequired: false
+                    rawAd: We are hiring a junior frontend developer...
+                    improvedAd: null
+                    skillMatrix: null
+                    createdAt: "2026-05-18T09:30:00Z"
+                    updatedAt: "2026-05-18T09:30:00Z"
+
+  /jobs/{jobId}:
+    get:
+      tags: [Jobs]
+      summary: Get a job by ID.
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: Job details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+              examples:
+                job:
+                  value:
+                    id: job_01JFE
+                    title: Junior Frontend Developer
+                    companyName: Acme SaaS
+                    location: Paris, France
+                    workMode: hybrid
+                    status: published
+                    diplomaRequired: false
+                    rawAd: We are hiring a junior frontend developer...
+                    improvedAd: Build accessible React interfaces with TypeScript...
+                    skillMatrix:
+                      - id: skill_react
+                        name: React fundamentals
+                        weight: 30
+                        criteria:
+                          - Explains component state and props clearly.
+                    createdAt: "2026-05-18T09:30:00Z"
+                    updatedAt: "2026-05-18T10:10:00Z"
+    patch:
+      tags: [Jobs]
+      summary: Update a draft job.
+      description: HR-only route.
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateJobRequest"
+            examples:
+              update:
+                value:
+                  title: Junior Frontend Developer
+                  location: Lille, France
+                  workMode: remote
+                  rawAd: Updated job ad text...
+      responses:
+        "200":
+          description: Job updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+              examples:
+                updated:
+                  value:
+                    id: job_01JFE
+                    title: Junior Frontend Developer
+                    companyName: Acme SaaS
+                    location: Lille, France
+                    workMode: remote
+                    status: draft
+                    diplomaRequired: false
+                    rawAd: Updated job ad text...
+                    improvedAd: null
+                    skillMatrix: null
+                    createdAt: "2026-05-18T09:30:00Z"
+                    updatedAt: "2026-05-18T10:00:00Z"
+    delete:
+      tags: [Jobs]
+      summary: Delete a draft job.
+      description: HR-only route.
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "204":
+          description: Job deleted.
+
+  /jobs/{jobId}/publish:
+    post:
+      tags: [Jobs]
+      summary: Publish a job after HR validates its assessment.
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: Job published.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+              examples:
+                published:
+                  value:
+                    id: job_01JFE
+                    title: Junior Frontend Developer
+                    companyName: Acme SaaS
+                    location: Paris, France
+                    workMode: hybrid
+                    status: published
+                    diplomaRequired: false
+                    rawAd: We are hiring a junior frontend developer...
+                    improvedAd: Build accessible React interfaces with TypeScript...
+                    skillMatrix:
+                      - id: skill_react
+                        name: React fundamentals
+                        weight: 30
+                        criteria:
+                          - Explains component state and props clearly.
+                    createdAt: "2026-05-18T09:30:00Z"
+                    updatedAt: "2026-05-18T10:15:00Z"
+
+  /jobs/{jobId}/archive:
+    post:
+      tags: [Jobs]
+      summary: Archive a published job.
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: Job archived.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+              examples:
+                archived:
+                  value:
+                    id: job_01JFE
+                    title: Junior Frontend Developer
+                    companyName: Acme SaaS
+                    location: Paris, France
+                    workMode: hybrid
+                    status: archived
+                    diplomaRequired: false
+                    rawAd: We are hiring a junior frontend developer...
+                    improvedAd: Build accessible React interfaces with TypeScript...
+                    skillMatrix: []
+                    createdAt: "2026-05-18T09:30:00Z"
+                    updatedAt: "2026-05-18T11:00:00Z"
+
+  /jobs/{jobId}/upgrade:
+    post:
+      tags: [AI Orchestration]
+      summary: Analyze a job ad and propose improvements.
+      description: HR-only AI route for the Job Ad Upgrade Studio.
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rawAd:
+                  type: string
+                  description: Optional ad text overriding the job's current rawAd.
+            examples:
+              overrideText:
+                value:
+                  rawAd: Junior developer wanted. Must know React, TypeScript, Kubernetes, AWS, GraphQL, Figma, and have 3 years of experience.
+      responses:
+        "200":
+          description: AI upgrade proposal.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobUpgradeProposal"
+              examples:
+                proposal:
+                  value:
+                    jobId: job_01JFE
+                    flags:
+                      - type: overreach
+                        severity: high
+                        message: Three years of experience conflicts with a junior role.
+                        evidence: have 3 years of experience
+                      - type: vague_responsibility
+                        severity: medium
+                        message: The ad does not describe the first-month responsibilities.
+                        evidence: Junior developer wanted.
+                    improvedAd: |
+                      Join Acme SaaS as a Junior Frontend Developer. You will build
+                      React and TypeScript interfaces with guidance from senior engineers.
+                    skillMatrix:
+                      - id: skill_react
+                        name: React fundamentals
+                        weight: 30
+                        criteria:
+                          - Uses components, props, and state appropriately.
+                          - Explains rendering tradeoffs in simple terms.
+                      - id: skill_typescript
+                        name: TypeScript basics
+                        weight: 25
+                        criteria:
+                          - Defines clear interfaces for component props.
+
+  /jobs/{jobId}/upgrade/accept:
+    post:
+      tags: [AI Orchestration]
+      summary: Accept or edit the upgraded job ad and skill matrix.
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptUpgradeRequest"
+            examples:
+              accept:
+                value:
+                  improvedAd: Join Acme SaaS as a Junior Frontend Developer...
+                  skillMatrix:
+                    - id: skill_react
+                      name: React fundamentals
+                      weight: 30
+                      criteria:
+                        - Uses components, props, and state appropriately.
+                    - id: skill_typescript
+                      name: TypeScript basics
+                      weight: 25
+                      criteria:
+                        - Defines clear interfaces for component props.
+      responses:
+        "200":
+          description: Upgrade saved on job.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+              examples:
+                accepted:
+                  value:
+                    id: job_01JFE
+                    title: Junior Frontend Developer
+                    companyName: Acme SaaS
+                    location: Paris, France
+                    workMode: hybrid
+                    status: draft
+                    diplomaRequired: false
+                    rawAd: We are hiring a junior frontend developer...
+                    improvedAd: Join Acme SaaS as a Junior Frontend Developer...
+                    skillMatrix:
+                      - id: skill_react
+                        name: React fundamentals
+                        weight: 30
+                        criteria:
+                          - Uses components, props, and state appropriately.
+                    createdAt: "2026-05-18T09:30:00Z"
+                    updatedAt: "2026-05-18T10:12:00Z"
+
+  /jobs/{jobId}/assessment:
+    post:
+      tags: [Assessments]
+      summary: Generate an assessment from the validated job and skill matrix.
+      description: HR-only route. Uses AI to draft questions, then stores a reviewable assessment.
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                durationMinutes:
+                  type: integer
+                  minimum: 15
+                  maximum: 90
+                  default: 45
+                questionTypes:
+                  type: array
+                  items:
+                    type: string
+                    enum: [written, mcq, code]
+            examples:
+              generate:
+                value:
+                  durationMinutes: 45
+                  questionTypes: [written, mcq, code]
+      responses:
+        "201":
+          description: Assessment generated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assessment"
+              examples:
+                assessment:
+                  value:
+                    id: asmt_01JFE
+                    jobId: job_01JFE
+                    status: draft
+                    durationMinutes: 45
+                    questions:
+                      - id: q_001
+                        type: written
+                        skillId: skill_react
+                        prompt: Explain when you would lift state up in a React application.
+                        maxScore: 5
+                        rubric:
+                          - score: 5
+                            description: Gives a clear parent-child state ownership explanation with tradeoffs.
+                      - id: q_002
+                        type: code
+                        skillId: skill_typescript
+                        prompt: Implement a typed Button component with loading and disabled states.
+                        language: typescript
+                        maxScore: 5
+                        rubric:
+                          - score: 5
+                            description: Uses explicit props, safe defaults, and accessible attributes.
+                    createdAt: "2026-05-18T10:20:00Z"
+    get:
+      tags: [Assessments]
+      summary: Get the assessment attached to a job.
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: Assessment details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assessment"
+              examples:
+                assessment:
+                  value:
+                    id: asmt_01JFE
+                    jobId: job_01JFE
+                    status: approved
+                    durationMinutes: 45
+                    questions:
+                      - id: q_001
+                        type: written
+                        skillId: skill_react
+                        prompt: Explain when you would lift state up in a React application.
+                        maxScore: 5
+                        rubric: []
+                    createdAt: "2026-05-18T10:20:00Z"
+    patch:
+      tags: [Assessments]
+      summary: Edit the assessment before publishing.
+      description: HR-only route.
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAssessmentRequest"
+            examples:
+              editAssessment:
+                value:
+                  durationMinutes: 40
+                  questions:
+                    - id: q_001
+                      type: written
+                      skillId: skill_react
+                      prompt: Explain when you would lift state up in a React application.
+                      maxScore: 5
+                      rubric:
+                        - score: 5
+                          description: Explains state ownership, parent-child data flow, and tradeoffs.
+      responses:
+        "200":
+          description: Assessment updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assessment"
+              examples:
+                updated:
+                  value:
+                    id: asmt_01JFE
+                    jobId: job_01JFE
+                    status: draft
+                    durationMinutes: 40
+                    questions:
+                      - id: q_001
+                        type: written
+                        skillId: skill_react
+                        prompt: Explain when you would lift state up in a React application.
+                        maxScore: 5
+                        rubric:
+                          - score: 5
+                            description: Explains state ownership, parent-child data flow, and tradeoffs.
+                    createdAt: "2026-05-18T10:20:00Z"
+
+  /jobs/{jobId}/assessment/approve:
+    post:
+      tags: [Assessments]
+      summary: Approve the generated assessment for applicants.
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: Assessment approved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assessment"
+              examples:
+                approved:
+                  value:
+                    id: asmt_01JFE
+                    jobId: job_01JFE
+                    status: approved
+                    durationMinutes: 45
+                    questions:
+                      - id: q_001
+                        type: written
+                        skillId: skill_react
+                        prompt: Explain when you would lift state up in a React application.
+                        maxScore: 5
+                        rubric: []
+                    createdAt: "2026-05-18T10:20:00Z"
+
+  /applications:
+    get:
+      tags: [Applications]
+      summary: List applications for the current user.
+      description: Candidates see their own applications. HR users can filter by job.
+      parameters:
+        - $ref: "#/components/parameters/JobIdQuery"
+        - $ref: "#/components/parameters/ApplicationStatusQuery"
+      responses:
+        "200":
+          description: Application list.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Application"
+              examples:
+                applications:
+                  value:
+                    data:
+                      - id: app_01SFK
+                        jobId: job_01JFE
+                        candidateId: usr_01SFK
+                        status: assessment_submitted
+                        createdAt: "2026-05-18T12:00:00Z"
+    post:
+      tags: [Applications]
+      summary: Apply to a published job.
+      description: Candidate-only route.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jobId]
+              properties:
+                jobId:
+                  type: string
+            examples:
+              apply:
+                value:
+                  jobId: job_01JFE
+      responses:
+        "201":
+          description: Application created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Application"
+              examples:
+                created:
+                  value:
+                    id: app_01SFK
+                    jobId: job_01JFE
+                    candidateId: usr_01SFK
+                    status: applied
+                    createdAt: "2026-05-18T12:00:00Z"
+
+  /applications/{applicationId}:
+    get:
+      tags: [Applications]
+      summary: Get application details.
+      parameters:
+        - $ref: "#/components/parameters/ApplicationId"
+      responses:
+        "200":
+          description: Application details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Application"
+              examples:
+                application:
+                  value:
+                    id: app_01SFK
+                    jobId: job_01JFE
+                    candidateId: usr_01SFK
+                    status: assessment_submitted
+                    createdAt: "2026-05-18T12:00:00Z"
+
+  /applications/{applicationId}/withdraw:
+    post:
+      tags: [Applications]
+      summary: Withdraw an application.
+      description: Candidate-only route.
+      parameters:
+        - $ref: "#/components/parameters/ApplicationId"
+      responses:
+        "200":
+          description: Application withdrawn.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Application"
+              examples:
+                withdrawn:
+                  value:
+                    id: app_01SFK
+                    jobId: job_01JFE
+                    candidateId: usr_01SFK
+                    status: withdrawn
+                    createdAt: "2026-05-18T12:00:00Z"
+
+  /applications/{applicationId}/session:
+    post:
+      tags: [Candidate]
+      summary: Start an assessment session.
+      description: Candidate-only route. Creates a timed session and returns applicant-safe questions.
+      parameters:
+        - $ref: "#/components/parameters/ApplicationId"
+      responses:
+        "201":
+          description: Assessment session started.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentSession"
+              examples:
+                started:
+                  value:
+                    id: sess_01SFK
+                    applicationId: app_01SFK
+                    status: in_progress
+                    startedAt: "2026-05-18T12:05:00Z"
+                    expiresAt: "2026-05-18T12:50:00Z"
+                    questions:
+                      - id: q_001
+                        type: written
+                        prompt: Explain when you would lift state up in a React application.
+                        maxScore: 5
+                      - id: q_002
+                        type: code
+                        prompt: Implement a typed Button component with loading and disabled states.
+                        language: typescript
+                        maxScore: 5
+    get:
+      tags: [Candidate]
+      summary: Get the active assessment session.
+      parameters:
+        - $ref: "#/components/parameters/ApplicationId"
+      responses:
+        "200":
+          description: Current session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentSession"
+              examples:
+                session:
+                  value:
+                    id: sess_01SFK
+                    applicationId: app_01SFK
+                    status: in_progress
+                    startedAt: "2026-05-18T12:05:00Z"
+                    expiresAt: "2026-05-18T12:50:00Z"
+                    questions:
+                      - id: q_001
+                        type: written
+                        prompt: Explain when you would lift state up in a React application.
+                        maxScore: 5
+
+  /sessions/{sessionId}/answers:
+    put:
+      tags: [Candidate]
+      summary: Save draft answers during an assessment session.
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveAnswersRequest"
+            examples:
+              save:
+                value:
+                  answers:
+                    - questionId: q_001
+                      type: written
+                      content: I would lift state to the closest shared parent when two child components need the same value.
+                    - questionId: q_002
+                      type: code
+                      language: typescript
+                      content: |
+                        type ButtonProps = { loading?: boolean; disabled?: boolean };
+      responses:
+        "200":
+          description: Answers saved.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sessionId, savedAt]
+                properties:
+                  sessionId:
+                    type: string
+                  savedAt:
+                    type: string
+                    format: date-time
+              examples:
+                saved:
+                  value:
+                    sessionId: sess_01SFK
+                    savedAt: "2026-05-18T12:20:00Z"
+
+  /sessions/{sessionId}/submit:
+    post:
+      tags: [Candidate]
+      summary: Submit final answers for AI evaluation and ranking.
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveAnswersRequest"
+            examples:
+              submit:
+                value:
+                  answers:
+                    - questionId: q_001
+                      type: written
+                      content: I would lift state to the closest shared parent when two child components need the same value.
+                    - questionId: q_002
+                      type: code
+                      language: typescript
+                      content: |
+                        type ButtonProps = { loading?: boolean; disabled?: boolean; children: React.ReactNode };
+                        export function Button({ loading = false, disabled = false, children }: ButtonProps) {
+                          return <button disabled={disabled || loading} aria-busy={loading}>{children}</button>;
+                        }
+      responses:
+        "202":
+          description: Submission accepted for asynchronous evaluation.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [submissionId, status]
+                properties:
+                  submissionId:
+                    type: string
+                  status:
+                    type: string
+                    enum: [queued]
+              examples:
+                queued:
+                  value:
+                    submissionId: sub_01SFK
+                    status: queued
+
+  /submissions/{submissionId}:
+    get:
+      tags: [Results]
+      summary: Get submission status and evaluation summary.
+      parameters:
+        - $ref: "#/components/parameters/SubmissionId"
+      responses:
+        "200":
+          description: Submission status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+              examples:
+                evaluated:
+                  value:
+                    id: sub_01SFK
+                    applicationId: app_01SFK
+                    status: evaluated
+                    submittedAt: "2026-05-18T12:42:00Z"
+                    evaluatedAt: "2026-05-18T12:44:30Z"
+                    totalScore: 78
+
+  /submissions/{submissionId}/sandbox-runs:
+    post:
+      tags: [Sandbox]
+      summary: Run code answers in the sandbox.
+      description: Internal route used by the API worker to validate code answers.
+      parameters:
+        - $ref: "#/components/parameters/SubmissionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [questionId, language, sourceCode]
+              properties:
+                questionId:
+                  type: string
+                language:
+                  type: string
+                  enum: [javascript, typescript, python]
+                sourceCode:
+                  type: string
+                tests:
+                  type: array
+                  items:
+                    type: string
+            examples:
+              run:
+                value:
+                  questionId: q_002
+                  language: typescript
+                  sourceCode: "export function sum(a: number, b: number) { return a + b; }"
+                  tests:
+                    - "expect(sum(1, 2)).toBe(3)"
+      responses:
+        "201":
+          description: Sandbox run created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SandboxRun"
+              examples:
+                passed:
+                  value:
+                    id: run_01ABC
+                    submissionId: sub_01SFK
+                    questionId: q_002
+                    status: passed
+                    stdout: "2 tests passed"
+                    stderr: ""
+                    durationMs: 420
+
+  /jobs/{jobId}/results:
+    get:
+      tags: [Results]
+      summary: Get ranked candidate results for a job.
+      description: HR-only route.
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: Ranked shortlist.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RankedResults"
+              examples:
+                ranked:
+                  value:
+                    jobId: job_01JFE
+                    generatedAt: "2026-05-18T13:00:00Z"
+                    candidates:
+                      - rank: 1
+                        applicationId: app_01SFK
+                        candidate:
+                          id: usr_01SFK
+                          fullName: Sofiane Khelifi
+                          email: sofiane@example.com
+                        totalScore: 78
+                        recommendation: trainable
+                        strengths:
+                          - Clear React state reasoning.
+                          - TypeScript answer is simple and accessible.
+                        risks:
+                          - Limited discussion of testing strategy.
+
+  /applications/{applicationId}/scorecard:
+    get:
+      tags: [Results]
+      summary: Get a detailed candidate scorecard.
+      description: HR-only route for evidence-backed review.
+      parameters:
+        - $ref: "#/components/parameters/ApplicationId"
+      responses:
+        "200":
+          description: Candidate scorecard.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scorecard"
+              examples:
+                scorecard:
+                  value:
+                    applicationId: app_01SFK
+                    totalScore: 78
+                    recommendation: trainable
+                    criteria:
+                      - skillId: skill_react
+                        skillName: React fundamentals
+                        score: 4
+                        maxScore: 5
+                        evidence:
+                          - Mentions closest shared parent for shared state.
+                        risk: Does not mention memoization or re-render impact.
+                    interviewQuestions:
+                      - Can you describe a case where lifting state made a component harder to maintain?
+
+  /applications/{applicationId}/feedback:
+    get:
+      tags: [Candidate]
+      summary: Get candidate-facing feedback.
+      description: Candidate-only route after evaluation is complete.
+      parameters:
+        - $ref: "#/components/parameters/ApplicationId"
+      responses:
+        "200":
+          description: Candidate feedback.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CandidateFeedback"
+              examples:
+                feedback:
+                  value:
+                    applicationId: app_01SFK
+                    status: not_selected
+                    scoreSummary:
+                      totalScore: 78
+                      level: promising
+                    feedback:
+                      - Your React state answer was clear and practical.
+                      - Your TypeScript solution would be stronger with explicit event handler types.
+                    nextSteps:
+                      - Practice explaining accessibility tradeoffs in component APIs.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    JobId:
+      name: jobId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: job_01JFE
+    ApplicationId:
+      name: applicationId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: app_01SFK
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: sess_01SFK
+    SubmissionId:
+      name: submissionId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: sub_01SFK
+    StatusQuery:
+      name: status
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [draft, published, archived]
+      example: published
+    ApplicationStatusQuery:
+      name: status
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [applied, assessment_started, assessment_submitted, shortlisted, rejected, withdrawn]
+      example: assessment_submitted
+    JobIdQuery:
+      name: jobId
+      in: query
+      required: false
+      schema:
+        type: string
+      example: job_01JFE
+    LocationQuery:
+      name: location
+      in: query
+      required: false
+      schema:
+        type: string
+      example: Paris
+    DiplomaRequiredQuery:
+      name: diplomaRequired
+      in: query
+      required: false
+      schema:
+        type: boolean
+      example: false
+    PageQuery:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      example: 1
+    PageSizeQuery:
+      name: pageSize
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      example: 20
+
+  schemas:
+    HealthCheck:
+      type: object
+      required: [status, service, version]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        service:
+          type: string
+        version:
+          type: string
+
+    RegisterRequest:
+      type: object
+      required: [role, email, password, fullName]
+      properties:
+        role:
+          type: string
+          enum: [hr, candidate]
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 12
+        fullName:
+          type: string
+        companyName:
+          type: string
+          description: Required for HR users.
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [accessToken, refreshToken, user]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    User:
+      type: object
+      required: [id, role, email, fullName]
+      properties:
+        id:
+          type: string
+        role:
+          type: string
+          enum: [hr, candidate]
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        companyName:
+          type: [string, "null"]
+
+    CreateJobRequest:
+      type: object
+      required: [title, location, workMode, rawAd]
+      properties:
+        title:
+          type: string
+        location:
+          type: string
+        workMode:
+          type: string
+          enum: [onsite, hybrid, remote]
+        diplomaRequired:
+          type: boolean
+          default: false
+        rawAd:
+          type: string
+          minLength: 200
+          maxLength: 8000
+
+    UpdateJobRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        location:
+          type: string
+        workMode:
+          type: string
+          enum: [onsite, hybrid, remote]
+        diplomaRequired:
+          type: boolean
+        rawAd:
+          type: string
+          minLength: 50
+          maxLength: 8000
+
+    Job:
+      type: object
+      required: [id, title, companyName, location, workMode, status, diplomaRequired, rawAd, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        companyName:
+          type: string
+        location:
+          type: string
+        workMode:
+          type: string
+          enum: [onsite, hybrid, remote]
+        status:
+          type: string
+          enum: [draft, published, archived]
+        diplomaRequired:
+          type: boolean
+        rawAd:
+          type: string
+        improvedAd:
+          type: [string, "null"]
+        skillMatrix:
+          type: [array, "null"]
+          items:
+            $ref: "#/components/schemas/SkillCriterion"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    JobListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Job"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    Pagination:
+      type: object
+      required: [page, pageSize, total]
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+
+    SkillCriterion:
+      type: object
+      required: [id, name, weight, criteria]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        weight:
+          type: integer
+          minimum: 0
+          maximum: 100
+        criteria:
+          type: array
+          items:
+            type: string
+
+    JobUpgradeProposal:
+      type: object
+      required: [jobId, flags, improvedAd, skillMatrix]
+      properties:
+        jobId:
+          type: string
+        flags:
+          type: array
+          items:
+            $ref: "#/components/schemas/JobAdFlag"
+        improvedAd:
+          type: string
+        skillMatrix:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillCriterion"
+
+    JobAdFlag:
+      type: object
+      required: [type, severity, message, evidence]
+      properties:
+        type:
+          type: string
+          enum: [overreach, vague_responsibility, missing_information, contradiction]
+        severity:
+          type: string
+          enum: [low, medium, high]
+        message:
+          type: string
+        evidence:
+          type: string
+
+    AcceptUpgradeRequest:
+      type: object
+      required: [improvedAd, skillMatrix]
+      properties:
+        improvedAd:
+          type: string
+        skillMatrix:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillCriterion"
+
+    Assessment:
+      type: object
+      required: [id, jobId, status, durationMinutes, questions, createdAt]
+      properties:
+        id:
+          type: string
+        jobId:
+          type: string
+        status:
+          type: string
+          enum: [draft, approved]
+        durationMinutes:
+          type: integer
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/AssessmentQuestion"
+        createdAt:
+          type: string
+          format: date-time
+
+    AssessmentQuestion:
+      type: object
+      required: [id, type, skillId, prompt, maxScore]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [written, mcq, code]
+        skillId:
+          type: string
+        prompt:
+          type: string
+        language:
+          type: string
+          enum: [javascript, typescript, python]
+        choices:
+          type: array
+          items:
+            type: string
+        maxScore:
+          type: integer
+          maximum: 5
+        rubric:
+          type: array
+          items:
+            $ref: "#/components/schemas/RubricLevel"
+
+    RubricLevel:
+      type: object
+      required: [score, description]
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 5
+        description:
+          type: string
+
+    UpdateAssessmentRequest:
+      type: object
+      properties:
+        durationMinutes:
+          type: integer
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/AssessmentQuestion"
+
+    Application:
+      type: object
+      required: [id, jobId, candidateId, status, createdAt]
+      properties:
+        id:
+          type: string
+        jobId:
+          type: string
+        candidateId:
+          type: string
+        status:
+          type: string
+          enum: [applied, assessment_started, assessment_submitted, shortlisted, rejected, withdrawn]
+        createdAt:
+          type: string
+          format: date-time
+
+    AssessmentSession:
+      type: object
+      required: [id, applicationId, status, startedAt, expiresAt, questions]
+      properties:
+        id:
+          type: string
+        applicationId:
+          type: string
+        status:
+          type: string
+          enum: [in_progress, submitted, expired]
+        startedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/CandidateQuestion"
+
+    CandidateQuestion:
+      type: object
+      required: [id, type, prompt, maxScore]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [written, mcq, code]
+        prompt:
+          type: string
+        language:
+          type: string
+        choices:
+          type: array
+          items:
+            type: string
+        maxScore:
+          type: integer
+
+    SaveAnswersRequest:
+      type: object
+      required: [answers]
+      properties:
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Answer"
+
+    Answer:
+      type: object
+      required: [questionId, type, content]
+      properties:
+        questionId:
+          type: string
+        type:
+          type: string
+          enum: [written, mcq, code]
+        language:
+          type: string
+          enum: [javascript, typescript, python]
+        content:
+          type: string
+
+    Submission:
+      type: object
+      required: [id, applicationId, status, submittedAt]
+      properties:
+        id:
+          type: string
+        applicationId:
+          type: string
+        status:
+          type: string
+          enum: [queued, evaluating, evaluated, failed]
+        submittedAt:
+          type: string
+          format: date-time
+        evaluatedAt:
+          type: [string, "null"]
+          format: date-time
+        totalScore:
+          type: [integer, "null"]
+
+    SandboxRun:
+      type: object
+      required: [id, submissionId, questionId, status, stdout, stderr, durationMs]
+      properties:
+        id:
+          type: string
+        submissionId:
+          type: string
+        questionId:
+          type: string
+        status:
+          type: string
+          enum: [passed, failed, error, timeout]
+        stdout:
+          type: string
+        stderr:
+          type: string
+        durationMs:
+          type: integer
+
+    RankedResults:
+      type: object
+      required: [jobId, generatedAt, candidates]
+      properties:
+        jobId:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+        candidates:
+          type: array
+          items:
+            type: object
+            required: [rank, applicationId, candidate, totalScore, recommendation, strengths, risks]
+            properties:
+              rank:
+                type: integer
+              applicationId:
+                type: string
+              candidate:
+                type: object
+                required: [id, fullName, email]
+                properties:
+                  id:
+                    type: string
+                  fullName:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+              totalScore:
+                type: integer
+              recommendation:
+                type: string
+                enum: [ready_now, trainable, not_aligned]
+              strengths:
+                type: array
+                items:
+                  type: string
+              risks:
+                type: array
+                items:
+                  type: string
+
+    Scorecard:
+      type: object
+      required: [applicationId, totalScore, recommendation, criteria, interviewQuestions]
+      properties:
+        applicationId:
+          type: string
+        totalScore:
+          type: integer
+        recommendation:
+          type: string
+          enum: [ready_now, trainable, not_aligned]
+        criteria:
+          type: array
+          items:
+            type: object
+            required: [skillId, skillName, score, maxScore, evidence]
+            properties:
+              skillId:
+                type: string
+              skillName:
+                type: string
+              score:
+                type: integer
+              maxScore:
+                type: integer
+              evidence:
+                type: array
+                items:
+                  type: string
+              risk:
+                type: string
+        interviewQuestions:
+          type: array
+          items:
+            type: string
+
+    CandidateFeedback:
+      type: object
+      required: [applicationId, status, scoreSummary, feedback, nextSteps]
+      properties:
+        applicationId:
+          type: string
+        status:
+          type: string
+          enum: [shortlisted, not_selected]
+        scoreSummary:
+          type: object
+          required: [totalScore, level]
+          properties:
+            totalScore:
+              type: integer
+            level:
+              type: string
+              enum: [strong, promising, needs_practice]
+        feedback:
+          type: array
+          items:
+            type: string
+        nextSteps:
+          type: array
+          items:
+            type: string

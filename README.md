@@ -112,6 +112,8 @@ The planned architecture separates HR and candidate frontends from a shared Skil
 
 See [`context/Architecture.png`](context/Architecture.png) for the architecture diagram.
 
+The REST API contract is described in [`openapi.yaml`](openapi.yaml), including route examples for authentication, jobs, AI orchestration, assessments, applications, candidate sessions, results, and sandbox runs.
+
 ## MVP Scope
 
 The 4-week prototype demonstrates the complete B2B value chain for a single role:
