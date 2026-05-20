@@ -4,7 +4,7 @@
 |--------|--------|
 | **Product** | SkillProof |
 | **Version** | MVP 1.0 (course prototype) |
-| **Status** | Draft — pending open items in [§14](#14-open-questions) |
+| **Status** | Draft — core decisions locked in [§6.4](#64-confirmed-product-decisions); open items in [§14](#14-open-questions) |
 | **Last updated** | May 2026 |
 | **Theme** | Education & Workforce Development (ESCEN — AI for Impact, Boston LXP) |
 | **Related docs** | [Project brief](../brief/project%20brief.md) · [Personas](../brief/project%20personas.md) · [Backend architecture](../architecture/backend-architecture.md) · [UI mockups](../../mockups/) |
@@ -87,7 +87,7 @@ Replace junior hiring’s CV-sorting step with **evidence-based screening** that
 
 **Success with SkillProof:** Publish a cleaned listing and assessment in &lt;10 minutes; review a ranked shortlist in minutes, not days.
 
-→ Full profile: [Marion — project personas](./project%20personas.md)
+→ Full profile: [Marion — project personas](../brief/project%20personas.md)
 
 ### 4.2 Secondary personas — Candidates (Sofiane, Camille)
 
@@ -139,7 +139,7 @@ Validated production metrics, paid customers, or longitudinal hire outcomes — 
 - **Candidate accounts** (register / login).
 - Job posting lifecycle: **draft → check listing → accept suggestions → publish**.
 - **Skills matrix** only on “Check listing” (Gemini).
-- **One-click** apply AI-improved job description.
+- **Apply suggestions** — HR accepts Gemini rewrite in one click (updates job description).
 - **Assessment generation** on publish (Gemini), junior frontend template.
 - **Technical test** with code editor, timer, multi-question flow.
 - **Code sandbox** execution (e.g. Judge0) + **batch grading** on submit (Gemini).
@@ -167,9 +167,33 @@ Validated production metrics, paid customers, or longitudinal hire outcomes — 
 
 Original brief listed “no live code sandbox” for the story MVP. **Confirmed build includes sandbox execution** for stronger verification — document as intentional upgrade in the report. See [backend architecture](../architecture/backend-architecture.md).
 
+### 6.4 Confirmed product decisions
+
+Locked for MVP (details in [backend architecture](../architecture/backend-architecture.md)):
+
+| Topic | Decision |
+|--------|----------|
+| Candidate access | Accounts; browse and apply inside SkillProof |
+| Code execution | Sandbox (e.g. Judge0) + Gemini grading |
+| Skills matrix | Only after **Check listing** |
+| Listing rewrite | Gemini full rewrite → HR **Apply suggestions** in one click |
+| Grading | Batch on **Submit** only |
+| Auth | Company + HR JWT; separate candidate JWT |
+| Apply vs practice | Apply requires completed test + submit as application; practice results hidden from HR |
+| AI | Google Gemini, all pipelines real |
+| ATS | None |
+
 ---
 
 ## 7. User journeys
+
+Three end-to-end paths cover the MVP. Satisfaction scores (1–5) are illustrative for journey maps.
+
+| Journey | Actor | Outcome |
+|---------|--------|---------|
+| [7.1](#71-hr--create-and-publish-a-role) | HR | Published job + generated assessment |
+| [7.2](#72-candidate--practice-vs-apply) | Candidate (+ HR on apply) | Practice feedback private, or application visible to HR |
+| [7.3](#73-hr--review-shortlist) | HR | Ranked shortlist from verified tests |
 
 ### 7.1 HR — Create and publish a role
 
@@ -210,12 +234,32 @@ journey
 
 ### 7.3 HR — Review shortlist
 
+```mermaid
+journey
+    title HR reviews verified applicants
+    section Open role
+      Open published job: 4: HR
+      Open Candidates tab: 5: HR
+    section Triage
+      Review KPI stats: 4: HR
+      Filter by band or search: 4: HR
+      Sort by highest score: 5: HR
+    section Decide
+      Review candidate card: 5: HR
+      Read scores radar and AI summary: 5: HR
+      Open candidate detail: 4: HR
+      Shortlist for interview: 5: HR
+```
+
+**Steps (detail)**
+
 1. Open published job → **Candidates** tab.
-2. See aggregate stats (applications, top performers).
-3. Filter by band (Ready now / Trainable / At risk) or search.
-4. Sort by highest score (default).
-5. Open candidate card → scores, radar, strengths, improvements, AI recommendation.
-6. Use evidence for interview decision *(interview scheduling out of scope)*.
+2. See aggregate stats: applications received, verified matches, top performers *(applications only — practice tests excluded; no separate “tests completed” metric in MVP)*.
+3. Filter by band (**Ready now** / **Trainable** / **At risk**) or search by name.
+4. Sort by highest score (default); top match visually emphasized.
+5. Review candidate card: overall score, match %, dimension radar, strengths, areas to improve, AI recommendation.
+6. Open **View details** for per-question breakdown and audit trail *(Should for MVP)*.
+7. Use evidence for interview decision *(scheduling out of scope)*.
 
 ---
 
@@ -271,7 +315,7 @@ Requirements use **Must** (MVP) and **Should** (if time permits).
 | CAND-5 | Navigate questions; autosave code per question | Must |
 | CAND-6 | Optional **Run code** against public tests (sandbox) | Should |
 | CAND-7 | **Submit** locks session and triggers batch sandbox + Gemini grade | Must |
-| CAND-8 | On submit, candidate chooses **practice** or **application** (if started as application) | Must |
+| CAND-8 | Session mode set at start (`practice` \| `application`); **Submit** finalizes that mode (application submit creates `Application`) | Must |
 | CAND-9 | Practice results: `visible_to_company = false` | Must |
 | CAND-10 | Application results: create `Application` row, visible to HR | Must |
 | CAND-11 | Candidate can view own result (scores, feedback) after submit | Must |
@@ -295,8 +339,8 @@ Requirements use **Must** (MVP) and **Should** (if time permits).
 
 | ID | Requirement | Priority |
 |----|-------------|----------|
-| DASH-1 | Show stats: applications received, tests completed, verified matches, top performers | Must |
-| DASH-2 | Stats count **application** submissions only (exclude practice) | Must |
+| DASH-1 | Show stats: applications received, verified matches, top performers | Must |
+| DASH-2 | All dashboard metrics count **application** submissions only (exclude practice); *applications received* equals completed apply+test submits in MVP | Must |
 | DASH-3 | List candidates sorted by score (default) | Must |
 | DASH-4 | Filter by recommendation band | Must |
 | DASH-5 | Search by candidate name | Should |
@@ -337,7 +381,7 @@ All pipelines use **real Gemini** with **structured JSON** outputs and schema va
 | Pipeline | Input | Output | User trigger |
 |----------|-------|--------|--------------|
 | Listing check | Title + description | `issues[]`, `skills[]` | Check listing |
-| Listing rewrite | Title + description + issues | `improved_description` | Accept suggestions |
+| Listing rewrite | Title + description + issues | `improved_description` | Accept suggestions → Apply suggestions |
 | Assessment gen | Description + skills + role template | `questions[]`, rubrics, tests | Publish |
 | Session grade | Answers + sandbox results + rubrics | Scores, band, feedback | Submit test |
 
@@ -345,7 +389,7 @@ All pipelines use **real Gemini** with **structured JSON** outputs and schema va
 
 **Failure handling:** If Gemini fails, show actionable error; do not silently fall back to fake scores.
 
-Technical detail: [backend-architecture.md](./backend-architecture.md).
+Technical detail: [backend-architecture.md](../architecture/backend-architecture.md).
 
 ---
 
@@ -355,7 +399,7 @@ Based on [mockups](../../mockups/) (English UI):
 
 | Screen | Key elements |
 |--------|----------------|
-| **Create job posting** | Rich editor, Check listing CTA, skills matrix table, Save draft / Publish |
+| **Create job posting** | Rich editor, Check listing CTA, skills matrix *(after check only)*, Save draft / Publish |
 | **Take assessment** | Timer, question sidebar, instructions + code editor, Previous/Next, Submit |
 | **See candidates** | KPI cards, band tabs, search/sort, candidate cards with radar + AI recommendation |
 
@@ -395,19 +439,19 @@ Suggested phases — adjust to your syllabus dates.
 
 ### 13.1 MVP feature priority (MoSCoW)
 
-**Must have:** AUTH, JOB-1–8, ASSESS-1–4, CAND-1–12, GRADE-1–6, DASH-1–6  
-**Should have:** CAND-6, DASH-5–7, JOB-9–10, AUTH-5  
-**Could have:** AUDIT-3, DASH-9, email notifications
+**Must have:** AUTH-1–4, JOB-1–8, ASSESS-1–4, CAND-1–12, GRADE-1–7, DASH-1–4, DASH-6, AUDIT-1  
+**Should have:** CAND-6, DASH-5, DASH-7–9, JOB-9–10, AUTH-5, AUDIT-2  
+**Could have:** AUDIT-3, email notifications, suggested interview questions (per brief)
 
 ---
 
 ## 14. Open questions
 
-Please answer these so the PRD can move to **Approved** status.
+Items already decided are in [§6.4](#64-confirmed-product-decisions). Remaining questions:
 
 ### Product & UX
 
-1. **Apply UX:** Does the candidate click **Apply** before the test (locked into application session), or only choose **Submit as application** at the end of the test?
+1. **Apply UX:** Does the candidate click **Apply** before the test (starts `application` session), or only choose **Submit as application** at the end after a practice session?
 2. **One app or two?** Single web app with HR/Candidate modes, or separate deployables?
 3. **Candidate feedback on reject:** Does HR send rejection from SkillProof, or is feedback only visible on the candidate’s result page?
 4. **Interview questions:** Should Gemini generate suggested interview questions on the candidate detail view (brief mentions it; mockups show summary only)?
@@ -421,9 +465,9 @@ Please answer these so the PRD can move to **Approved** status.
 
 ### Technical
 
-9. **Backend framework:** FastAPI or NestJS — team decision date?
-10. **Hosting:** Local only, Railway/Render, or school-provided infra?
-11. **Gemini model:** Which model ID (e.g. `gemini-2.0-flash`) and budget cap for demos?
+9. **Backend framework:** FastAPI or NestJS — team decision date?  
+10. **Hosting:** Local only, Railway/Render, or school-provided infra?  
+11. **Gemini model:** Which model ID (e.g. `gemini-2.5-flash`) and budget cap for demos? *(Provider: Gemini — decided.)*
 12. **Data retention:** How long to keep candidate code and audit logs in MVP?
 13. **Email:** Registration confirmation / “application received” — in or out for MVP?
 
@@ -455,19 +499,30 @@ Please answer these so the PRD can move to **Approved** status.
 | **Application** | Candidate submission visible to HR after test + apply submit |
 | **Practice session** | Test completed without applying; hidden from HR |
 | **Skills matrix** | Skills extracted from listing at Check listing |
-| **Band** | `ready_now` / `trainable` / `at_risk` recommendation |
+| **Band** | `ready_now` / `trainable` / `at_risk` recommendation (brief: “not aligned”) |
 
-### B. Reference links
+### B. PRD review notes (May 2026)
+
+| Area | Verdict |
+|------|---------|
+| Alignment with brief & architecture | OK after §6.4 and stat/clarification fixes |
+| Broken doc links | Fixed (personas, architecture) |
+| README.md at repo root | **Out of sync** with PRD — uses 0–5 rubric, no match %, 30–45 min tests, job delete, browse filters; treat **PRD as source of truth** until README is updated |
+| Mockup vs PRD | Early mockups may show skills matrix before Check listing; implementation follows §6.4 (matrix after check) |
+| OpenAPI | Aligned at route level; verify schemas when backend is built |
+
+### C. Reference links
 
 - UI: [`mockups/`](../../mockups/)
 - Architecture: [`docs/architecture/backend-architecture.md`](../architecture/backend-architecture.md)
 - Personas: [`docs/brief/project personas.md`](../brief/project%20personas.md)
 
-### C. Document history
+### D. Document history
 
 | Version | Date | Changes |
 |---------|------|---------|
 | 0.1 | May 2026 | Initial PRD from brief, personas, architecture decisions |
+| 0.2 | May 2026 | Review pass: fixes links, §6.4 decisions, CAND-8/DASH clarity, MoSCoW, review notes |
 
 ---
 
