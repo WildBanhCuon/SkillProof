@@ -110,9 +110,27 @@ The planned architecture separates HR and candidate frontends from a shared Skil
 - **Infrastructure**: PostgreSQL for application data, Redis for sessions and job queues, object storage for code snapshots and logs.
 - **External services**: Google Gemini API and a code sandbox runner such as Judge0, Piston, or a Docker worker.
 
-See [`context/Architecture.png`](context/Architecture.png) for the architecture diagram.
+See [backend architecture](docs/architecture/backend-architecture.md) for system diagrams (Mermaid).
 
-The REST API contract is described in [`openapi.yaml`](openapi.yaml), including route examples for authentication, jobs, AI orchestration, assessments, applications, candidate sessions, results, and sandbox runs.
+The REST API contract is in [`docs/api/openapi.yaml`](docs/api/openapi.yaml), including route examples for authentication, jobs, AI orchestration, assessments, applications, candidate sessions, results, and sandbox runs.
+
+## Project structure
+
+```
+project/
+├── README.md                 # This file
+├── docs/
+│   ├── README.md             # Documentation index
+│   ├── brief/                # Problem & personas
+│   ├── product/              # PRD
+│   ├── architecture/         # Backend design
+│   ├── design/               # UI / mockup prompts
+│   └── api/                  # OpenAPI spec
+├── mockups/                  # UI screenshots (Figma / Lovable)
+└── course/
+    ├── sessions/             # Class slides (sessions 1–2)
+    └── …                     # Course assignment PDF
+```
 
 ## MVP Scope
 
