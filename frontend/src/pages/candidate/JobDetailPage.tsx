@@ -7,6 +7,7 @@ import type { JobPosting, TestSession } from '../../api/types';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Alert } from '../../components/ui/Alert';
+import { MarkdownContent } from '../../components/ui/MarkdownContent';
 
 export function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -55,9 +56,7 @@ export function JobDetailPage() {
       )}
 
       <Card className="mt-6 p-6">
-        <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
-          {job.description}
-        </div>
+        <MarkdownContent content={job.description} />
       </Card>
 
       {job.assessment && (

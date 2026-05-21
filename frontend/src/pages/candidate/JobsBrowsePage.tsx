@@ -4,6 +4,7 @@ import { api } from '../../api/client';
 import type { JobPosting } from '../../api/types';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { markdownExcerpt } from '../../components/ui/MarkdownContent';
 
 export function JobsBrowsePage() {
   const { data: jobs = [], isLoading } = useQuery({
@@ -32,7 +33,7 @@ export function JobsBrowsePage() {
                 {job.company?.name ?? 'Company'}
               </p>
               <p className="mt-3 line-clamp-3 text-sm text-slate-600">
-                {job.description}
+                {markdownExcerpt(job.description)}
               </p>
               {job.assessment && (
                 <p className="mt-4 text-xs text-slate-500">
