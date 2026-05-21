@@ -39,6 +39,11 @@ export class GradingProcessor {
         },
       });
 
+      if (session.status === 'GRADED') {
+        this.logger.log(`Session ${sessionId} already graded, skipping`);
+        return;
+      }
+
       for (const answer of session.answers) {
         const hiddenTests = answer.question.testCases.filter((t) => t.isHidden);
         const runs = await this.judge0.runTests(
@@ -100,8 +105,14 @@ export class GradingProcessor {
       const visibleToCompany =
         session.sessionType === SessionType.APPLICATION;
 
-      await this.prisma.testResult.create({
-        data: {
+      const dimensionRows = grade.dimensionScores.map((d) => ({
+        dimension: dimensionMap[d.dimension] ?? 'TECHNICAL',
+        score0_100: d.score,
+      }));
+
+      await this.prisma.testResult.upsert({
+        where: { sessionId },
+        create: {
           sessionId,
           visibleToCompany,
           overallScore: grade.overallScore,
@@ -111,11 +122,20 @@ export class GradingProcessor {
           strengths: grade.strengths,
           improvements: grade.improvements,
           aiSummary: grade.aiSummary,
+          dimensionScores: { create: dimensionRows },
+        },
+        update: {
+          visibleToCompany,
+          overallScore: grade.overallScore,
+          matchPercent: grade.matchPercent,
+          recommendation:
+            recommendationMap[grade.recommendation] ?? 'TRAINABLE',
+          strengths: grade.strengths,
+          improvements: grade.improvements,
+          aiSummary: grade.aiSummary,
           dimensionScores: {
-            create: grade.dimensionScores.map((d) => ({
-              dimension: dimensionMap[d.dimension] ?? 'TECHNICAL',
-              score0_100: d.score,
-            })),
+            deleteMany: {},
+            create: dimensionRows,
           },
         },
       });

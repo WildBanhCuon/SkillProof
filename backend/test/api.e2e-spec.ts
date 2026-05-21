@@ -1,7 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import { Job } from 'bull';
 import request from 'supertest';
-import { GradingProcessor } from '../src/workers/grading.processor';
 import { createE2eApp } from './setup-e2e-app';
 
 const HR_EMAIL = 'marion@acme.test';
@@ -10,6 +8,25 @@ const PASSWORD = 'Password123!';
 
 function authHeader(token: string) {
   return { Authorization: `Bearer ${token}` };
+}
+
+async function waitForEvaluated(
+  app: INestApplication,
+  sessionId: string,
+  token: string,
+  maxMs = 20000,
+) {
+  const deadline = Date.now() + maxMs;
+  while (Date.now() < deadline) {
+    const res = await request(app.getHttpServer())
+      .get(`/v1/sessions/${sessionId}/result`)
+      .set(authHeader(token));
+    if (res.status === 200 && res.body.status === 'evaluated') {
+      return res;
+    }
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  throw new Error(`Timed out waiting for session ${sessionId} to be graded`);
 }
 
 async function login(
@@ -264,19 +281,12 @@ describe('SkillProof API (e2e)', () => {
       expect(res.body.status).toBe('queued');
     });
 
-    it('runs grading worker synchronously', async () => {
-      const processor = app.get(GradingProcessor);
-      await processor.handle({
-        data: { sessionId },
-      } as Job<{ sessionId: string }>);
-    });
-
     it('GET /v1/sessions/:id/result — evaluated', async () => {
-      const res = await request(app.getHttpServer())
-        .get(`/v1/sessions/${sessionId}/result`)
-        .set(authHeader(candidateToken))
-        .expect(200);
-      expect(res.body.status).toBe('evaluated');
+      const res = await waitForEvaluated(
+        app,
+        sessionId,
+        candidateToken,
+      );
       expect(res.body.overallScore).toBe(78);
     });
   });
