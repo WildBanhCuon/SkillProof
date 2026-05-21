@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Share2, Trophy } from 'lucide-react';
@@ -9,6 +9,7 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { DimensionRadar } from '../../components/charts/DimensionRadar';
 import { bandLabel, bandVariant } from '../../utils/format';
+import { rememberLastResultsJob } from '../../utils/hrNav';
 
 const bands = [
   { id: '', label: 'All' },
@@ -20,6 +21,10 @@ const bands = [
 export function JobResultsPage() {
   const { id: jobId } = useParams<{ id: string }>();
   const [band, setBand] = useState('');
+
+  useEffect(() => {
+    if (jobId) rememberLastResultsJob(jobId);
+  }, [jobId]);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('score');
 

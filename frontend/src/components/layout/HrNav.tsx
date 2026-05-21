@@ -1,8 +1,13 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { Logo } from '../ui/Logo';
 import { Button } from '../ui/Button';
+import {
+  candidatesNavPath,
+  isHrCandidatesNavActive,
+  isHrJobsNavActive,
+} from '../../utils/hrNav';
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -14,6 +19,8 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 export function HrNav() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const candidatesTo = candidatesNavPath(pathname);
 
   const handleLogout = async () => {
     await logout();
@@ -32,10 +39,20 @@ export function HrNav() {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
         <Logo to="/hr/jobs" />
         <nav className="hidden items-center gap-1 md:flex">
-          <NavLink to="/hr/jobs" className={linkClass}>
+          <NavLink
+            to="/hr/jobs"
+            className={linkClass({
+              isActive: isHrJobsNavActive(pathname),
+            })}
+          >
             Jobs
           </NavLink>
-          <NavLink to="/hr/jobs" className={linkClass}>
+          <NavLink
+            to={candidatesTo}
+            className={linkClass({
+              isActive: isHrCandidatesNavActive(pathname),
+            })}
+          >
             Candidates
           </NavLink>
           <span className="cursor-not-allowed rounded-lg px-3 py-2 text-sm text-slate-400">

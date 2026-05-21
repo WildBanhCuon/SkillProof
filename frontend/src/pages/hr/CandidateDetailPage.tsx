@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
@@ -7,6 +8,7 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { DimensionRadar } from '../../components/charts/DimensionRadar';
 import { bandLabel, bandVariant } from '../../utils/format';
+import { rememberLastResultsJob } from '../../utils/hrNav';
 
 interface DetailResponse {
   applicationId: string;
@@ -31,6 +33,10 @@ interface DetailResponse {
 
 export function CandidateDetailPage() {
   const { id: jobId, applicationId } = useParams();
+
+  useEffect(() => {
+    if (jobId) rememberLastResultsJob(jobId);
+  }, [jobId]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['candidate-detail', jobId, applicationId],
