@@ -414,7 +414,7 @@ Based on [mockups](../../mockups/) (English UI):
 | Layer | Decision / recommendation |
 |-------|---------------------------|
 | Frontend | React + TypeScript + Vite (recreate mockups, not Lovable) |
-| Backend | REST API — FastAPI or NestJS (team TBD) |
+| Backend | REST API — NestJS (team TBD) |
 | Database | PostgreSQL |
 | Cache / queue | Redis (sandbox jobs, sessions) |
 | AI | Google Gemini API |
@@ -465,9 +465,10 @@ Items already decided are in [§6.4](#64-confirmed-product-decisions). Remaining
 
 ### Technical
 
-9. **Backend framework:** FastAPI or NestJS — team decision date?  
-10. **Hosting:** Local only, Railway/Render, or school-provided infra?  
-11. **Gemini model:** Which model ID (e.g. `gemini-2.5-flash`) and budget cap for demos? *(Provider: Gemini — decided.)*
+9. **Backend framework:** NestJS — team decision date?
+10. **Hosting:** Local only, Railway/Render, or school-provided infra?
+11. **Gemini model:** Which model ID (e.g. `gemini-2.5-flash`) and budget cap for demos?
+>>>>>>> 172533f (Remove uncertainties from context docs)
 12. **Data retention:** How long to keep candidate code and audit logs in MVP?
 13. **Email:** Registration confirmation / “application received” — in or out for MVP?
 

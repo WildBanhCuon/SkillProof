@@ -114,11 +114,16 @@ See [backend architecture](docs/architecture/backend-architecture.md) for system
 
 The REST API contract is in [`docs/api/openapi.yaml`](docs/api/openapi.yaml), including route examples for authentication, jobs, AI orchestration, assessments, applications, candidate sessions, results, and sandbox runs.
 
+The backend implementation starts in [`backend/`](backend/), currently initialized as a NestJS API with the authentication and tenancy layer from PRD §8.1.
+
 ## Project structure
 
 ```
 project/
 ├── README.md                 # This file
+├── docker-compose.yaml       # Local API, PostgreSQL, Redis stack
+├── Makefile                  # Development command aliases
+├── backend/                  # NestJS API
 ├── docs/
 │   ├── README.md             # Documentation index
 │   ├── brief/                # Problem & personas

@@ -90,7 +90,7 @@ flowchart TB
 | Layer | Recommendation | Notes |
 |--------|----------------|--------|
 | **HR + Candidate UI** | React + TypeScript + Vite | Recreate [mockups](../../mockups/); call REST API |
-| **API** | **FastAPI** (Python) or **NestJS** (TypeScript) | Team can pick; both fit Gemini + Judge0 |
+| **API** | **NestJS** (TypeScript) | Team can pick; both fit Gemini + Judge0 |
 | **Database** | PostgreSQL | Relational model below |
 | **Cache / queue** | Redis | Sandbox job queue, rate limits, session TTL |
 | **AI** | `google-generativeai` / Vertex AI | Structured JSON outputs per pipeline |
