@@ -32,17 +32,44 @@ export function configureApiClient(config: {
   onUnauthorized = config.onUnauthorized;
 }
 
-async function parseError(res: Response): Promise<string> {
-  try {
-    const data = await res.json();
-    if (typeof data === 'object' && data && 'message' in data) {
-      const msg = (data as { message: string | string[] }).message;
-      return Array.isArray(msg) ? msg.join(', ') : msg;
+type NestErrorBody = {
+  message?: string | string[];
+  error?: string;
+  statusCode?: number;
+};
+
+async function parseErrorResponse(
+  res: Response,
+): Promise<{ message: string; body: unknown }> {
+  const text = await res.text();
+  let body: unknown = text;
+  if (text) {
+    try {
+      body = JSON.parse(text) as unknown;
+    } catch {
+      /* plain text body */
     }
-  } catch {
-    /* ignore */
   }
-  return res.statusText || `Request failed (${res.status})`;
+
+  if (typeof body === 'object' && body !== null) {
+    const data = body as NestErrorBody;
+    if (data.message) {
+      const msg = Array.isArray(data.message)
+        ? data.message.join('; ')
+        : data.message;
+      if (msg.trim()) return { message: msg.trim(), body };
+    }
+    if (typeof data.error === 'string' && data.error.trim()) {
+      return { message: data.error.trim(), body };
+    }
+  }
+
+  if (typeof body === 'string' && body.trim()) {
+    return { message: body.trim(), body };
+  }
+
+  const fallback = res.statusText?.trim() || `HTTP ${res.status}`;
+  return { message: fallback, body };
 }
 
 async function refreshAccessToken(): Promise<boolean> {
@@ -87,7 +114,8 @@ export async function apiRequest<T>(
   }
 
   if (!res.ok) {
-    throw new ApiError(await parseError(res), res.status, await res.text());
+    const { message, body } = await parseErrorResponse(res);
+    throw new ApiError(message, res.status, body);
   }
 
   if (res.status === 204) return undefined as T;

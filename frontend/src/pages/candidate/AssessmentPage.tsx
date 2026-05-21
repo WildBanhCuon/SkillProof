@@ -10,7 +10,8 @@ import {
   Loader2,
   Play,
 } from 'lucide-react';
-import { ApiError, api } from '../../api/client';
+import { api } from '../../api/client';
+import { formatApiError } from '../../utils/errors';
 import type { TestRun, TestSession } from '../../api/types';
 import { Logo } from '../../components/ui/Logo';
 import { Button } from '../../components/ui/Button';
@@ -72,7 +73,7 @@ export function AssessmentPage() {
         submittedCode: codes[q.id] ?? q.starterCode,
       });
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Save failed');
+      setError(formatApiError(e, 'Autosave answer'));
     } finally {
       setSaving(false);
     }
@@ -108,7 +109,7 @@ export function AssessmentPage() {
       );
       setRuns(res.runs);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Run failed');
+      setError(formatApiError(e, 'Run public tests'));
     } finally {
       setRunning(false);
     }
@@ -125,7 +126,7 @@ export function AssessmentPage() {
         state: { sessionType: session?.sessionType },
       });
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Submit failed');
+      setError(formatApiError(e, 'Submit assessment'));
       setSubmitting(false);
     }
   };

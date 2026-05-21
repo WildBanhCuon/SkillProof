@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ApiError, api } from '../../api/client';
+import { api } from '../../api/client';
+import { formatApiError } from '../../utils/errors';
 import type { JobPosting, TestSession } from '../../api/types';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -29,7 +30,7 @@ export function JobDetailPage() {
       });
       navigate(`/sessions/${session.id}`, { state: { session } });
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Could not start session');
+      setError(formatApiError(e, 'Start assessment session'));
     } finally {
       setLoading('');
     }

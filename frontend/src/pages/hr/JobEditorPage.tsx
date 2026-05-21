@@ -2,13 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Sparkles, Wand2 } from 'lucide-react';
-import { ApiError, api } from '../../api/client';
+import { api } from '../../api/client';
 import type { JobPosting, ListingIssue } from '../../api/types';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Alert } from '../../components/ui/Alert';
 import { wordCount, statusLabel } from '../../utils/format';
+import { formatApiError } from '../../utils/errors';
 
 const DEFAULT_DESCRIPTION = `We are hiring a Junior Frontend Developer to join our product team.
 
@@ -71,7 +72,7 @@ export function JobEditorPage() {
       setSuccess('Draft saved');
       queryClient.invalidateQueries({ queryKey: ['hr', 'jobs'] });
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Save failed');
+      setError(formatApiError(e, 'Save draft'));
     } finally {
       setBusy('');
     }
@@ -100,7 +101,12 @@ export function JobEditorPage() {
       setIssues((analysis?.issues as ListingIssue[]) ?? []);
       queryClient.invalidateQueries({ queryKey: ['job', idToUse] });
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Check listing failed');
+      setError(
+        formatApiError(
+          e,
+          'AI listing check failed — ensure GEMINI_API_KEY is set in backend/.env',
+        ),
+      );
     } finally {
       setBusy('');
     }
@@ -119,7 +125,7 @@ export function JobEditorPage() {
       setSuccess('Suggestions applied to description');
       queryClient.invalidateQueries({ queryKey: ['job', jobId] });
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Apply failed');
+      setError(formatApiError(e, 'Apply suggestions'));
     } finally {
       setBusy('');
     }
@@ -135,7 +141,7 @@ export function JobEditorPage() {
       queryClient.invalidateQueries({ queryKey: ['hr', 'jobs'] });
       queryClient.invalidateQueries({ queryKey: ['job', jobId] });
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Publish failed');
+      setError(formatApiError(e, 'Publish listing'));
     } finally {
       setBusy('');
     }

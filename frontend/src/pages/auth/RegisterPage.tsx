@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ApiError } from '../../api/client';
+import { formatApiError } from '../../utils/errors';
 import { useAuth } from '../../auth/AuthContext';
 import type { UserRole } from '../../api/types';
 import { Button } from '../../components/ui/Button';
@@ -43,7 +43,7 @@ export function RegisterPage() {
         navigate('/jobs');
       }
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Registration failed');
+      setError(formatApiError(err, 'Registration'));
     } finally {
       setLoading(false);
     }

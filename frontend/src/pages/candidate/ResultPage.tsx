@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { ApiError } from '../../api/client';
+import { formatApiError } from '../../utils/errors';
 import type { SessionResult } from '../../api/types';
 import { pollSessionResult } from '../../utils/poll';
 import { Logo } from '../../components/ui/Logo';
@@ -29,7 +29,7 @@ export function ResultPage() {
         if (!cancelled) setResult(res);
       } catch (e) {
         if (!cancelled) {
-          setError(e instanceof ApiError ? e.message : 'Could not load results');
+          setError(formatApiError(e, 'Load assessment results'));
         }
       } finally {
         if (!cancelled) setLoading(false);
