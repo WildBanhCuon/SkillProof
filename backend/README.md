@@ -91,6 +91,19 @@ See [backend-architecture.md](../docs/architecture/backend-architecture.md).
 | `npm run build` | Production build |
 | `npm run prisma:migrate` | Create/apply migrations (dev) |
 | `npm run prisma:seed` | Seed demo users |
+| `npm test` | E2E tests (all API routes; requires Docker + seed) |
+
+## E2E tests
+
+End-to-end tests live in `test/api.e2e-spec.ts`. They exercise every `/v1` route in order (auth → HR job lifecycle → candidate session → results → logout).
+
+- **Mocks:** Gemini and Judge0 are stubbed so no API key or sandbox is required for tests.
+- **Database:** Uses your `.env` `DATABASE_URL` (Postgres on `127.0.0.1:54333`). Run `docker compose up -d`, `npx prisma migrate deploy`, and `npm run prisma:seed` first.
+- **Redis:** Bull queue must be reachable (`redis://localhost:6379`) for app bootstrap; grading is invoked synchronously in tests after submit.
+
+```bash
+npm test
+```
 
 ## Postman
 
