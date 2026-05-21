@@ -128,12 +128,35 @@ npm run start:dev
 
 API: `http://localhost:3000/v1` — full route list in [backend/README.md](backend/README.md).
 
+## Run frontend
+
+```bash
+cd frontend
+npm install
+cp .env.example .env
+npm run dev
+```
+
+App: http://localhost:5173 (proxies `/v1` to the API in dev). See [frontend/README.md](frontend/README.md).
+
+**Full stack:** start Docker + backend (`npm run start:dev`), then `npm run dev` in `frontend/`.
+
+Demo logins after `npm run prisma:seed` in `backend/`:
+
+| Role | Email | Password |
+|------|-------|----------|
+| HR | marion@acme.test | Password123! |
+| Candidate | sofiane@test.com | Password123! |
+
+The seed includes a **published** Junior Frontend Developer role with one graded application — open HR results at `/hr/jobs` → **View results** on the demo job.
+
 ## Project structure
 
 ```
 project/
 ├── README.md                 # This file
 ├── backend/                  # NestJS API (Prisma, Gemini, Judge0)
+├── frontend/                 # React + Vite SPA (HR + candidate flows)
 ├── docs/
 │   ├── README.md             # Documentation index
 │   ├── brief/                # Problem & personas

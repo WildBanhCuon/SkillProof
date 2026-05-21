@@ -1,0 +1,137 @@
+export type UserRole = 'hr' | 'candidate';
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  role: UserRole;
+  fullName: string;
+  companyId?: string;
+  companyName?: string;
+}
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface ListingIssue {
+  type: string;
+  severity: 'low' | 'medium' | 'high';
+  message: string;
+  excerpt?: string;
+}
+
+export interface SkillRequirement {
+  id?: string;
+  skillName: string;
+  importance: string;
+  expectedLevel: string;
+  testable: boolean;
+}
+
+export interface JobPosting {
+  id: string;
+  title: string;
+  description: string;
+  suggestedDescription?: string | null;
+  status: string;
+  publishedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  skillRequirements?: SkillRequirement[];
+  listingAnalyses?: { issues: ListingIssue[] }[];
+  company?: { name: string };
+  assessment?: {
+    id: string;
+    durationMinutes: number;
+    totalPoints: number;
+    questions?: { id: string }[];
+  };
+}
+
+export interface AssessmentQuestion {
+  id: string;
+  orderIndex: number;
+  title: string;
+  instructions: string;
+  starterCode: string;
+  points: number;
+  language: string;
+}
+
+export interface SessionQuestion {
+  id: string;
+  orderIndex: number;
+  title: string;
+  instructions: string;
+  starterCode: string;
+  points: number;
+  language: string;
+}
+
+export interface TestSession {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  companyName: string;
+  sessionType: string;
+  status: string;
+  startedAt: string;
+  expiresAt: string;
+  durationMinutes?: number;
+  totalPoints?: number;
+  questions: SessionQuestion[];
+}
+
+export interface TestRun {
+  testCaseId: string;
+  passed: boolean;
+  stdout: string;
+  stderr: string;
+  status: string;
+  durationMs?: number;
+}
+
+export interface DimensionScore {
+  dimension: string;
+  score: number;
+}
+
+export interface CandidateRow {
+  applicationId: string;
+  rank?: number;
+  isTopMatch?: boolean;
+  candidate: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
+  overallScore: number;
+  matchPercent: number;
+  recommendation: string;
+  strengths: string[];
+  improvements: string[];
+  aiSummary: string;
+  dimensionScores: DimensionScore[];
+  appliedAt?: string;
+}
+
+export interface JobStats {
+  jobId: string;
+  applicationsReceived: number;
+  verifiedMatches: number;
+  topPerformers: number;
+}
+
+export interface SessionResult {
+  sessionId: string;
+  status: 'grading' | 'evaluated';
+  overallScore?: number;
+  matchPercent?: number;
+  recommendation?: string;
+  strengths?: string[];
+  improvements?: string[];
+  aiSummary?: string;
+  dimensionScores?: DimensionScore[];
+  visibleToCompany?: boolean;
+}
