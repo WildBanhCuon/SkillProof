@@ -20,3 +20,19 @@ body {
 #root {
   min-height: 100vh;
 }
+
+@layer base {
+  a,
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  label[for],
+  select:not(:disabled),
+  summary {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  select:disabled {
+    cursor: not-allowed;
+  }
+}

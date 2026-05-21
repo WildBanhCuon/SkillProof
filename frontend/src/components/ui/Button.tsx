@@ -31,7 +31,7 @@ export function Button({
   };
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-lg transition-colors ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg transition-colors disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >
       {children}

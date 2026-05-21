@@ -1,5 +1,7 @@
 import {
   BadGatewayException,
+  HttpException,
+  HttpStatus,
   Injectable,
   Logger,
 } from '@nestjs/common';
@@ -38,6 +40,44 @@ export class GeminiService {
     return new GoogleGenerativeAI(key);
   }
 
+  /** Map Google SDK / HTTP errors to messages shown in the UI. */
+  private throwGeminiError(pipeline: string, err: unknown): never {
+    const raw = err instanceof Error ? err.message : String(err);
+
+    if (
+      raw.includes('429') ||
+      raw.toLowerCase().includes('too many requests')
+    ) {
+      if (
+        raw.includes('prepayment credits are depleted') ||
+        raw.includes('billing')
+      ) {
+        throw new HttpException(
+          'Gemini prepaid credits are depleted. Add billing or top up at https://ai.studio/projects (see https://ai.google.dev/gemini-api/docs/billing#prepay).',
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+      throw new HttpException(
+        'Gemini rate limit exceeded. Wait a moment and try again.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
+    if (
+      raw.includes('API key not valid') ||
+      raw.includes('API_KEY_INVALID') ||
+      raw.includes('403')
+    ) {
+      throw new BadGatewayException(
+        'GEMINI_API_KEY is invalid or lacks permission for this model.',
+      );
+    }
+
+    const bracketDetail = raw.match(/\]\s+(.+)$/s)?.[1]?.trim();
+    const detail = (bracketDetail ?? raw).slice(0, 400);
+    throw new BadGatewayException(`Gemini ${pipeline} failed: ${detail}`);
+  }
+
   private async generateJson<T>(
     pipeline: string,
     referenceId: string | undefined,
@@ -74,9 +114,7 @@ export class GeminiService {
       return validated;
     } catch (err) {
       this.logger.error(`Gemini ${pipeline} failed`, err);
-      throw new BadGatewayException(
-        `AI pipeline ${pipeline} failed. Check GEMINI_API_KEY and try again.`,
-      );
+      this.throwGeminiError(pipeline, err);
     }
   }
 

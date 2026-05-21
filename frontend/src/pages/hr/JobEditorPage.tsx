@@ -101,12 +101,7 @@ export function JobEditorPage() {
       setIssues((analysis?.issues as ListingIssue[]) ?? []);
       queryClient.invalidateQueries({ queryKey: ['job', idToUse] });
     } catch (e) {
-      setError(
-        formatApiError(
-          e,
-          'AI listing check failed — ensure GEMINI_API_KEY is set in backend/.env',
-        ),
-      );
+      setError(formatApiError(e, 'AI listing check'));
     } finally {
       setBusy('');
     }
