@@ -114,18 +114,33 @@ See [backend architecture](docs/architecture/backend-architecture.md) for system
 
 The REST API contract is in [`docs/api/openapi.yaml`](docs/api/openapi.yaml), including route examples for authentication, jobs, AI orchestration, assessments, applications, candidate sessions, results, and sandbox runs.
 
+## Run backend
+
+```bash
+cd backend
+cp .env.example .env   # set GEMINI_API_KEY, JWT_SECRET
+docker compose up -d
+npm install
+npx prisma migrate deploy
+npm run prisma:seed
+npm run start:dev
+```
+
+API: `http://localhost:3000/v1` — full route list in [backend/README.md](backend/README.md).
+
 ## Project structure
 
 ```
 project/
 ├── README.md                 # This file
+├── backend/                  # NestJS API (Prisma, Gemini, Judge0)
 ├── docs/
 │   ├── README.md             # Documentation index
 │   ├── brief/                # Problem & personas
 │   ├── product/              # PRD
 │   ├── architecture/         # Backend design
 │   ├── design/               # UI / mockup prompts
-│   └── api/                  # OpenAPI spec
+│   └── api/                  # OpenAPI draft + PRD route notes
 ├── mockups/                  # UI screenshots (Figma / Lovable)
 └── course/
     ├── sessions/             # Class slides (sessions 1–2)

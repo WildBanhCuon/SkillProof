@@ -6,7 +6,7 @@
 | [product/](./product/) | [PRD](./product/PRD.md) |
 | [architecture/](./architecture/) | [Backend architecture](./architecture/backend-architecture.md) |
 | [design/](./design/) | UI spec / Lovable prompt |
-| [api/](./api/) | OpenAPI contract |
+| [api/](./api/) | OpenAPI draft + [implemented routes](../../backend/README.md) |
 
 ## Quick links
 

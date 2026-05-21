@@ -1,0 +1,477 @@
+{
+  "info": {
+    "_postman_id": "skillproof-mvp-collection",
+    "name": "SkillProof API",
+    "description": "SkillProof MVP — PRD-aligned routes.\n\n**Setup:** Import `SkillProof.local.postman_environment.json` or set `baseUrl` to `http://localhost:3000/v1`.\n\n**Quick test:**\n1. Health\n2. Auth → Login HR (saves token)\n3. Jobs → Create → Check listing → Accept → Apply suggestions → Publish\n4. Auth → Login Candidate\n5. Sessions → Start (application) → Save answer → Submit → Get result (poll)\n6. Login HR → Stats → Candidates",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000/v1" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "jobId", "value": "" },
+    { "key": "sessionId", "value": "" },
+    { "key": "questionId", "value": "" },
+    { "key": "applicationId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register HR",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"hr.demo@acme.test\",\n  \"password\": \"Password123!\",\n  \"fullName\": \"Demo HR\",\n  \"companyName\": \"Demo Company\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/hr/register"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', j.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', j.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register Candidate",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"candidate.demo@test.com\",\n  \"password\": \"Password123!\",\n  \"displayName\": \"Demo Candidate\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/candidate/register"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', j.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', j.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login HR (seed)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"marion@acme.test\",\n  \"password\": \"Password123!\",\n  \"role\": \"hr\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', j.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', j.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Candidate (seed)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sofiane@test.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"candidate\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', j.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', j.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/refresh"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.accessToken) pm.collectionVariables.set('accessToken', j.accessToken);",
+                  "if (j.refreshToken) pm.collectionVariables.set('refreshToken', j.refreshToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "HR — Jobs",
+      "item": [
+        {
+          "name": "Create job (draft)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Junior Frontend Developer\",\n  \"description\": \"We are hiring a Junior Frontend Developer to join our product team.\\n\\nResponsibilities:\\n- Build features in React and TypeScript\\n- Collaborate with designers and backend engineers\\n\\nRequirements:\\n- 3+ years of professional experience\\n- React, TypeScript, HTML, CSS, Git\\n- Kubernetes and AWS experience required\\n- Strong communication skills\"\n}"
+            },
+            "url": "{{baseUrl}}/jobs"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.id) pm.collectionVariables.set('jobId', j.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List jobs (HR)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/jobs",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs"],
+              "query": [{ "key": "status", "value": "DRAFT", "disabled": true }]
+            }
+          }
+        },
+        {
+          "name": "Get job by id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/jobs/{{jobId}}"
+          }
+        },
+        {
+          "name": "Update job (draft)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Junior Frontend Developer\",\n  \"description\": \"Updated draft description for junior frontend role at our SaaS company.\"\n}"
+            },
+            "url": "{{baseUrl}}/jobs/{{jobId}}"
+          }
+        },
+        {
+          "name": "Check listing (Gemini)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/jobs/{{jobId}}/check-listing"
+          }
+        },
+        {
+          "name": "Accept suggestions (Gemini)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/jobs/{{jobId}}/accept-suggestions"
+          }
+        },
+        {
+          "name": "Apply suggestions",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/jobs/{{jobId}}/apply-suggestions"
+          }
+        },
+        {
+          "name": "Publish job (Gemini assessment)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/jobs/{{jobId}}/publish"
+          }
+        },
+        {
+          "name": "Get assessment",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/jobs/{{jobId}}/assessment"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j?.questions?.[0]?.id) pm.collectionVariables.set('questionId', j.questions[0].id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Archive job",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/jobs/{{jobId}}/archive"
+          }
+        }
+      ]
+    },
+    {
+      "name": "HR — Results",
+      "item": [
+        {
+          "name": "Job stats",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/jobs/{{jobId}}/stats"
+          }
+        },
+        {
+          "name": "Ranked candidates",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/jobs/{{jobId}}/candidates?sort=score",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "{{jobId}}", "candidates"],
+              "query": [
+                { "key": "sort", "value": "score" },
+                { "key": "band", "value": "ready_now", "disabled": true },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j?.candidates?.[0]?.applicationId) {",
+                  "  pm.collectionVariables.set('applicationId', j.candidates[0].applicationId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Candidate detail",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/jobs/{{jobId}}/candidates/{{applicationId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Candidate — Jobs & Sessions",
+      "item": [
+        {
+          "name": "List published jobs",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/jobs"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "const jobs = Array.isArray(data) ? data : [];",
+                  "if (jobs[0]?.id) pm.collectionVariables.set('jobId', jobs[0].id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get published job",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/jobs/{{jobId}}"
+          }
+        },
+        {
+          "name": "Start session (practice)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mode\": \"practice\"\n}"
+            },
+            "url": "{{baseUrl}}/jobs/{{jobId}}/sessions"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.id) pm.collectionVariables.set('sessionId', j.id);",
+                  "if (j?.questions?.[0]?.id) pm.collectionVariables.set('questionId', j.questions[0].id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Start session (application)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mode\": \"application\"\n}"
+            },
+            "url": "{{baseUrl}}/jobs/{{jobId}}/sessions"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.id) pm.collectionVariables.set('sessionId', j.id);",
+                  "if (j?.questions?.[0]?.id) pm.collectionVariables.set('questionId', j.questions[0].id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Save answer",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"submittedCode\": \"function App() {\\n  const [users, setUsers] = React.useState([]);\\n  React.useEffect(() => {\\n    fetch('https://api.example.com/users')\\n      .then(r => r.json())\\n      .then(setUsers);\\n  }, []);\\n  return <ul>{users.map(u => <li key={u.id}>{u.name}</li>)}</ul>;\\n}\",\n  \"notes\": \"Handled loading informally\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{sessionId}}/answers/{{questionId}}"
+          }
+        },
+        {
+          "name": "Run code (public tests)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/sessions/{{sessionId}}/answers/{{questionId}}/run"
+          }
+        },
+        {
+          "name": "Submit session",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/sessions/{{sessionId}}/submit"
+          }
+        },
+        {
+          "name": "Get session result (poll)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/sessions/{{sessionId}}/result"
+          }
+        }
+      ]
+    }
+  ]
+}

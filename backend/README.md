@@ -29,6 +29,8 @@ npm run start:dev
 
 API base: `http://localhost:3000/v1`
 
+Postgres is exposed on **port 54333** (not 5432) to avoid conflicting with a local PostgreSQL install on Windows. Use `127.0.0.1` in `DATABASE_URL`.
+
 Health: `GET /v1/health`
 
 ## Seed accounts
@@ -89,6 +91,15 @@ See [backend-architecture.md](../docs/architecture/backend-architecture.md).
 | `npm run build` | Production build |
 | `npm run prisma:migrate` | Create/apply migrations (dev) |
 | `npm run prisma:seed` | Seed demo users |
+
+## Postman
+
+Import into Postman:
+
+- Collection: [`postman/SkillProof.postman_collection.json`](postman/SkillProof.postman_collection.json)
+- Environment: [`postman/SkillProof.local.postman_environment.json`](postman/SkillProof.local.postman_environment.json)
+
+Login requests auto-save `accessToken`, `refreshToken`, `jobId`, `sessionId`, and `questionId` to collection variables.
 
 ## Notes
 
