@@ -236,6 +236,12 @@ Login requests auto-save `accessToken`, `refreshToken`, `jobId`, `sessionId`, an
 
 
 
+## Production
+
+- **API base:** [https://skillproof-api-mxjo.onrender.com/v1](https://skillproof-api-mxjo.onrender.com/v1)
+- **Health:** [https://skillproof-api-mxjo.onrender.com/v1/health](https://skillproof-api-mxjo.onrender.com/v1/health)
+- **Frontend:** [https://skillproof-z3j9.onrender.com/](https://skillproof-z3j9.onrender.com/)
+
 ## Deploy on Render
 
 | Setting | Value |
@@ -260,7 +266,7 @@ Create **PostgreSQL** and **Key Value (Redis)** in the **same region** as the we
 | `JWT_SECRET` | Long random string (you generate) |
 | `GEMINI_API_KEY` | Google AI Studio key |
 | `GEMINI_MODEL` | `gemini-2.0-flash` |
-| `CORS_ORIGINS` | Your frontend URL, e.g. `https://skillproof-web.onrender.com` (add `http://localhost:5173` for local dev) |
+| `CORS_ORIGINS` | `https://skillproof-z3j9.onrender.com,http://localhost:5173` |
 
 Optional: `JWT_ACCESS_EXPIRES`, `JWT_REFRESH_EXPIRES`, `PORT` (Render sets `PORT` automatically).
 
@@ -268,7 +274,7 @@ Optional: `JWT_ACCESS_EXPIRES`, `JWT_REFRESH_EXPIRES`, `PORT` (Render sets `PORT
 
 1. Open **Shell** on the API service.
 2. Run: `npm run prisma:seed`
-3. Hit `GET https://<your-api>.onrender.com/v1/health`
+3. Hit `GET https://skillproof-api-mxjo.onrender.com/v1/health`
 
 ### Build succeeded but deploy exits with status 1
 

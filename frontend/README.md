@@ -2,6 +2,11 @@
 
 React + Vite frontend for the SkillProof MVP. UI follows the [Lovable mockups](../mockups/) and [design spec](../docs/design/Lovable%20mockups%20prompt.md).
 
+## Production
+
+- **App:** [https://skillproof-z3j9.onrender.com/](https://skillproof-z3j9.onrender.com/)
+- **API:** `https://skillproof-api-mxjo.onrender.com/v1` (set as `VITE_API_URL` at build time on Render)
+
 ## Prerequisites
 
 - Node.js 20+
@@ -60,7 +65,7 @@ A **published demo job** (seed: Junior Frontend Developer) with one graded candi
 
 | Key | Value |
 |-----|--------|
-| `VITE_API_URL` | `https://<your-api>.onrender.com/v1` |
+| `VITE_API_URL` | `https://skillproof-api-mxjo.onrender.com/v1` |
 
 **Redirects:** add rewrite `/*` → `/index.html` for React Router.
 

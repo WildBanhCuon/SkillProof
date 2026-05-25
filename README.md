@@ -197,6 +197,16 @@ SkillProof is designed to improve measurable hiring outcomes:
 - Lower mis-hire rate measured 3-6 months after hiring.
 - Faster time-to-fill for junior tech roles.
 
+## Live deployment (Render)
+
+| Service | URL |
+|---------|-----|
+| **Web app** | [https://skillproof-z3j9.onrender.com/](https://skillproof-z3j9.onrender.com/) |
+| **API** | [https://skillproof-api-mxjo.onrender.com/v1](https://skillproof-api-mxjo.onrender.com/v1) |
+| **Health check** | [https://skillproof-api-mxjo.onrender.com/v1/health](https://skillproof-api-mxjo.onrender.com/v1/health) |
+
+Deployed from the `deploy` branch. Demo accounts (after `npm run prisma:seed` on the API): `marion@acme.test` / `sofiane@test.com` — password `Password123!`.
+
 ## Links
 
 - Repository: [https://github.com/WildBanhCuon/SkillProof](https://github.com/WildBanhCuon/SkillProof)
