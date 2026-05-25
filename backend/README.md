@@ -272,9 +272,27 @@ Optional: `JWT_ACCESS_EXPIRES`, `JWT_REFRESH_EXPIRES`, `PORT` (Render sets `PORT
 
 ### After first successful deploy
 
-1. Open **Shell** on the API service.
-2. Run: `npm run prisma:seed`
-3. Hit `GET https://skillproof-api-mxjo.onrender.com/v1/health`
+1. Seed demo data (see **Seed without Render Shell** below if Shell is unavailable).
+2. Hit `GET https://skillproof-api-mxjo.onrender.com/v1/health`
+
+### Seed without Render Shell
+
+If your Render plan has no Shell, run the seed **from your machine** against the production database:
+
+1. In Render → Postgres → **Connections**, copy the **External** database URL (add `?sslmode=require` if needed).
+2. Locally:
+
+```bash
+cd backend
+# One-off — do not commit this URL
+set DATABASE_URL=postgresql://...   # Windows CMD
+# export DATABASE_URL=postgresql://...   # macOS/Linux
+npm run prisma:seed
+```
+
+3. Unset `DATABASE_URL` afterward or close the terminal.
+
+Alternatively, register a new HR account and job via the UI at [https://skillproof-z3j9.onrender.com/](https://skillproof-z3j9.onrender.com/) — seed is only needed for pre-filled demo data (`marion@acme.test`, demo job, graded candidate).
 
 ### Build succeeded but deploy exits with status 1
 

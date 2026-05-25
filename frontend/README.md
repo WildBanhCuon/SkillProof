@@ -65,7 +65,7 @@ A **published demo job** (seed: Junior Frontend Developer) with one graded candi
 
 | Key | Value |
 |-----|--------|
-| `VITE_API_URL` | `https://skillproof-api-mxjo.onrender.com/v1` |
+| `VITE_API_URL` | `https://skillproof-api-mxjo.onrender.com/v1` (no trailing slash) |
 
 **Redirects:** add rewrite `/*` → `/index.html` for React Router.
 

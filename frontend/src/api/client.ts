@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL ?? '/v1';
+/** Base URL without trailing slash, e.g. https://api.example.com/v1 */
+const API_URL = (import.meta.env.VITE_API_URL ?? '/v1').replace(/\/+$/, '');
 
 export class ApiError extends Error {
   constructor(

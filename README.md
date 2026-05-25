@@ -205,7 +205,11 @@ SkillProof is designed to improve measurable hiring outcomes:
 | **API** | [https://skillproof-api-mxjo.onrender.com/v1](https://skillproof-api-mxjo.onrender.com/v1) |
 | **Health check** | [https://skillproof-api-mxjo.onrender.com/v1/health](https://skillproof-api-mxjo.onrender.com/v1/health) |
 
-Deployed from the `deploy` branch. Demo accounts (after `npm run prisma:seed` on the API): `marion@acme.test` / `sofiane@test.com` — password `Password123!`.
+Deployed from the `deploy` branch.
+
+**Frontend API URL:** set `VITE_API_URL` to `https://skillproof-api-mxjo.onrender.com/v1` with **no trailing slash** (or redeploy after the latest frontend fix, which strips trailing slashes automatically).
+
+Demo accounts (after seed — see [backend/README.md](backend/README.md#seed-without-render-shell)): `marion@acme.test` / `sofiane@test.com` — password `Password123!`. You can also **register new accounts** without seeding.
 
 ## Links
 
