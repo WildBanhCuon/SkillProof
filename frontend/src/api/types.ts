@@ -43,7 +43,9 @@ export type ProfileFieldKey =
 export interface CandidateProfileData {
   displayName: string;
   bio: string | null;
+  phoneCountryCode: string | null;
   phone: string | null;
+  phoneFormatted?: string | null;
   linkedInUrl: string | null;
   portfolioUrl: string | null;
   githubUrl: string | null;

@@ -1,6 +1,7 @@
 import { ExternalLink } from 'lucide-react';
 import type { CandidateProfileData } from '../../data/profileFields';
 import { profileFieldLabel } from '../../data/profileFields';
+import { formatPhoneDisplay } from '../../data/phoneCountryCodes';
 import { Card } from '../ui/Card';
 
 const LINK_KEYS = [
@@ -61,12 +62,16 @@ export function CandidateProfileCard({
             <dd className="mt-0.5 text-slate-900">{email}</dd>
           </div>
         )}
-        {profile.phone && (
+        {(profile.phoneFormatted ||
+          formatPhoneDisplay(profile.phoneCountryCode, profile.phone)) && (
           <div>
             <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Phone
             </dt>
-            <dd className="mt-0.5 text-slate-900">{profile.phone}</dd>
+            <dd className="mt-0.5 text-slate-900">
+              {profile.phoneFormatted ??
+                formatPhoneDisplay(profile.phoneCountryCode, profile.phone)}
+            </dd>
           </div>
         )}
         {profile.bio && (
@@ -96,7 +101,8 @@ export function CandidateProfileCard({
       </dl>
 
       {!profile.bio &&
-        !profile.phone &&
+        !profile.phoneFormatted &&
+        !formatPhoneDisplay(profile.phoneCountryCode, profile.phone) &&
         links.length === 0 && (
           <p className="mt-4 text-sm text-slate-500">
             The candidate has not filled in additional profile details yet.

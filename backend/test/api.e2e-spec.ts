@@ -294,11 +294,14 @@ describe('SkillProof API (e2e)', () => {
         .patch('/v1/candidate/profile')
         .set(authHeader(candidateToken))
         .send({
-          phone: '+32 470 00 00 00',
+          phoneCountryCode: '+32',
+          phone: '470 00 00 00',
           resumeUrl: 'https://example.com/cv.pdf',
         })
         .expect(200);
-      expect(res.body.profile.phone).toBe('+32 470 00 00 00');
+      expect(res.body.profile.phoneCountryCode).toBe('+32');
+      expect(res.body.profile.phone).toBe('470 00 00 00');
+      expect(res.body.profile.phoneFormatted).toBe('+32 470 00 00 00');
       expect(res.body.profile.resumeUrl).toBe('https://example.com/cv.pdf');
     });
 
@@ -418,7 +421,7 @@ describe('SkillProof API (e2e)', () => {
         .expect(200);
       expect(res.body.applicationId).toBe(applicationId);
       expect(res.body.candidate.profile).toBeDefined();
-      expect(res.body.candidate.profile.phone).toBe('+32 470 00 00 00');
+      expect(res.body.candidate.profile.phoneFormatted).toBe('+32 470 00 00 00');
       expect(res.body.requiredProfileFields).toContain('phone');
     });
 

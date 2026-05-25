@@ -6,6 +6,8 @@ import {
   CandidateProfileData,
   EMPTY_PROFILE,
 } from '../../data/profileFields';
+import { DEFAULT_PHONE_COUNTRY_CODE } from '../../data/phoneCountryCodes';
+import { PhoneFields } from '../../components/candidate/PhoneFields';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
@@ -36,6 +38,8 @@ export function CandidateProfilePage() {
       setForm({
         displayName: data.profile.displayName ?? '',
         bio: data.profile.bio ?? '',
+        phoneCountryCode:
+          data.profile.phoneCountryCode ?? DEFAULT_PHONE_COUNTRY_CODE,
         phone: data.profile.phone ?? '',
         linkedInUrl: data.profile.linkedInUrl ?? '',
         portfolioUrl: data.profile.portfolioUrl ?? '',
@@ -59,6 +63,9 @@ export function CandidateProfilePage() {
       await api.patch('/candidate/profile', {
         displayName: form.displayName.trim(),
         bio: form.bio?.trim() || '',
+        phoneCountryCode: form.phone?.trim()
+          ? form.phoneCountryCode?.trim() || DEFAULT_PHONE_COUNTRY_CODE
+          : '',
         phone: form.phone?.trim() || '',
         linkedInUrl: form.linkedInUrl?.trim() || '',
         portfolioUrl: form.portfolioUrl?.trim() || '',
@@ -129,11 +136,11 @@ export function CandidateProfilePage() {
               placeholder="Brief professional summary"
             />
           </div>
-          <Input
-            label="Phone"
-            type="tel"
-            value={form.phone ?? ''}
-            onChange={(e) => set('phone', e.target.value)}
+          <PhoneFields
+            countryCode={form.phoneCountryCode ?? DEFAULT_PHONE_COUNTRY_CODE}
+            phone={form.phone ?? ''}
+            onCountryCodeChange={(code) => set('phoneCountryCode', code)}
+            onPhoneChange={(value) => set('phone', value)}
           />
           <Input
             label="LinkedIn"

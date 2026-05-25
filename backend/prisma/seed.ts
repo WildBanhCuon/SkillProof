@@ -233,6 +233,7 @@ async function main() {
     where: { candidateUserId: candidate.id },
     update: {
       bio: 'Junior developer passionate about React and clean UI.',
+      phoneCountryCode: null,
       phone: null,
       resumeUrl: null,
       linkedInUrl: 'https://linkedin.com/in/sofiane-demo',

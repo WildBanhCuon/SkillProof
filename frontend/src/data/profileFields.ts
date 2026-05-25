@@ -40,7 +40,9 @@ export function profileFieldLabel(key: string): string {
 export interface CandidateProfileData {
   displayName: string;
   bio: string | null;
+  phoneCountryCode: string | null;
   phone: string | null;
+  phoneFormatted?: string | null;
   linkedInUrl: string | null;
   portfolioUrl: string | null;
   githubUrl: string | null;
@@ -51,6 +53,7 @@ export interface CandidateProfileData {
 export const EMPTY_PROFILE: CandidateProfileData = {
   displayName: '',
   bio: null,
+  phoneCountryCode: null,
   phone: null,
   linkedInUrl: null,
   portfolioUrl: null,
