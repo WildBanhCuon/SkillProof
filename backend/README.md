@@ -242,12 +242,12 @@ Login requests auto-save `accessToken`, `refreshToken`, `jobId`, `sessionId`, an
 |--------|--------|
 | Root Directory | `backend` |
 | Branch | `deploy` |
-| Build Command | `npm install && npx prisma generate && npm run build` |
+| Build Command | `npm install --include=dev && npx prisma generate && npm run build` |
 | Start Command | `npx prisma migrate deploy && npm run start:prod` |
 
 **Node:** `backend/.node-version` pins **22** (optional; set `NODE_VERSION=22` in Render if needed).
 
-**Important:** Do not set `NODE_ENV=production` during the build phase, or dev-only tools may be skipped. `@nestjs/cli` is listed under `dependencies` so `nest build` works on Render.
+**Important:** Use `npm install --include=dev` in the build command (or rely on `backend/.npmrc`). Render’s production install skips devDependencies by default, which breaks TypeScript and `@types/*`. Build-time packages (`@nestjs/cli`, `typescript`, `@types/*`) are also listed under `dependencies` as a fallback.
 
 After first deploy, open **Shell** and run `npm run prisma:seed` once.
 
