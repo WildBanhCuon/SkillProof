@@ -62,8 +62,8 @@ export function MyApplicationsPage() {
     <div>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">My applications</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">My applications</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
             Track job applications and practice tests you have started.
           </p>
         </div>
@@ -87,7 +87,7 @@ export function MyApplicationsPage() {
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               filter === key
                 ? 'bg-indigo-600 text-white'
-                : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 ring-1 ring-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-950'
             }`}
           >
             {label} ({counts[key]})
@@ -96,21 +96,21 @@ export function MyApplicationsPage() {
       </div>
 
       {isLoading && (
-        <p className="mt-10 flex items-center gap-2 text-slate-500">
+        <p className="mt-10 flex items-center gap-2 text-slate-500 dark:text-slate-400 dark:text-slate-500">
           <Loader2 className="h-5 w-5 animate-spin" />
           Loading your applications…
         </p>
       )}
 
       {error && (
-        <p className="mt-6 text-sm text-red-600">Could not load applications.</p>
+        <p className="mt-6 text-sm text-red-600 dark:text-red-400">Could not load applications.</p>
       )}
 
       {!isLoading && !error && items.length === 0 && (
         <Card className="mt-8 p-10 text-center">
           <ClipboardList className="mx-auto h-10 w-10 text-slate-300" />
-          <p className="mt-4 font-medium text-slate-900">No tests yet</p>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-4 font-medium text-slate-900 dark:text-slate-100">No tests yet</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
             {filter === 'all'
               ? 'Apply to a job or run a practice test to see it here.'
               : `No ${filter === 'application' ? 'applications' : 'practice tests'} yet.`}
@@ -129,7 +129,7 @@ export function MyApplicationsPage() {
               <Card className="flex flex-wrap items-center justify-between gap-4 p-5">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="font-semibold text-slate-900">
+                    <h2 className="font-semibold text-slate-900 dark:text-slate-100">
                       {item.jobTitle}
                     </h2>
                     <Badge
@@ -141,13 +141,13 @@ export function MyApplicationsPage() {
                       <Badge variant="info">Practice</Badge>
                     )}
                   </div>
-                  <p className="mt-1 text-sm text-slate-500">{item.companyName}</p>
-                  <p className="mt-2 text-xs text-slate-400">
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">{item.companyName}</p>
+                  <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
                     Started {new Date(item.startedAt).toLocaleString()}
                     {item.submittedAt &&
                       ` · Submitted ${new Date(item.submittedAt).toLocaleString()}`}
                     {item.hasResult && item.overallScore != null && (
-                      <span className="text-slate-600">
+                      <span className="text-slate-600 dark:text-slate-300">
                         {' '}
                         · Score {item.overallScore}%
                       </span>
@@ -166,8 +166,8 @@ export function MyApplicationsPage() {
         })}
       </ul>
 
-      <Card className="mt-8 border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-600">
-        <p className="font-medium text-slate-800">What the statuses mean</p>
+      <Card className="mt-8 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/80 p-4 text-sm text-slate-600 dark:text-slate-300">
+        <p className="font-medium text-slate-800 dark:text-slate-200">What the statuses mean</p>
         <ul className="mt-2 list-disc space-y-1 pl-5">
           <li>
             <strong>In progress</strong> — finish and submit your assessment.

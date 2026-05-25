@@ -36,23 +36,23 @@ function OptionCard({
       onClick={onClick}
       className={`w-full rounded-lg border px-4 py-3 text-left transition-colors ${
         selected
-          ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600'
-          : 'border-slate-200 bg-white hover:border-slate-300'
+          ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/50 ring-1 ring-indigo-600 dark:ring-indigo-500'
+          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600 dark:border-slate-600'
       }`}
     >
-      <span className="font-medium text-slate-900">{label}</span>
-      {hint && <span className="mt-0.5 block text-sm text-slate-500">{hint}</span>}
+      <span className="font-medium text-slate-900 dark:text-slate-100">{label}</span>
+      {hint && <span className="mt-0.5 block text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">{hint}</span>}
     </button>
   );
 }
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border-b border-slate-100 py-3 last:border-0">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+    <div className="border-b border-slate-100 dark:border-slate-800 py-3 last:border-0">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 dark:text-slate-500">
         {label}
       </p>
-      <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800">
+      <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800 dark:text-slate-200">
         {value || '—'}
       </p>
     </div>
@@ -149,16 +149,16 @@ export function JobWizardPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <p className="text-sm text-slate-500">
-        <Link to="/hr/jobs" className="hover:text-indigo-600">
+      <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
+        <Link to="/hr/jobs" className="hover:text-indigo-600 dark:text-indigo-400">
           Jobs
         </Link>{' '}
         / Guided setup
       </p>
-      <h1 className="mt-2 text-2xl font-bold text-slate-900">
+      <h1 className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
         Create a job posting
       </h1>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
         Answer a few questions — AI will draft a professional listing you can edit.
       </p>
 
@@ -173,7 +173,7 @@ export function JobWizardPage() {
           />
         ))}
       </div>
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
         Step {step + 1} of {WIZARD_STEPS.length} — {current.title}
       </p>
 
@@ -184,7 +184,7 @@ export function JobWizardPage() {
       )}
 
       <Card className="mt-6 p-6">
-        <h2 className="text-lg font-semibold text-slate-900">{current.subtitle}</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{current.subtitle}</h2>
 
         <form
           className="mt-6 space-y-4"
@@ -200,7 +200,7 @@ export function JobWizardPage() {
                 placeholder="e.g. Junior WordPress Developer"
               />
               <div>
-                <span className="mb-2 block text-sm font-medium text-slate-700">
+                <span className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Seniority level
                 </span>
                 <div className="grid gap-2 sm:grid-cols-3">
@@ -219,13 +219,13 @@ export function JobWizardPage() {
 
           {current.id === 'team' && (
             <label className="block w-full">
-              <span className="mb-1 block text-sm font-medium text-slate-700">
+              <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                 About your team and product
               </span>
               {user?.companyTeamProfile?.trim() ? (
-                <p className="mb-2 text-xs text-slate-500">
+                <p className="mb-2 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
                   Prefilled from your{' '}
-                  <Link to="/hr/profile" className="font-medium text-indigo-600 hover:underline">
+                  <Link to="/hr/profile" className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
                     company profile
                   </Link>
                   . Adjust here only if this role differs.
@@ -233,7 +233,7 @@ export function JobWizardPage() {
               ) : (
                 <p className="mb-2 text-xs text-amber-700">
                   Add a default in your{' '}
-                  <Link to="/hr/profile" className="font-medium text-indigo-600 hover:underline">
+                  <Link to="/hr/profile" className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
                     company profile
                   </Link>{' '}
                   to skip retyping this next time.
@@ -242,7 +242,7 @@ export function JobWizardPage() {
               <textarea
                 required
                 rows={5}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                 value={answers.teamContext}
                 onChange={(e) => update('teamContext', e.target.value)}
                 placeholder="e.g. We are a 20-person SaaS team building a learning platform. You would join the product squad with 2 designers and 4 developers."
@@ -252,13 +252,13 @@ export function JobWizardPage() {
 
           {current.id === 'work' && (
             <label className="block w-full">
-              <span className="mb-1 block text-sm font-medium text-slate-700">
+              <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Main responsibilities
               </span>
               <textarea
                 required
                 rows={6}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                 value={answers.responsibilities}
                 onChange={(e) => update('responsibilities', e.target.value)}
                 placeholder={'List what they will do — one task per line is fine.\ne.g. Build UI in React\nPair with backend on APIs\nParticipate in code reviews'}
@@ -269,25 +269,25 @@ export function JobWizardPage() {
           {current.id === 'skills' && (
             <>
               <label className="block w-full">
-                <span className="mb-1 block text-sm font-medium text-slate-700">
+                <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Must-have skills
                 </span>
                 <textarea
                   required
                   rows={3}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                   value={answers.mustHaveSkills}
                   onChange={(e) => update('mustHaveSkills', e.target.value)}
                   placeholder="e.g. React, TypeScript, HTML/CSS, Git"
                 />
               </label>
               <label className="block w-full">
-                <span className="mb-1 block text-sm font-medium text-slate-700">
+                <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Nice-to-have skills (optional)
                 </span>
                 <textarea
                   rows={2}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                   value={answers.niceToHaveSkills}
                   onChange={(e) => update('niceToHaveSkills', e.target.value)}
                   placeholder="e.g. Figma basics, unit testing"
@@ -299,7 +299,7 @@ export function JobWizardPage() {
           {current.id === 'logistics' && (
             <>
               <div>
-                <span className="mb-2 block text-sm font-medium text-slate-700">
+                <span className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Experience expected
                 </span>
                 <div className="grid gap-2 sm:grid-cols-2">
@@ -314,7 +314,7 @@ export function JobWizardPage() {
                 </div>
               </div>
               <div>
-                <span className="mb-2 block text-sm font-medium text-slate-700">
+                <span className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Work mode
                 </span>
                 <div className="grid gap-2 sm:grid-cols-3">
@@ -352,7 +352,7 @@ export function JobWizardPage() {
           )}
 
           {current.id === 'review' && (
-            <div className="rounded-lg border border-slate-200 bg-slate-50/50 px-4">
+            <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/50 px-4">
               <ReviewRow label="Job title" value={answers.roleTitle} />
               <ReviewRow label="Seniority" value={seniorityLabel} />
               <ReviewRow label="Team context" value={answers.teamContext} />
@@ -371,7 +371,7 @@ export function JobWizardPage() {
             </div>
           )}
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 dark:border-slate-700 pt-6">
             <div className="flex gap-2">
               {step > 0 ? (
                 <Button type="button" variant="outline" onClick={back} disabled={generating}>
@@ -401,9 +401,9 @@ export function JobWizardPage() {
         </form>
       </Card>
 
-      <p className="mt-4 text-center text-sm text-slate-500">
+      <p className="mt-4 text-center text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
         Prefer to write yourself?{' '}
-        <Link to="/hr/jobs/new" className="font-medium text-indigo-600 hover:underline">
+        <Link to="/hr/jobs/new" className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
           Open blank editor
         </Link>
       </p>

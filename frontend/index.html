@@ -11,6 +11,19 @@
       rel="stylesheet"
     />
     <title>SkillProof — Prove skills, not CVs</title>
+    <script>
+      (function () {
+        try {
+          var k = 'skillproof-theme';
+          var s = localStorage.getItem(k);
+          var dark =
+            s === 'dark' ||
+            (!s || s === 'system') &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

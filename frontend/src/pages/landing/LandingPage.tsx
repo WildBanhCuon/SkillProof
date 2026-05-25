@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { Logo } from '../../components/ui/Logo';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
+import { ThemeToggle } from '../../components/ui/ThemeToggle';
 
 const steps = [
   {
@@ -49,11 +50,12 @@ export function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <header className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Logo />
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             {isAuthenticated ? (
               <Button onClick={() => navigate(user?.role === 'hr' ? '/hr/jobs' : '/jobs')}>
                 Go to dashboard
@@ -73,13 +75,13 @@ export function LandingPage() {
       </header>
 
       <section className="mx-auto max-w-6xl px-4 py-16 text-center sm:px-6 sm:py-24">
-        <p className="text-sm font-medium text-indigo-600">AI-assisted hiring workflow</p>
-        <h1 className="mt-4 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+        <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">AI-assisted hiring workflow</p>
+        <h1 className="mt-4 text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
           Prove skills.
           <br />
           Not CVs.
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600">
+        <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600 dark:text-slate-300">
           SkillProof helps hiring teams write better job listings, generates tailored
           assessments, and ranks candidates by what they can actually do.
         </p>
@@ -100,13 +102,13 @@ export function LandingPage() {
                 : null;
           return (
             <Card key={s.n} className="p-6 text-left">
-              <span className="text-xs font-semibold text-indigo-600">{s.n}</span>
-              <span className="ml-2 text-xs text-slate-500">{s.role}</span>
-              <Icon className="mt-4 h-8 w-8 text-indigo-600" />
-              <h3 className="mt-3 font-semibold text-slate-900">{s.title}</h3>
-              <p className="mt-2 text-sm text-slate-600">{s.desc}</p>
+              <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">{s.n}</span>
+              <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">{s.role}</span>
+              <Icon className="mt-4 h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+              <h3 className="mt-3 font-semibold text-slate-900 dark:text-slate-100">{s.title}</h3>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{s.desc}</p>
               {path && (
-                <Link to={path} className="mt-4 inline-block text-sm font-medium text-indigo-600">
+                <Link to={path} className="mt-4 inline-block text-sm font-medium text-indigo-600 dark:text-indigo-400">
                   Open →
                 </Link>
               )}
@@ -115,7 +117,7 @@ export function LandingPage() {
         })}
       </section>
 
-      <p className="pb-8 text-center text-xs text-slate-400">
+      <p className="pb-8 text-center text-xs text-slate-400 dark:text-slate-500">
         Demo flow: Check listing → Publish → Take assessment → Review ranked results
       </p>
     </div>

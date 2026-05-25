@@ -56,16 +56,16 @@ export function JobDetailPage() {
   };
 
   if (isLoading || !job) {
-    return <p className="text-slate-500">Loading job…</p>;
+    return <p className="text-slate-500 dark:text-slate-400 dark:text-slate-500">Loading job…</p>;
   }
 
   return (
     <div className="mx-auto max-w-3xl">
-      <Link to="/jobs" className="text-sm text-indigo-600 hover:underline">
+      <Link to="/jobs" className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
         ← All jobs
       </Link>
-      <h1 className="mt-4 text-3xl font-bold text-slate-900">{job.title}</h1>
-      <p className="text-lg text-indigo-600">{job.company?.name}</p>
+      <h1 className="mt-4 text-3xl font-bold text-slate-900 dark:text-slate-100">{job.title}</h1>
+      <p className="text-lg text-indigo-600 dark:text-indigo-400">{job.company?.name}</p>
 
       {error && (
         <div className="mt-4">
@@ -78,24 +78,24 @@ export function JobDetailPage() {
       </Card>
 
       {job.assessment && (
-        <p className="mt-4 text-sm text-slate-500">
+        <p className="mt-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
           Assessment: {job.assessment.durationMinutes} minutes ·{' '}
           {job.assessment.totalPoints} points
         </p>
       )}
 
       {job.requiredProfileFields && job.requiredProfileFields.length > 0 && (
-        <Card className="mt-6 border-amber-100 bg-amber-50/40 p-4">
-          <p className="text-sm font-medium text-amber-900">Profile required to apply</p>
-          <p className="mt-1 text-sm text-amber-800/90">
+        <Card className="mt-6 border-amber-100 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40/40 p-4">
+          <p className="text-sm font-medium text-amber-900 dark:text-amber-200">Profile required to apply</p>
+          <p className="mt-1 text-sm text-amber-800 dark:text-amber-200/90">
             This employer requires:{' '}
             {job.requiredProfileFields.map((f) => profileFieldLabel(f)).join(', ')}.
           </p>
           {job.missingProfileFields && job.missingProfileFields.length > 0 && (
-            <p className="mt-2 text-sm text-amber-900">
+            <p className="mt-2 text-sm text-amber-900 dark:text-amber-200">
               You still need:{' '}
               {job.missingProfileFields.map((f) => profileFieldLabel(f)).join(', ')}.{' '}
-              <Link to="/profile" className="font-medium text-indigo-700 underline">
+              <Link to="/profile" className="font-medium text-indigo-700 dark:text-indigo-300 underline">
                 Complete your profile
               </Link>
             </p>
@@ -120,7 +120,7 @@ export function JobDetailPage() {
           {loading === 'application' ? 'Starting…' : 'Apply — take assessment'}
         </Button>
       </div>
-      <p className="mt-3 text-center text-xs text-slate-500">
+      <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
         Practice results are private. Apply submits your score to the employer.
       </p>
     </div>

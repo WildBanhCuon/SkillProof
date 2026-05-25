@@ -20,6 +20,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import {
   CreateJobDto,
   GenerateJobFromWizardDto,
+  ListCandidateJobsQueryDto,
   UpdateJobDto,
 } from './jobs.dto';
 import { JobsService } from './jobs.service';
@@ -52,7 +53,11 @@ export class JobsController {
   list(
     @CurrentUser() user: JwtPayload,
     @Query('status') status?: JobStatus,
+    @Query() candidateQuery?: ListCandidateJobsQueryDto,
   ) {
+    if (user.role === 'candidate') {
+      return this.jobs.listForCandidate(user, candidateQuery ?? {});
+    }
     return this.jobs.list(user, status);
   }
 

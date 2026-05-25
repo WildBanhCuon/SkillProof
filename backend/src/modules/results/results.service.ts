@@ -4,7 +4,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ApplicationHrStatus, Recommendation } from '@prisma/client';
+import {
+  ApplicationHrStatus,
+  JobStatus,
+  Recommendation,
+} from '@prisma/client';
 import {
   parseRequiredProfileFields,
   profileForApi,
@@ -56,6 +60,130 @@ export class ResultsService {
   ) {
     await this.ensureHrJob(jobId, user.companyId!);
 
+    const applications = await this.prisma.application.findMany({
+      where: {
+        jobPostingId: jobId,
+        ...(opts.search
+          ? {
+              candidateUser: {
+                displayName: {
+                  contains: opts.search,
+                  mode: 'insensitive' as const,
+                },
+              },
+            }
+          : {}),
+      },
+      include: this.applicationInclude(),
+    });
+
+    const rows = this.buildCandidateRows(applications, opts);
+    return { jobId, candidates: rows };
+  }
+
+  async candidatesByJob(
+    user: JwtPayload,
+    opts: {
+      sort?: string;
+      band?: string;
+      search?: string;
+    },
+  ) {
+    const companyId = user.companyId!;
+
+    const jobs = await this.prisma.jobPosting.findMany({
+      where: {
+        companyId,
+        status: { in: [JobStatus.PUBLISHED, JobStatus.CLOSED] },
+      },
+      orderBy: [{ publishedAt: 'desc' }, { updatedAt: 'desc' }],
+      include: {
+        applications: {
+          ...(opts.search
+            ? {
+                where: {
+                  candidateUser: {
+                    displayName: {
+                      contains: opts.search,
+                      mode: 'insensitive' as const,
+                    },
+                  },
+                },
+              }
+            : {}),
+          include: this.applicationInclude(),
+        },
+      },
+    });
+
+    let groups = jobs.map((job) => {
+      const candidates = this.buildCandidateRows(job.applications, opts);
+      return {
+        jobId: job.id,
+        title: job.title,
+        status: job.status.toLowerCase(),
+        publishedAt: job.publishedAt,
+        candidateCount: candidates.length,
+        candidates,
+      };
+    });
+
+    if (opts.search || opts.band) {
+      groups = groups.filter((g) => g.candidateCount > 0);
+    }
+
+    const totalCandidates = groups.reduce((n, g) => n + g.candidateCount, 0);
+
+    return { totalCandidates, jobs: groups };
+  }
+
+  private applicationInclude() {
+    return {
+      candidateUser: { include: { profile: true } },
+      testSession: {
+        include: {
+          testResult: { include: { dimensionScores: true } },
+        },
+      },
+    } as const;
+  }
+
+  private buildCandidateRows(
+    applications: {
+      id: string;
+      appliedAt: Date;
+      hrStatus: ApplicationHrStatus;
+      hrDecidedAt: Date | null;
+      candidateUser: {
+        id: string;
+        displayName: string;
+        email: string;
+        profile: {
+          bio: string | null;
+          phoneCountryCode: string | null;
+          phone: string | null;
+          linkedInUrl: string | null;
+          portfolioUrl: string | null;
+          githubUrl: string | null;
+          websiteUrl: string | null;
+          resumeUrl: string | null;
+        } | null;
+      };
+      testSession: {
+        testResult: {
+          visibleToCompany: boolean;
+          overallScore: number;
+          matchPercent: number;
+          recommendation: Recommendation;
+          strengths: unknown;
+          improvements: unknown;
+          aiSummary: string;
+          dimensionScores: { dimension: string; score0_100: number }[];
+        } | null;
+      };
+    }[],
+    opts: { sort?: string; band?: string },
+  ) {
     const bandFilter = opts.band
       ? ({
           ready_now: 'READY_NOW',
@@ -63,27 +191,6 @@ export class ResultsService {
           at_risk: 'AT_RISK',
         }[opts.band] as Recommendation | undefined)
       : undefined;
-
-    const applications = await this.prisma.application.findMany({
-      where: {
-        jobPostingId: jobId,
-        ...(opts.search
-          ? {
-              candidateUser: {
-                displayName: { contains: opts.search, mode: 'insensitive' as const },
-              },
-            }
-          : {}),
-      },
-      include: {
-        candidateUser: { include: { profile: true } },
-        testSession: {
-          include: {
-            testResult: { include: { dimensionScores: true } },
-          },
-        },
-      },
-    });
 
     let rows = applications
       .filter((a) => a.testSession.testResult?.visibleToCompany)
@@ -109,7 +216,7 @@ export class ResultsService {
           improvements: r.improvements,
           aiSummary: r.aiSummary,
           dimensionScores: r.dimensionScores.map((d) => ({
-            dimension: d.dimension.toLowerCase().replace('_', ' '),
+            dimension: String(d.dimension).toLowerCase().replace('_', ' '),
             score: d.score0_100,
           })),
           appliedAt: a.appliedAt,
@@ -126,9 +233,7 @@ export class ResultsService {
       rows.sort((a, b) => b.overallScore - a.overallScore);
     }
 
-    rows = rows.map((r, i) => ({ ...r, rank: i + 1, isTopMatch: i === 0 }));
-
-    return { jobId, candidates: rows };
+    return rows.map((r, i) => ({ ...r, rank: i + 1, isTopMatch: i === 0 }));
   }
 
   async candidateDetail(

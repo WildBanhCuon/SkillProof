@@ -255,8 +255,25 @@ describe('SkillProof API (e2e)', () => {
         .get('/v1/jobs')
         .set(authHeader(candidateToken))
         .expect(200);
-      expect(Array.isArray(res.body)).toBe(true);
-      expect(res.body.some((j: { id: string }) => j.id === jobId)).toBe(true);
+      expect(Array.isArray(res.body.items)).toBe(true);
+      expect(res.body.items.some((j: { id: string }) => j.id === jobId)).toBe(
+        true,
+      );
+      expect(Array.isArray(res.body.companies)).toBe(true);
+    });
+
+    it('GET /v1/jobs — search and sort', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/v1/jobs')
+        .query({ search: 'Junior', sort: 'title_asc' })
+        .set(authHeader(candidateToken))
+        .expect(200);
+      expect(res.body.total).toBeGreaterThanOrEqual(1);
+      expect(res.body.items.some((j: { id: string }) => j.id === jobId)).toBe(
+        true,
+      );
+      const titles = res.body.items.map((j: { title: string }) => j.title);
+      expect([...titles].sort()).toEqual(titles);
     });
 
     it('GET /v1/jobs/:id — published job', async () => {
@@ -371,6 +388,20 @@ describe('SkillProof API (e2e)', () => {
   });
 
   describe('HR — Results', () => {
+    it('GET /v1/hr/candidates — grouped by job', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/v1/hr/candidates')
+        .set(authHeader(hrToken))
+        .expect(200);
+      expect(Array.isArray(res.body.jobs)).toBe(true);
+      expect(res.body.totalCandidates).toBeGreaterThanOrEqual(1);
+      const group = res.body.jobs.find(
+        (j: { jobId: string }) => j.jobId === jobId,
+      );
+      expect(group).toBeDefined();
+      expect(group.candidates.length).toBeGreaterThan(0);
+    });
+
     it('GET /v1/jobs/:id/stats', async () => {
       const res = await request(app.getHttpServer())
         .get(`/v1/jobs/${jobId}/stats`)

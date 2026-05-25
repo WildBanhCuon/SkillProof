@@ -13,7 +13,7 @@ function DiffChunk({
     ? 'bg-emerald-100 text-emerald-950'
     : part.removed
       ? 'bg-red-100 text-red-950'
-      : 'text-slate-700';
+      : 'text-slate-700 dark:text-slate-300';
 
   return (
     <span key={index}>
@@ -25,10 +25,10 @@ function DiffChunk({
             <span
               className={`inline-block w-6 select-none text-center font-bold ${
                 part.added
-                  ? 'text-emerald-700'
+                  ? 'text-emerald-700 dark:text-emerald-300'
                   : part.removed
-                    ? 'text-red-700'
-                    : 'text-slate-400'
+                    ? 'text-red-700 dark:text-red-300'
+                    : 'text-slate-400 dark:text-slate-500'
               }`}
             >
               {prefix}
@@ -54,7 +54,7 @@ export function TextDiff({
 
   if (before === after) {
     return (
-      <p className={`text-sm text-slate-500 ${className}`}>
+      <p className={`text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500 ${className}`}>
         No textual changes detected.
       </p>
     );
@@ -62,9 +62,9 @@ export function TextDiff({
 
   return (
     <div className={className}>
-      <div className="mb-2 flex flex-wrap gap-3 text-xs text-slate-600">
+      <div className="mb-2 flex flex-wrap gap-3 text-xs text-slate-600 dark:text-slate-300">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded border border-emerald-200 bg-emerald-100" />
+          <span className="h-3 w-3 rounded border border-emerald-200 dark:border-emerald-800 bg-emerald-100" />
           Added
         </span>
         <span className="inline-flex items-center gap-1.5">
@@ -73,7 +73,7 @@ export function TextDiff({
         </span>
       </div>
       <div
-        className="max-h-96 overflow-auto rounded-lg border border-slate-200 bg-white font-mono text-sm leading-6"
+        className="max-h-96 overflow-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono text-sm leading-6"
         aria-label="Description changes"
       >
         {changes.map((part, index) => (

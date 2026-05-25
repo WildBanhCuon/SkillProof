@@ -92,7 +92,7 @@ export function JobPostingActions({
           size={size}
           disabled={!!busy}
           onClick={remove}
-          className="text-red-700 hover:bg-red-50 hover:text-red-800"
+          className="text-red-700 dark:text-red-300 hover:bg-red-50 dark:bg-red-950/40 hover:text-red-800"
         >
           <Trash2 className="h-4 w-4" />
           {busy === 'delete' ? 'Deleting…' : 'Delete'}

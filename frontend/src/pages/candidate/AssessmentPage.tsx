@@ -14,6 +14,7 @@ import { formatApiError } from '../../utils/errors';
 import type { TestSession } from '../../api/types';
 import { Logo } from '../../components/ui/Logo';
 import { Button } from '../../components/ui/Button';
+import { ThemeToggle } from '../../components/ui/ThemeToggle';
 import { Card } from '../../components/ui/Card';
 import { Alert } from '../../components/ui/Alert';
 
@@ -118,8 +119,8 @@ export function AssessmentPage() {
 
   if (!session || !sessionId) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 p-6">
-        <p className="text-slate-600">Session not found. Start from a job posting.</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-slate-950 p-6">
+        <p className="text-slate-600 dark:text-slate-300">Session not found. Start from a job posting.</p>
         <Link to="/jobs">
           <Button>Browse jobs</Button>
         </Link>
@@ -128,15 +129,16 @@ export function AssessmentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <header className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
           <Logo to="/jobs" />
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-mono text-blue-800">
+            <span className="flex items-center gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 px-3 py-1.5 text-sm font-mono text-blue-800 dark:text-blue-200">
               <Clock className="h-4 w-4" />
               {timeLeft}
             </span>
+            <ThemeToggle />
             <Link to="/jobs">
               <Button variant="outline" size="sm">
                 Exit test
@@ -146,30 +148,30 @@ export function AssessmentPage() {
         </div>
       </header>
 
-      <div className="border-b border-slate-200 bg-white px-4 py-4">
+      <div className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs font-semibold uppercase text-slate-500">
+          <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
             Skill assessment
           </p>
-          <h1 className="text-xl font-bold text-slate-900">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
             {session.jobTitle} @ {session.companyName}
           </h1>
-          <div className="mt-2 flex flex-wrap gap-6 text-sm text-slate-500">
+          <div className="mt-2 flex flex-wrap gap-6 text-sm text-slate-500 dark:text-slate-400">
             <span>{session.durationMinutes} min</span>
             <span>{questions.length} questions</span>
             <span>{session.totalPoints} points</span>
           </div>
           <div className="mt-3 flex items-center gap-3">
-            <span className="text-sm text-slate-600">
+            <span className="text-sm text-slate-600 dark:text-slate-300">
               Question {currentIdx + 1} of {questions.length}
             </span>
-            <div className="h-2 flex-1 max-w-md overflow-hidden rounded-full bg-slate-100">
+            <div className="h-2 flex-1 max-w-md overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
               <div
                 className="h-full bg-indigo-600 transition-all"
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <span className="text-sm text-slate-500">{progress}%</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{progress}%</span>
           </div>
         </div>
       </div>
@@ -183,7 +185,7 @@ export function AssessmentPage() {
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[240px_1fr]">
         <aside className="space-y-4">
           <Card className="p-4">
-            <p className="text-xs font-semibold uppercase text-slate-500">
+            <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
               Questions
             </p>
             <ul className="mt-3 space-y-2">
@@ -197,8 +199,8 @@ export function AssessmentPage() {
                     }}
                     className={`flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm ${
                       i === currentIdx
-                        ? 'bg-indigo-50 text-indigo-800'
-                        : 'hover:bg-slate-50'
+                        ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800'
+                        : 'hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-950'
                     }`}
                   >
                     {i < currentIdx ? (
@@ -207,7 +209,7 @@ export function AssessmentPage() {
                       <Circle className="h-4 w-4 shrink-0 text-slate-300" />
                     )}
                     <span className="truncate">{question.title}</span>
-                    <span className="ml-auto text-xs text-slate-400">
+                    <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">
                       {question.points}pt
                     </span>
                   </button>
@@ -222,7 +224,7 @@ export function AssessmentPage() {
                 type="button"
                 onClick={() => setCurrentIdx(i)}
                 className={`shrink-0 rounded-full px-3 py-1 text-xs ${
-                  i === currentIdx ? 'bg-indigo-600 text-white' : 'bg-white ring-1 ring-slate-200'
+                  i === currentIdx ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-900 ring-1 ring-slate-200'
                 }`}
               >
                 Q{i + 1}
@@ -234,25 +236,25 @@ export function AssessmentPage() {
         <main>
           {q && (
             <Card className="overflow-hidden">
-              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase text-indigo-600">
+                  <p className="text-xs font-semibold uppercase text-indigo-600 dark:text-indigo-400">
                     Question {currentIdx + 1} — {q.title}
                   </p>
-                  <h2 className="mt-1 text-lg font-semibold text-slate-900">
+                  <h2 className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">
                     {q.instructions.split('\n')[0]}
                   </h2>
                 </div>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium">
+                <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-sm font-medium">
                   {q.points} pts
                 </span>
               </div>
               <div className="grid gap-0 lg:grid-cols-2">
-                <div className="border-b border-slate-100 p-6 lg:border-b-0 lg:border-r">
-                  <p className="text-xs font-semibold uppercase text-slate-500">
+                <div className="border-b border-slate-100 dark:border-slate-800 p-6 lg:border-b-0 lg:border-r">
+                  <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
                     Instructions
                   </p>
-                  <div className="mt-3 whitespace-pre-wrap text-sm text-slate-700">
+                  <div className="mt-3 whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300">
                     {q.instructions}
                   </div>
                 </div>
@@ -281,7 +283,7 @@ export function AssessmentPage() {
                   />
                 </div>
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-6 py-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800 px-6 py-4">
                 <Button
                   variant="outline"
                   disabled={currentIdx === 0}
@@ -291,7 +293,7 @@ export function AssessmentPage() {
                   Previous
                 </Button>
                 {saving && (
-                  <span className="self-center text-xs text-slate-400">
+                  <span className="self-center text-xs text-slate-400 dark:text-slate-500">
                     Saving…
                   </span>
                 )}

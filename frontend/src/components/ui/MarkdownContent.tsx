@@ -9,7 +9,7 @@ export function MarkdownContent({
   className?: string;
 }) {
   if (!content.trim()) {
-    return <p className="text-sm text-slate-500">No description provided.</p>;
+    return <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">No description provided.</p>;
   }
 
   return (

@@ -32,10 +32,10 @@ export function LoginPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold text-slate-900">Welcome back</h1>
-      <p className="mt-1 text-sm text-slate-500">Sign in to your SkillProof account</p>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Welcome back</h1>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">Sign in to your SkillProof account</p>
 
-      <div className="mt-6 flex rounded-lg border border-slate-200 p-1">
+      <div className="mt-6 flex rounded-lg border border-slate-200 dark:border-slate-700 p-1">
         {(['hr', 'candidate'] as const).map((r) => (
           <button
             key={r}
@@ -44,7 +44,7 @@ export function LoginPage() {
             className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
               role === r
                 ? 'bg-indigo-600 text-white'
-                : 'text-slate-600 hover:bg-slate-50'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-950'
             }`}
           >
             {r === 'hr' ? 'HR / Recruiter' : 'Candidate'}
@@ -80,9 +80,9 @@ export function LoginPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-slate-600">
+      <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-300">
         No account?{' '}
-        <Link to="/register" className="font-medium text-indigo-600 hover:underline">
+        <Link to="/register" className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
           Create one
         </Link>
       </p>

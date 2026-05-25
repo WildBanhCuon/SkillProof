@@ -3,8 +3,18 @@ import {
   IsIn,
   IsOptional,
   IsString,
+  MaxLength,
   MinLength,
 } from 'class-validator';
+
+export const CANDIDATE_JOB_SORT_OPTIONS = [
+  'newest',
+  'oldest',
+  'title_asc',
+  'title_desc',
+  'duration_asc',
+  'duration_desc',
+] as const;
 import { PROFILE_FIELD_KEYS } from '../../common/profile-fields';
 
 export class GenerateJobFromWizardDto {
@@ -62,6 +72,22 @@ export class CreateJobDto {
   @IsArray()
   @IsIn([...PROFILE_FIELD_KEYS], { each: true })
   requiredProfileFields?: string[];
+}
+
+export class ListCandidateJobsQueryDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  search?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  company?: string;
+
+  @IsOptional()
+  @IsIn([...CANDIDATE_JOB_SORT_OPTIONS])
+  sort?: (typeof CANDIDATE_JOB_SORT_OPTIONS)[number];
 }
 
 export class UpdateJobDto {

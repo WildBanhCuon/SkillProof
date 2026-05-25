@@ -12,6 +12,7 @@ import { JobEditorPage } from './pages/hr/JobEditorPage';
 import { JobWizardPage } from './pages/hr/JobWizardPage';
 import { HrProfilePage } from './pages/hr/HrProfilePage';
 import { JobResultsPage } from './pages/hr/JobResultsPage';
+import { AllCandidatesPage } from './pages/hr/AllCandidatesPage';
 import { CandidateDetailPage } from './pages/hr/CandidateDetailPage';
 import { JobsBrowsePage } from './pages/candidate/JobsBrowsePage';
 import { JobDetailPage } from './pages/candidate/JobDetailPage';
@@ -51,6 +52,7 @@ export default function App() {
           >
             <Route index element={<Navigate to="/hr/jobs" replace />} />
             <Route path="jobs" element={<JobsListPage />} />
+            <Route path="candidates" element={<AllCandidatesPage />} />
             <Route path="profile" element={<HrProfilePage />} />
             <Route path="jobs/wizard" element={<JobWizardPage />} />
             <Route path="jobs/new" element={<JobEditorPage />} />

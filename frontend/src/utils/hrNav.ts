@@ -14,15 +14,14 @@ export function isHrJobsNavActive(pathname: string): boolean {
   return /^\/hr\/jobs\/[^/]+$/.test(pathname);
 }
 
-/** Results dashboard or candidate detail for a job. */
+/** All candidates overview, per-job results, or candidate detail. */
 export function isHrCandidatesNavActive(pathname: string): boolean {
+  if (pathname === '/hr/candidates' || pathname.startsWith('/hr/candidates/')) {
+    return true;
+  }
   return /^\/hr\/jobs\/[^/]+\/(results|candidates\/)/.test(pathname);
 }
 
-export function candidatesNavPath(pathname: string): string {
-  const fromUrl = pathname.match(
-    /^\/hr\/jobs\/([^/]+)\/(results|candidates)/,
-  )?.[1];
-  const jobId = fromUrl ?? getLastResultsJobId();
-  return jobId ? `/hr/jobs/${jobId}/results` : '/hr/jobs';
+export function candidatesNavPath(_pathname: string): string {
+  return '/hr/candidates';
 }

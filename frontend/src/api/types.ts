@@ -53,6 +53,12 @@ export interface CandidateProfileData {
   resumeUrl: string | null;
 }
 
+export interface PublishedJobsListResponse {
+  items: JobPosting[];
+  companies: string[];
+  total: number;
+}
+
 export interface JobPosting {
   id: string;
   title: string;

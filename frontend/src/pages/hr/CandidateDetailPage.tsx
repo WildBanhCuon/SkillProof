@@ -97,7 +97,7 @@ export function CandidateDetailPage() {
   };
 
   if (isLoading || !data) {
-    return <p className="text-slate-500">Loading candidate…</p>;
+    return <p className="text-slate-500 dark:text-slate-400 dark:text-slate-500">Loading candidate…</p>;
   }
 
   const rec = data.testResult.recommendation.toLowerCase();
@@ -109,12 +109,19 @@ export function CandidateDetailPage() {
 
   return (
     <div>
-      <Link to={`/hr/jobs/${jobId}/results`}>
-        <Button variant="ghost" size="sm" className="mb-4">
-          <ArrowLeft className="h-4 w-4" />
-          Back to results
-        </Button>
-      </Link>
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Link to="/hr/candidates">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="h-4 w-4" />
+            All candidates
+          </Button>
+        </Link>
+        <Link to={`/hr/jobs/${jobId}/results`}>
+          <Button variant="ghost" size="sm">
+            This job only
+          </Button>
+        </Link>
+      </div>
 
       {error && (
         <div className="mb-4">
@@ -124,10 +131,10 @@ export function CandidateDetailPage() {
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
             {data.candidate.fullName}
           </h1>
-          <p className="text-slate-500">{data.candidate.email}</p>
+          <p className="text-slate-500 dark:text-slate-400 dark:text-slate-500">{data.candidate.email}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={hrDecisionVariant(data.hrStatus)}>
@@ -147,14 +154,14 @@ export function CandidateDetailPage() {
         </div>
       )}
 
-      <Card className="mt-6 border-indigo-100 bg-indigo-50/40 p-6">
-        <h2 className="font-semibold text-slate-900">Hiring decision</h2>
-        <p className="mt-1 text-sm text-slate-600">
+      <Card className="mt-6 border-indigo-100 dark:border-indigo-900 bg-indigo-50 dark:bg-indigo-950/50/40 p-6">
+        <h2 className="font-semibold text-slate-900 dark:text-slate-100">Hiring decision</h2>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
           The candidate sees your decision on their applications page. Accept means you
           want to schedule an interview.
         </p>
         {data.hrDecidedAt && data.hrStatus !== 'pending' && (
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
             Decided {new Date(data.hrDecidedAt).toLocaleString()}
           </p>
         )}
@@ -170,7 +177,7 @@ export function CandidateDetailPage() {
               </Button>
               <Button
                 variant="outline"
-                className="text-red-700 hover:bg-red-50"
+                className="text-red-700 dark:text-red-300 hover:bg-red-50 dark:bg-red-950/40"
                 onClick={() => setDecision('decline')}
                 disabled={!!busy}
               >
@@ -179,7 +186,7 @@ export function CandidateDetailPage() {
               </Button>
             </>
           ) : (
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 dark:text-slate-300">
               {data.hrStatus === 'interview'
                 ? 'You invited this candidate to an interview. You can change your mind by declining them.'
                 : 'You declined this candidate. You can still invite them to an interview if you reconsider.'}
@@ -201,7 +208,7 @@ export function CandidateDetailPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-red-700"
+                  className="text-red-700 dark:text-red-300"
                   onClick={() => setDecision('decline')}
                   disabled={!!busy}
                 >
@@ -215,31 +222,31 @@ export function CandidateDetailPage() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Card className="p-6 lg:col-span-2">
-          <h2 className="font-semibold text-slate-900">Assessment summary</h2>
-          <p className="mt-4 text-3xl font-bold text-slate-900">
+          <h2 className="font-semibold text-slate-900 dark:text-slate-100">Assessment summary</h2>
+          <p className="mt-4 text-3xl font-bold text-slate-900 dark:text-slate-100">
             {data.testResult.overallScore}
-            <span className="text-lg text-slate-400">/100</span>
+            <span className="text-lg text-slate-400 dark:text-slate-500">/100</span>
           </p>
-          <p className="text-indigo-600">{data.testResult.matchPercent}% match</p>
-          <p className="mt-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-900">
+          <p className="text-indigo-600 dark:text-indigo-400">{data.testResult.matchPercent}% match</p>
+          <p className="mt-4 rounded-lg bg-blue-50 dark:bg-blue-950/40 p-4 text-sm text-blue-900 dark:text-blue-200">
             {data.testResult.aiSummary}
           </p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="text-xs font-semibold uppercase text-slate-500">
+              <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 dark:text-slate-500">
                 Strengths
               </p>
-              <ul className="mt-2 list-disc pl-5 text-sm text-slate-600">
+              <ul className="mt-2 list-disc pl-5 text-sm text-slate-600 dark:text-slate-300">
                 {data.testResult.strengths.map((s, i) => (
                   <li key={i}>{s}</li>
                 ))}
               </ul>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase text-slate-500">
+              <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 dark:text-slate-500">
                 Improvements
               </p>
-              <ul className="mt-2 list-disc pl-5 text-sm text-slate-600">
+              <ul className="mt-2 list-disc pl-5 text-sm text-slate-600 dark:text-slate-300">
                 {data.testResult.improvements.map((s, i) => (
                   <li key={i}>{s}</li>
                 ))}
@@ -253,47 +260,47 @@ export function CandidateDetailPage() {
       </div>
 
       <Card className="mt-6 p-6">
-        <h2 className="font-semibold text-slate-900">Assessment questions & answers</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <h2 className="font-semibold text-slate-900 dark:text-slate-100">Assessment questions & answers</h2>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
           Each block shows the question the candidate received, then their submission.
         </p>
         <div className="mt-6 space-y-8">
           {data.answers.map((a, idx) => (
             <div
               key={a.questionId}
-              className="overflow-hidden rounded-lg border border-slate-200"
+              className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700"
             >
-              <div className="border-b border-slate-100 bg-slate-50 px-4 py-3 sm:px-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+              <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 sm:px-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
                   Question {idx + 1}
-                  <span className="text-slate-400"> · {a.points} pts</span>
+                  <span className="text-slate-400 dark:text-slate-500"> · {a.points} pts</span>
                   {a.language && (
-                    <span className="text-slate-400"> · {a.language}</span>
+                    <span className="text-slate-400 dark:text-slate-500"> · {a.language}</span>
                   )}
                 </p>
-                <h3 className="mt-1 font-semibold text-slate-900">{a.title}</h3>
+                <h3 className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{a.title}</h3>
               </div>
-              <div className="border-b border-slate-100 bg-white px-4 py-4 sm:px-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <div className="border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-4 sm:px-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 dark:text-slate-500">
                   Question / instructions
                 </p>
-                <div className="mt-2 text-sm text-slate-700">
+                <div className="mt-2 text-sm text-slate-700 dark:text-slate-300">
                   <MarkdownContent content={a.instructions} />
                 </div>
               </div>
-              <div className="bg-white px-4 py-4 sm:px-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <div className="bg-white dark:bg-slate-900 px-4 py-4 sm:px-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 dark:text-slate-500">
                   Candidate answer
                 </p>
                 <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-slate-900 p-4 text-xs text-slate-100">
                   {a.submittedCode || '(empty)'}
                 </pre>
                 {a.notes?.trim() && (
-                  <div className="mt-3 rounded-lg border border-amber-100 bg-amber-50/60 p-3">
-                    <p className="text-xs font-semibold uppercase text-amber-800">
+                  <div className="mt-3 rounded-lg border border-amber-100 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40/60 p-3">
+                    <p className="text-xs font-semibold uppercase text-amber-800 dark:text-amber-200">
                       Candidate notes
                     </p>
-                    <p className="mt-1 whitespace-pre-wrap text-sm text-amber-900">
+                    <p className="mt-1 whitespace-pre-wrap text-sm text-amber-900 dark:text-amber-200">
                       {a.notes}
                     </p>
                   </div>
@@ -306,8 +313,8 @@ export function CandidateDetailPage() {
 
       {data.auditLogs.length > 0 && (
         <Card className="mt-6 p-6">
-          <h2 className="font-semibold text-slate-900">AI audit trail</h2>
-          <ul className="mt-3 space-y-2 text-sm text-slate-600">
+          <h2 className="font-semibold text-slate-900 dark:text-slate-100">AI audit trail</h2>
+          <ul className="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
             {data.auditLogs.map((log, i) => (
               <li key={i}>
                 {log.pipeline} · {log.model} ·{' '}

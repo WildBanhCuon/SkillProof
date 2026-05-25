@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import { Logo } from '../ui/Logo';
 import { Button } from '../ui/Button';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
 const nav = [
   { to: '/jobs', label: 'Browse jobs' },
@@ -14,7 +15,7 @@ export function CandidateHeader() {
   const location = useLocation();
 
   return (
-    <header className="border-b border-slate-200 bg-white">
+    <header className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:border-slate-800 dark:bg-slate-900">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-8">
           <Logo to={isAuthenticated ? '/my-applications' : '/'} />
@@ -34,8 +35,8 @@ export function CandidateHeader() {
                     to={item.to}
                     className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                       active
-                        ? 'bg-indigo-50 text-indigo-700'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                        ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 dark:bg-indigo-950/60 dark:text-indigo-300'
+                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-950 hover:text-slate-900 dark:hover:text-slate-100 dark:text-slate-100 dark:text-slate-400 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-100'
                     }`}
                   >
                     {item.label}
@@ -48,9 +49,10 @@ export function CandidateHeader() {
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
             <>
-              <span className="hidden text-sm text-slate-600 sm:inline">
+              <span className="hidden text-sm text-slate-600 dark:text-slate-300 dark:text-slate-400 dark:text-slate-500 sm:inline">
                 {user?.fullName}
               </span>
+              <ThemeToggle />
               <Button variant="outline" size="sm" onClick={() => logout()}>
                 Log out
               </Button>

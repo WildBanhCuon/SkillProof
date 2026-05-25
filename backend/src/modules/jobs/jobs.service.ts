@@ -4,7 +4,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { JobStatus, SkillImportance } from '@prisma/client';
+import {
+  JobStatus,
+  Prisma,
+  SkillImportance,
+} from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { GeminiService } from '../ai/gemini.service';
 import { AssessmentsService } from '../assessments/assessments.service';
@@ -16,8 +20,10 @@ import {
   ProfileFieldKey,
 } from '../../common/profile-fields';
 import {
+  CANDIDATE_JOB_SORT_OPTIONS,
   CreateJobDto,
   GenerateJobFromWizardDto,
+  ListCandidateJobsQueryDto,
   UpdateJobDto,
 } from './jobs.dto';
 
@@ -58,24 +64,49 @@ export class JobsService {
     return this.formatJob(job);
   }
 
-  async list(user: JwtPayload, status?: JobStatus) {
-    if (user.role === 'candidate') {
-    const jobs = await this.prisma.jobPosting.findMany({
-      where: { status: 'PUBLISHED' },
-      include: {
-        company: { select: { name: true } },
-        assessment: {
-          select: {
-            durationMinutes: true,
-            totalPoints: true,
-            questions: { select: { id: true } },
+  async listForCandidate(
+    user: JwtPayload,
+    opts: ListCandidateJobsQueryDto,
+  ) {
+    if (user.role !== 'candidate') {
+      throw new ForbiddenException();
+    }
+
+    const where = this.candidateJobsWhere(opts);
+    const orderBy = this.candidateJobsOrderBy(opts.sort);
+
+    const [jobs, companyRows] = await Promise.all([
+      this.prisma.jobPosting.findMany({
+        where,
+        include: {
+          company: { select: { name: true } },
+          assessment: {
+            select: {
+              durationMinutes: true,
+              totalPoints: true,
+              questions: { select: { id: true } },
+            },
           },
         },
-      },
-      orderBy: { publishedAt: 'desc' },
-    });
-    return jobs.map((j) => this.formatJob(j));
+        orderBy,
+      }),
+      this.prisma.company.findMany({
+        where: {
+          jobs: { some: { status: JobStatus.PUBLISHED } },
+        },
+        select: { name: true },
+        orderBy: { name: 'asc' },
+      }),
+    ]);
+
+    return {
+      items: jobs.map((j) => this.formatJob(j)),
+      companies: companyRows.map((c) => c.name),
+      total: jobs.length,
+    };
   }
+
+  async list(user: JwtPayload, status?: JobStatus) {
     const jobs = await this.prisma.jobPosting.findMany({
       where: {
         companyId: user.companyId,
@@ -291,6 +322,56 @@ export class JobsService {
       throw new BadRequestException('Cannot edit published job');
     }
     return job;
+  }
+
+  private candidateJobsWhere(
+    opts: ListCandidateJobsQueryDto,
+  ): Prisma.JobPostingWhereInput {
+    const and: Prisma.JobPostingWhereInput[] = [];
+
+    if (opts.company?.trim()) {
+      and.push({
+        company: {
+          name: { contains: opts.company.trim(), mode: 'insensitive' },
+        },
+      });
+    }
+
+    if (opts.search?.trim()) {
+      const q = opts.search.trim();
+      and.push({
+        OR: [
+          { title: { contains: q, mode: 'insensitive' } },
+          { description: { contains: q, mode: 'insensitive' } },
+          { company: { name: { contains: q, mode: 'insensitive' } } },
+        ],
+      });
+    }
+
+    return {
+      status: JobStatus.PUBLISHED,
+      ...(and.length > 0 ? { AND: and } : {}),
+    };
+  }
+
+  private candidateJobsOrderBy(
+    sort?: (typeof CANDIDATE_JOB_SORT_OPTIONS)[number],
+  ): Prisma.JobPostingOrderByWithRelationInput {
+    switch (sort) {
+      case 'oldest':
+        return { publishedAt: 'asc' };
+      case 'title_asc':
+        return { title: 'asc' };
+      case 'title_desc':
+        return { title: 'desc' };
+      case 'duration_asc':
+        return { assessment: { durationMinutes: 'asc' } };
+      case 'duration_desc':
+        return { assessment: { durationMinutes: 'desc' } };
+      case 'newest':
+      default:
+        return { publishedAt: 'desc' };
+    }
   }
 
   private formatJob<T extends { requiredProfileFields: unknown }>(job: T) {

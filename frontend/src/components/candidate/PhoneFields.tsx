@@ -18,12 +18,12 @@ export function PhoneFields({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-slate-700">
+      <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
         Phone
       </label>
       <div className="flex gap-2">
         <select
-          className="w-32 shrink-0 rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50"
+          className="w-32 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50 dark:bg-slate-950"
           value={countryCode || DEFAULT_PHONE_COUNTRY_CODE}
           disabled={disabled}
           onChange={(e) => onCountryCodeChange(e.target.value)}
@@ -37,7 +37,7 @@ export function PhoneFields({
         </select>
         <input
           type="tel"
-          className="min-w-0 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50"
+          className="min-w-0 flex-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50 dark:bg-slate-950"
           value={phone}
           disabled={disabled}
           onChange={(e) => onPhoneChange(e.target.value)}
@@ -45,7 +45,7 @@ export function PhoneFields({
           aria-label="Phone number"
         />
       </div>
-      <p className="mt-1 text-xs text-slate-400">
+      <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
         Select your country code, then enter your number without the leading zero.
       </p>
     </div>

@@ -187,9 +187,9 @@ export function JobEditorPage() {
   };
 
   const severityStyle = (s: string) => {
-    if (s === 'high') return 'border-l-4 border-l-amber-500 bg-amber-50';
-    if (s === 'medium') return 'border-l-4 border-l-amber-400 bg-amber-50/80';
-    return 'border-l-4 border-l-blue-500 bg-blue-50';
+    if (s === 'high') return 'border-l-4 border-l-amber-500 bg-amber-50 dark:bg-amber-950/40';
+    if (s === 'medium') return 'border-l-4 border-l-amber-400 bg-amber-50 dark:bg-amber-950/40/80';
+    return 'border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-950/40';
   };
 
   const canPublish =
@@ -212,16 +212,16 @@ export function JobEditorPage() {
 
   return (
     <div>
-      <p className="text-sm text-slate-500">
-        <Link to="/hr/jobs" className="hover:text-indigo-600">
+      <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
+        <Link to="/hr/jobs" className="hover:text-indigo-600 dark:text-indigo-400">
           Jobs
         </Link>{' '}
         / {isNew ? 'New posting' : isEditable ? 'Edit' : 'View'}
       </p>
-      <h1 className="mt-2 text-2xl font-bold text-slate-900">
+      <h1 className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
         {isNew ? 'Create job posting' : isEditable ? 'Edit job posting' : 'Job posting'}
       </h1>
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
         {title.trim() || 'Untitled posting'} ·{' '}
         {job ? statusLabel(job.status) : 'Draft'}
       </p>
@@ -250,18 +250,18 @@ export function JobEditorPage() {
       )}
 
       {!checked && isEditable && (
-        <Card className="mt-6 border-indigo-100 bg-indigo-50/40 p-4">
+        <Card className="mt-6 border-indigo-100 dark:border-indigo-900 bg-indigo-50 dark:bg-indigo-950/50/40 p-4">
           <p className="text-sm font-medium text-indigo-900">
             Tips for a strong listing
           </p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600 dark:text-slate-300">
             <li>Use a clear job title that matches the seniority you are hiring for.</li>
             <li>
               Separate responsibilities from requirements; avoid asking juniors for
               many years of experience or senior-only stacks unless truly needed.
             </li>
             <li>
-              Run <strong className="font-medium text-slate-700">Check listing</strong>{' '}
+              Run <strong className="font-medium text-slate-700 dark:text-slate-300">Check listing</strong>{' '}
               when your draft is ready — AI will flag issues and build a skills matrix.
             </li>
             <li>
@@ -276,11 +276,11 @@ export function JobEditorPage() {
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <div className={checked ? 'lg:col-span-2' : 'lg:col-span-3'}>
           <Card className="p-6">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 dark:text-slate-500">
               Job description
             </span>
             <input
-              className="mt-4 w-full rounded-lg border border-slate-200 px-3 py-2 text-lg font-semibold placeholder:font-normal placeholder:text-slate-400 read-only:bg-slate-50 read-only:text-slate-700"
+              className="mt-4 w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-lg font-semibold placeholder:font-normal placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-slate-500 read-only:bg-slate-50 dark:read-only:bg-slate-800 dark:bg-slate-950 read-only:text-slate-700 dark:text-slate-300"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={TITLE_PLACEHOLDER}
@@ -296,16 +296,16 @@ export function JobEditorPage() {
                 }
               }}
             />
-            <p className="mt-2 text-xs text-slate-400">
+            <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
               {description.trim() ? `${wordCount(description)} words` : 'Start typing or paste your job ad'}
             </p>
           </Card>
 
           <Card className="mt-6 p-6">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 dark:text-slate-500">
               Candidate profile requirements
             </span>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
               Choose which information candidates must provide on their profile before
               they can apply to this role. You will see their answers in results.
             </p>
@@ -317,7 +317,7 @@ export function JobEditorPage() {
               />
             </div>
             {isEditable && (
-              <p className="mt-3 text-xs text-slate-400">
+              <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
                 Save draft to keep these settings. Requirements cannot be changed after
                 publish.
               </p>
@@ -328,10 +328,10 @@ export function JobEditorPage() {
             <Card className="mt-4 p-6">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-900">
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                     Changes from AI suggestions
                   </h3>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
                     Green lines were added, red lines were removed (like a pull request diff).
                   </p>
                 </div>
@@ -367,17 +367,17 @@ export function JobEditorPage() {
           <div className="space-y-4">
             <Card className="p-4">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-indigo-600" />
-                <span className="text-xs font-semibold uppercase text-slate-500">
+                <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                <span className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 dark:text-slate-500">
                   AI analysis
                 </span>
                 <Badge variant="info">AI Assistant</Badge>
               </div>
               <div className="mt-4 space-y-3">
                 {issues.length === 0 ? (
-                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                  <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 p-4 text-sm text-emerald-900 dark:text-emerald-200">
                     <p className="font-medium">Listing looks good</p>
-                    <p className="mt-1 text-emerald-800/90">
+                    <p className="mt-1 text-emerald-800 dark:text-emerald-200/90">
                       No substantive issues for this seniority level. Review the skills matrix
                       below, then publish when you are ready.
                     </p>
@@ -388,16 +388,16 @@ export function JobEditorPage() {
                       key={i}
                       className={`rounded-lg p-3 text-sm ${severityStyle(issue.severity)}`}
                     >
-                      <p className="font-medium text-slate-900">{issue.message}</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{issue.message}</p>
                       {issue.excerpt && (
-                        <p className="mt-1 text-slate-600">"{issue.excerpt}"</p>
+                        <p className="mt-1 text-slate-600 dark:text-slate-300">"{issue.excerpt}"</p>
                       )}
                     </div>
                   ))
                 )}
               </div>
               {suggestionsApplied ? (
-                <div className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+                <div className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 px-4 py-3 text-sm font-medium text-emerald-800 dark:text-emerald-200">
                   <Check className="h-4 w-4 shrink-0" />
                   Suggestions applied
                 </div>
@@ -430,12 +430,12 @@ export function JobEditorPage() {
 
       {checked && skills && skills.length > 0 && (
         <Card className="mt-6 overflow-hidden p-0">
-          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4">
             <div>
-              <span className="text-xs font-semibold uppercase text-slate-500">
+              <span className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 dark:text-slate-500">
                 Skills matrix
               </span>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
                 Extracted from your listing. Testable skills feed the assessment.
               </p>
             </div>
@@ -445,7 +445,7 @@ export function JobEditorPage() {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+              <thead className="bg-slate-50 dark:bg-slate-950 text-xs uppercase text-slate-500 dark:text-slate-400 dark:text-slate-500">
                 <tr>
                   <th className="px-6 py-3">Skill</th>
                   <th className="px-6 py-3">Importance</th>
@@ -455,7 +455,7 @@ export function JobEditorPage() {
               </thead>
               <tbody>
                 {skills.map((s) => (
-                  <tr key={s.skillName} className="border-t border-slate-100">
+                  <tr key={s.skillName} className="border-t border-slate-100 dark:border-slate-800">
                     <td className="px-6 py-3 font-medium">{s.skillName}</td>
                     <td className="px-6 py-3">
                       <Badge
@@ -466,7 +466,7 @@ export function JobEditorPage() {
                         {s.importance?.replace('_', ' ') ?? s.importance}
                       </Badge>
                     </td>
-                    <td className="px-6 py-3 text-slate-600">{s.expectedLevel}</td>
+                    <td className="px-6 py-3 text-slate-600 dark:text-slate-300">{s.expectedLevel}</td>
                     <td className="px-6 py-3">
                       {s.testable ? (
                         <span className="text-emerald-600">✓</span>
@@ -482,7 +482,7 @@ export function JobEditorPage() {
         </Card>
       )}
 
-      <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-6">
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 dark:border-slate-700 pt-6">
         <Link to="/hr/jobs">
           <Button variant="outline">
             <ArrowLeft className="h-4 w-4" />

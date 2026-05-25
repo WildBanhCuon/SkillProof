@@ -43,14 +43,14 @@ export function HrProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <p className="text-sm text-slate-500">
-        <Link to="/hr/jobs" className="hover:text-indigo-600">
+      <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
+        <Link to="/hr/jobs" className="hover:text-indigo-600 dark:text-indigo-400">
           Jobs
         </Link>{' '}
         / Company profile
       </p>
-      <h1 className="mt-2 text-2xl font-bold text-slate-900">Company profile</h1>
-      <p className="mt-1 text-sm text-slate-500">
+      <h1 className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">Company profile</h1>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
         This description is reused when you create job postings with Guided setup.
       </p>
 
@@ -73,13 +73,13 @@ export function HrProfilePage() {
             label="Your name"
             value={user?.fullName ?? ''}
             readOnly
-            className="bg-slate-50"
+            className="bg-slate-50 dark:bg-slate-950"
           />
           <Input
             label="Company"
             value={user?.companyName ?? ''}
             readOnly
-            className="bg-slate-50"
+            className="bg-slate-50 dark:bg-slate-950"
           />
           <Input
             label="Company website"
@@ -101,24 +101,24 @@ export function HrProfilePage() {
               }}
               onError={setError}
             />
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
               We read public pages on your site (home, about, etc.) and draft text with AI.
               Always review before saving.
             </p>
           </div>
           <label className="block w-full">
-            <span className="mb-1 block text-sm font-medium text-slate-700">
+            <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
               About your team and product
             </span>
             <textarea
               required
               rows={6}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
               value={teamProfile}
               onChange={(e) => setTeamProfile(e.target.value)}
               placeholder="Describe your company, product, and the team the hire will join. This is prefilled in the job creation wizard."
             />
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
               Minimum 10 characters. You can still tweak this per job in the wizard.
             </p>
           </label>

@@ -10,7 +10,7 @@ export function Logo({
   return (
     <Link
       to={to}
-      className={`flex items-center gap-2 font-semibold text-slate-900 ${className}`}
+      className={`flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100 ${className}`}
     >
       <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
         S

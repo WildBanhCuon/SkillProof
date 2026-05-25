@@ -56,10 +56,10 @@ export function RegisterPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold text-slate-900">Create account</h1>
-      <p className="mt-1 text-sm text-slate-500">Join SkillProof to hire or apply with proof</p>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Create account</h1>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">Join SkillProof to hire or apply with proof</p>
 
-      <div className="mt-6 flex rounded-lg border border-slate-200 p-1">
+      <div className="mt-6 flex rounded-lg border border-slate-200 dark:border-slate-700 p-1">
         {(['hr', 'candidate'] as const).map((r) => (
           <button
             key={r}
@@ -68,7 +68,7 @@ export function RegisterPage() {
             className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
               role === r
                 ? 'bg-indigo-600 text-white'
-                : 'text-slate-600 hover:bg-slate-50'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-950'
             }`}
           >
             {r === 'hr' ? 'Company / HR' : 'Candidate'}
@@ -133,24 +133,24 @@ export function RegisterPage() {
                 }}
                 onError={setError}
               />
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
                 Optional: draft “about your team” from your public website, then edit.
               </p>
             </div>
             <label className="block w-full">
-              <span className="mb-1 block text-sm font-medium text-slate-700">
+              <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
                 About your team and product
               </span>
               <textarea
                 required
                 minLength={10}
                 rows={4}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                 value={form.teamProfile}
                 onChange={(e) => setForm({ ...form, teamProfile: e.target.value })}
                 placeholder="e.g. We are a 20-person SaaS team building a learning platform for enterprises."
               />
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
                 Used as the default in job posting wizard — you can edit it anytime in your profile.
               </p>
             </label>
@@ -168,9 +168,9 @@ export function RegisterPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-slate-600">
+      <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-300">
         Already have an account?{' '}
-        <Link to="/login" className="font-medium text-indigo-600 hover:underline">
+        <Link to="/login" className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
           Sign in
         </Link>
       </p>
