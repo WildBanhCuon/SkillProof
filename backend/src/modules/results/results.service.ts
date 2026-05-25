@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Recommendation } from '@prisma/client';
+import { ApplicationHrStatus, Recommendation } from '@prisma/client';
+import { hrStatusToApi } from '../candidate/candidate-application-status';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtPayload } from '../auth/auth.types';
 
@@ -100,6 +102,8 @@ export class ResultsService {
             score: d.score0_100,
           })),
           appliedAt: a.appliedAt,
+          hrStatus: hrStatusToApi(a.hrStatus),
+          hrDecidedAt: a.hrDecidedAt,
         };
       });
 
@@ -147,12 +151,17 @@ export class ResultsService {
 
     return {
       applicationId: app.id,
+      hrStatus: hrStatusToApi(app.hrStatus),
+      hrDecidedAt: app.hrDecidedAt,
       candidate: {
         id: app.candidateUser.id,
         fullName: app.candidateUser.displayName,
         email: app.candidateUser.email,
       },
-      testResult: app.testSession.testResult,
+      testResult: {
+        ...app.testSession.testResult,
+        recommendation: app.testSession.testResult.recommendation.toLowerCase(),
+      },
       answers: app.testSession.answers.map((a) => ({
         questionId: a.questionId,
         title: a.question.title,
@@ -163,6 +172,49 @@ export class ResultsService {
         model: l.model,
         createdAt: l.createdAt,
       })),
+    };
+  }
+
+  async setApplicationDecision(
+    user: JwtPayload,
+    jobId: string,
+    applicationId: string,
+    decision: 'interview' | 'decline',
+  ) {
+    await this.ensureHrJob(jobId, user.companyId!);
+
+    const app = await this.prisma.application.findFirst({
+      where: { id: applicationId, jobPostingId: jobId },
+      include: {
+        testSession: { include: { testResult: true } },
+      },
+    });
+    if (!app?.testSession.testResult) {
+      throw new NotFoundException('Application not found');
+    }
+    if (app.testSession.status !== 'GRADED') {
+      throw new BadRequestException(
+        'You can decide only after the assessment is graded',
+      );
+    }
+
+    const hrStatus =
+      decision === 'interview'
+        ? ApplicationHrStatus.INTERVIEW
+        : ApplicationHrStatus.DECLINED;
+
+    const updated = await this.prisma.application.update({
+      where: { id: applicationId },
+      data: {
+        hrStatus,
+        hrDecidedAt: new Date(),
+      },
+    });
+
+    return {
+      applicationId: updated.id,
+      hrStatus: hrStatusToApi(updated.hrStatus),
+      hrDecidedAt: updated.hrDecidedAt,
     };
   }
 

@@ -43,6 +43,12 @@ enum Recommendation {
   AT_RISK
 }
 
+enum ApplicationHrStatus {
+  PENDING
+  INTERVIEW
+  DECLINED
+}
+
 enum Dimension {
   TECHNICAL
   PROBLEM_SOLVING
@@ -198,11 +204,13 @@ model Answer {
 }
 
 model Application {
-  id              String   @id @default(uuid())
+  id              String               @id @default(uuid())
   jobPostingId    String
   candidateUserId String
-  testSessionId   String   @unique
-  appliedAt       DateTime @default(now())
+  testSessionId   String               @unique
+  hrStatus        ApplicationHrStatus  @default(PENDING)
+  hrDecidedAt     DateTime?
+  appliedAt       DateTime             @default(now())
   jobPosting      JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
   candidateUser   CandidateUser @relation(fields: [candidateUserId], references: [id], onDelete: Cascade)
   testSession     TestSession @relation(fields: [testSessionId], references: [id], onDelete: Cascade)

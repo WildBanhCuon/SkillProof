@@ -173,16 +173,16 @@ export function MyApplicationsPage() {
             <strong>In progress</strong> — finish and submit your assessment.
           </li>
           <li>
-            <strong>Under review</strong> — submitted; the hiring team is reviewing
-            your work.
+            <strong>Under review</strong> — submitted; waiting for the employer to
+            decide.
           </li>
           <li>
-            <strong>Shortlisted</strong> — strong match; the employer is likely to
-            follow up.
+            <strong>Interview invited</strong> — they want to meet you; check your
+            email for next steps.
           </li>
           <li>
-            <strong>Not selected</strong> — you can still view feedback from your
-            submission.
+            <strong>Not selected</strong> — role filled or not moving forward; you
+            can still view feedback.
           </li>
         </ul>
       </Card>

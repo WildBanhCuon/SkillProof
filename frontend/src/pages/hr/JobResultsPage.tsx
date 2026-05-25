@@ -8,7 +8,7 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { DimensionRadar } from '../../components/charts/DimensionRadar';
-import { bandLabel, bandVariant } from '../../utils/format';
+import { bandLabel, bandVariant, hrDecisionLabel, hrDecisionVariant } from '../../utils/format';
 import { rememberLastResultsJob } from '../../utils/hrNav';
 
 const bands = [
@@ -187,8 +187,11 @@ export function JobResultsPage() {
                     <h3 className="font-semibold text-slate-900">
                       {c.candidate.fullName}
                     </h3>
+                    <Badge variant={hrDecisionVariant(c.hrStatus ?? 'pending')}>
+                      {hrDecisionLabel(c.hrStatus ?? 'pending')}
+                    </Badge>
                     <Badge variant={bandVariant(c.recommendation)}>
-                      {bandLabel(c.recommendation)}
+                      AI: {bandLabel(c.recommendation)}
                     </Badge>
                   </div>
                   <p className="text-sm text-slate-500">{c.candidate.email}</p>

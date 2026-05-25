@@ -1,19 +1,25 @@
-import { Recommendation, SessionStatus, SessionType } from '@prisma/client';
+import {
+  ApplicationHrStatus,
+  Recommendation,
+  SessionStatus,
+  SessionType,
+} from '@prisma/client';
 
 /** Candidate-facing status for applications and practice tests. */
 export type CandidateApplicationStatus =
   | 'in_progress'
   | 'expired'
   | 'under_review'
-  | 'shortlisted'
-  | 'not_selected'
+  | 'interview_invited'
+  | 'declined'
   | 'practice_in_progress'
   | 'practice_complete';
 
 export function deriveCandidateApplicationStatus(
   sessionType: SessionType,
   sessionStatus: SessionStatus,
-  recommendation?: Recommendation | null,
+  hrStatus?: ApplicationHrStatus | null,
+  _recommendation?: Recommendation | null,
 ): CandidateApplicationStatus {
   if (sessionType === SessionType.PRACTICE) {
     if (sessionStatus === SessionStatus.IN_PROGRESS) {
@@ -28,6 +34,13 @@ export function deriveCandidateApplicationStatus(
     return 'under_review';
   }
 
+  if (hrStatus === ApplicationHrStatus.INTERVIEW) {
+    return 'interview_invited';
+  }
+  if (hrStatus === ApplicationHrStatus.DECLINED) {
+    return 'declined';
+  }
+
   switch (sessionStatus) {
     case SessionStatus.IN_PROGRESS:
       return 'in_progress';
@@ -35,16 +48,13 @@ export function deriveCandidateApplicationStatus(
       return 'expired';
     case SessionStatus.SUBMITTED:
     case SessionStatus.GRADING:
-      return 'under_review';
     case SessionStatus.GRADED:
-      if (recommendation === Recommendation.READY_NOW) {
-        return 'shortlisted';
-      }
-      if (recommendation === Recommendation.AT_RISK) {
-        return 'not_selected';
-      }
       return 'under_review';
     default:
       return 'under_review';
   }
+}
+
+export function hrStatusToApi(status: ApplicationHrStatus): string {
+  return status.toLowerCase();
 }

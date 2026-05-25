@@ -55,12 +55,6 @@ export function HrNav() {
           >
             Candidates
           </NavLink>
-          <span className="cursor-not-allowed rounded-lg px-3 py-2 text-sm text-slate-400">
-            Tests
-          </span>
-          <span className="cursor-not-allowed rounded-lg px-3 py-2 text-sm text-slate-400">
-            Analytics
-          </span>
         </nav>
         <div className="flex items-center gap-3">
           <div className="hidden text-right sm:block">

@@ -156,6 +156,25 @@ export function ApplicationDetailPage() {
         </Card>
       )}
 
+      {data.applicationStatus === 'interview_invited' && (
+        <Card className="mt-6 border-emerald-200 bg-emerald-50 p-6">
+          <h2 className="font-semibold text-emerald-900">Interview invited</h2>
+          <p className="mt-2 text-sm text-emerald-800">
+            {data.companyName} wants to move forward with you for this role. They
+            may contact you at the email on your account to schedule an interview.
+          </p>
+        </Card>
+      )}
+
+      {data.applicationStatus === 'declined' && (
+        <Card className="mt-6 border-slate-200 bg-slate-50 p-6">
+          <p className="text-sm text-slate-700">
+            The employer decided not to continue with your application for this
+            role. Your assessment feedback below can still help you improve.
+          </p>
+        </Card>
+      )}
+
       {isPractice && (
         <p className="mt-6 text-sm text-amber-800">
           Practice results are for your learning only — they are not shared with

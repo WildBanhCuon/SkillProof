@@ -1,10 +1,11 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { JwtPayload } from '../auth/auth.types';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { ResultsService } from './results.service';
+import { UpdateApplicationDecisionDto } from './results.dto';
 
 @Controller('jobs/:jobId')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -35,5 +36,20 @@ export class ResultsController {
     @Param('applicationId') applicationId: string,
   ) {
     return this.results.candidateDetail(user, jobId, applicationId);
+  }
+
+  @Patch('candidates/:applicationId/decision')
+  setDecision(
+    @CurrentUser() user: JwtPayload,
+    @Param('jobId') jobId: string,
+    @Param('applicationId') applicationId: string,
+    @Body() dto: UpdateApplicationDecisionDto,
+  ) {
+    return this.results.setApplicationDecision(
+      user,
+      jobId,
+      applicationId,
+      dto.decision,
+    );
   }
 }

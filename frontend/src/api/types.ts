@@ -116,6 +116,8 @@ export interface CandidateRow {
   aiSummary: string;
   dimensionScores: DimensionScore[];
   appliedAt?: string;
+  hrStatus?: 'pending' | 'interview' | 'declined' | string;
+  hrDecidedAt?: string | null;
 }
 
 export interface JobStats {

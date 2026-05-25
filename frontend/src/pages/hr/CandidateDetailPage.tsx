@@ -1,17 +1,26 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, Calendar, UserX } from 'lucide-react';
 import { api } from '../../api/client';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { Alert } from '../../components/ui/Alert';
 import { DimensionRadar } from '../../components/charts/DimensionRadar';
-import { bandLabel, bandVariant } from '../../utils/format';
+import {
+  bandLabel,
+  bandVariant,
+  hrDecisionLabel,
+  hrDecisionVariant,
+} from '../../utils/format';
+import { formatApiError } from '../../utils/errors';
 import { rememberLastResultsJob } from '../../utils/hrNav';
 
 interface DetailResponse {
   applicationId: string;
+  hrStatus: string;
+  hrDecidedAt: string | null;
   candidate: { id: string; fullName: string; email: string };
   testResult: {
     overallScore: number;
@@ -32,6 +41,9 @@ interface DetailResponse {
 
 export function CandidateDetailPage() {
   const { id: jobId, applicationId } = useParams();
+  const queryClient = useQueryClient();
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState<'interview' | 'decline' | null>(null);
 
   useEffect(() => {
     if (jobId) rememberLastResultsJob(jobId);
@@ -46,6 +58,30 @@ export function CandidateDetailPage() {
     enabled: !!jobId && !!applicationId,
   });
 
+  const setDecision = async (decision: 'interview' | 'decline') => {
+    if (!jobId || !applicationId) return;
+    const label =
+      decision === 'interview' ? 'invite this candidate to an interview' : 'decline this candidate';
+    if (!window.confirm(`Are you sure you want to ${label}?`)) return;
+
+    setError('');
+    setBusy(decision);
+    try {
+      await api.patch(
+        `/jobs/${jobId}/candidates/${applicationId}/decision`,
+        { decision },
+      );
+      await queryClient.invalidateQueries({
+        queryKey: ['candidate-detail', jobId, applicationId],
+      });
+      await queryClient.invalidateQueries({ queryKey: ['job', jobId, 'candidates'] });
+    } catch (e) {
+      setError(formatApiError(e, 'Update decision'));
+    } finally {
+      setBusy(null);
+    }
+  };
+
   if (isLoading || !data) {
     return <p className="text-slate-500">Loading candidate…</p>;
   }
@@ -55,6 +91,7 @@ export function CandidateDetailPage() {
     dimension: d.dimension.toLowerCase().replace(/_/g, ' '),
     score: d.score0_100,
   }));
+  const canDecide = data.hrStatus === 'pending';
 
   return (
     <div>
@@ -65,6 +102,12 @@ export function CandidateDetailPage() {
         </Button>
       </Link>
 
+      {error && (
+        <div className="mb-4">
+          <Alert onDismiss={() => setError('')}>{error}</Alert>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
@@ -72,8 +115,79 @@ export function CandidateDetailPage() {
           </h1>
           <p className="text-slate-500">{data.candidate.email}</p>
         </div>
-        <Badge variant={bandVariant(rec)}>{bandLabel(rec)}</Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant={hrDecisionVariant(data.hrStatus)}>
+            {hrDecisionLabel(data.hrStatus)}
+          </Badge>
+          <Badge variant={bandVariant(rec)}>AI: {bandLabel(rec)}</Badge>
+        </div>
       </div>
+
+      <Card className="mt-6 border-indigo-100 bg-indigo-50/40 p-6">
+        <h2 className="font-semibold text-slate-900">Hiring decision</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          The candidate sees your decision on their applications page. Accept means you
+          want to schedule an interview.
+        </p>
+        {data.hrDecidedAt && data.hrStatus !== 'pending' && (
+          <p className="mt-2 text-xs text-slate-500">
+            Decided {new Date(data.hrDecidedAt).toLocaleString()}
+          </p>
+        )}
+        <div className="mt-4 flex flex-wrap gap-3">
+          {canDecide ? (
+            <>
+              <Button
+                onClick={() => setDecision('interview')}
+                disabled={!!busy}
+              >
+                <Calendar className="h-4 w-4" />
+                {busy === 'interview' ? 'Saving…' : 'Invite to interview'}
+              </Button>
+              <Button
+                variant="outline"
+                className="text-red-700 hover:bg-red-50"
+                onClick={() => setDecision('decline')}
+                disabled={!!busy}
+              >
+                <UserX className="h-4 w-4" />
+                {busy === 'decline' ? 'Saving…' : 'Decline'}
+              </Button>
+            </>
+          ) : (
+            <p className="text-sm text-slate-600">
+              {data.hrStatus === 'interview'
+                ? 'You invited this candidate to an interview. You can change your mind by declining them.'
+                : 'You declined this candidate. You can still invite them to an interview if you reconsider.'}
+            </p>
+          )}
+          {!canDecide && (
+            <div className="flex flex-wrap gap-2">
+              {data.hrStatus !== 'interview' && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setDecision('interview')}
+                  disabled={!!busy}
+                >
+                  Invite to interview
+                </Button>
+              )}
+              {data.hrStatus !== 'declined' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-700"
+                  onClick={() => setDecision('decline')}
+                  disabled={!!busy}
+                >
+                  Decline
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </Card>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Card className="p-6 lg:col-span-2">

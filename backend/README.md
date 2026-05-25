@@ -140,6 +140,7 @@ Health: `GET /v1/health`
 - `GET /v1/jobs/:id/candidates?sort=score&band=ready_now&search=`
 
 - `GET /v1/jobs/:id/candidates/:applicationId`
+- `PATCH /v1/jobs/:id/candidates/:applicationId/decision` — `{ "decision": "interview" | "decline" }`
 
 
 

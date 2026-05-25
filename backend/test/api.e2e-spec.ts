@@ -329,6 +329,31 @@ describe('SkillProof API (e2e)', () => {
       expect(res.body).toBeDefined();
     });
 
+    it('PATCH /v1/jobs/:id/candidates/:applicationId/decision', async () => {
+      const list = await request(app.getHttpServer())
+        .get(`/v1/jobs/${jobId}/candidates`)
+        .set(authHeader(hrToken))
+        .expect(200);
+      const appId = list.body.candidates[0]?.applicationId;
+      expect(appId).toBeDefined();
+
+      await request(app.getHttpServer())
+        .patch(`/v1/jobs/${jobId}/candidates/${appId}/decision`)
+        .set(authHeader(hrToken))
+        .send({ decision: 'interview' })
+        .expect(200);
+
+      const candApps = await request(app.getHttpServer())
+        .get('/v1/candidate/applications')
+        .set(authHeader(candidateToken))
+        .expect(200);
+      const row = candApps.body.items.find(
+        (i: { sessionId: string }) => i.sessionId === sessionId,
+      );
+      expect(row.applicationStatus).toBe('interview_invited');
+      expect(row.hrStatus).toBe('interview');
+    });
+
     it('GET /v1/jobs/:id/candidates', async () => {
       const res = await request(app.getHttpServer())
         .get(`/v1/jobs/${jobId}/candidates`)

@@ -53,6 +53,8 @@ export function applicationStatusLabel(status: string): string {
     in_progress: 'In progress',
     expired: 'Expired',
     under_review: 'Under review',
+    interview_invited: 'Interview invited',
+    declined: 'Not selected',
     shortlisted: 'Shortlisted',
     not_selected: 'Not selected',
     practice_in_progress: 'Practice in progress',
@@ -64,11 +66,28 @@ export function applicationStatusLabel(status: string): string {
 export function applicationStatusVariant(
   status: string,
 ): 'default' | 'success' | 'info' | 'warning' | 'danger' {
-  if (status === 'shortlisted') return 'success';
-  if (status === 'not_selected') return 'danger';
+  if (status === 'interview_invited' || status === 'shortlisted') return 'success';
+  if (status === 'declined' || status === 'not_selected') return 'danger';
   if (status === 'under_review') return 'warning';
   if (status === 'in_progress' || status === 'practice_in_progress') return 'info';
   if (status === 'practice_complete') return 'default';
   if (status === 'expired') return 'danger';
   return 'default';
+}
+
+export function hrDecisionLabel(status: string): string {
+  const map: Record<string, string> = {
+    pending: 'Awaiting your decision',
+    interview: 'Interview invited',
+    declined: 'Declined',
+  };
+  return map[status] ?? status;
+}
+
+export function hrDecisionVariant(
+  status: string,
+): 'default' | 'success' | 'info' | 'warning' | 'danger' {
+  if (status === 'interview') return 'success';
+  if (status === 'declined') return 'danger';
+  return 'warning';
 }

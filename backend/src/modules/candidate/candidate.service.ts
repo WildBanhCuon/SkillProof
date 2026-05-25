@@ -35,8 +35,10 @@ export class CandidateService {
         applicationStatus: deriveCandidateApplicationStatus(
           s.sessionType,
           s.status,
+          s.application?.hrStatus,
           s.testResult?.recommendation,
         ),
+        hrStatus: s.application?.hrStatus?.toLowerCase() ?? null,
         startedAt: s.startedAt,
         submittedAt: s.submittedAt,
         expiresAt: s.expiresAt,
@@ -69,6 +71,7 @@ export class CandidateService {
     const applicationStatus = deriveCandidateApplicationStatus(
       s.sessionType,
       s.status,
+      s.application?.hrStatus,
       s.testResult?.recommendation,
     );
 
@@ -81,6 +84,8 @@ export class CandidateService {
       sessionType: s.sessionType.toLowerCase(),
       sessionStatus: s.status.toLowerCase(),
       applicationStatus,
+      hrStatus: s.application?.hrStatus?.toLowerCase() ?? null,
+      hrDecidedAt: s.application?.hrDecidedAt ?? null,
       startedAt: s.startedAt,
       submittedAt: s.submittedAt,
       expiresAt: s.expiresAt,
