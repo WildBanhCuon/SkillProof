@@ -18,6 +18,7 @@ import { formatApiError } from '../../utils/errors';
 import { rememberLastResultsJob } from '../../utils/hrNav';
 import { CandidateProfileCard } from '../../components/candidate/CandidateProfileCard';
 import type { CandidateProfileData } from '../../api/types';
+import { MarkdownContent } from '../../components/ui/MarkdownContent';
 
 interface DetailResponse {
   applicationId: string;
@@ -41,8 +42,13 @@ interface DetailResponse {
   };
   answers: {
     questionId: string;
+    orderIndex: number;
     title: string;
+    instructions: string;
+    points: number;
+    language: string;
     submittedCode: string;
+    notes: string | null;
   }[];
   auditLogs: { pipeline: string; model: string; createdAt: string }[];
 }
@@ -247,14 +253,52 @@ export function CandidateDetailPage() {
       </div>
 
       <Card className="mt-6 p-6">
-        <h2 className="font-semibold text-slate-900">Submitted answers</h2>
-        <div className="mt-4 space-y-6">
-          {data.answers.map((a) => (
-            <div key={a.questionId} className="border-t border-slate-100 pt-4">
-              <h3 className="font-medium text-slate-900">{a.title}</h3>
-              <pre className="mt-2 max-h-48 overflow-auto rounded-lg bg-slate-900 p-4 text-xs text-slate-100">
-                {a.submittedCode}
-              </pre>
+        <h2 className="font-semibold text-slate-900">Assessment questions & answers</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Each block shows the question the candidate received, then their submission.
+        </p>
+        <div className="mt-6 space-y-8">
+          {data.answers.map((a, idx) => (
+            <div
+              key={a.questionId}
+              className="overflow-hidden rounded-lg border border-slate-200"
+            >
+              <div className="border-b border-slate-100 bg-slate-50 px-4 py-3 sm:px-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+                  Question {idx + 1}
+                  <span className="text-slate-400"> · {a.points} pts</span>
+                  {a.language && (
+                    <span className="text-slate-400"> · {a.language}</span>
+                  )}
+                </p>
+                <h3 className="mt-1 font-semibold text-slate-900">{a.title}</h3>
+              </div>
+              <div className="border-b border-slate-100 bg-white px-4 py-4 sm:px-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Question / instructions
+                </p>
+                <div className="mt-2 text-sm text-slate-700">
+                  <MarkdownContent content={a.instructions} />
+                </div>
+              </div>
+              <div className="bg-white px-4 py-4 sm:px-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Candidate answer
+                </p>
+                <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-slate-900 p-4 text-xs text-slate-100">
+                  {a.submittedCode || '(empty)'}
+                </pre>
+                {a.notes?.trim() && (
+                  <div className="mt-3 rounded-lg border border-amber-100 bg-amber-50/60 p-3">
+                    <p className="text-xs font-semibold uppercase text-amber-800">
+                      Candidate notes
+                    </p>
+                    <p className="mt-1 whitespace-pre-wrap text-sm text-amber-900">
+                      {a.notes}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>

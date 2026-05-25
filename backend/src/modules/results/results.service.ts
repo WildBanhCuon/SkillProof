@@ -187,11 +187,18 @@ export class ResultsService {
         ...app.testSession.testResult,
         recommendation: app.testSession.testResult.recommendation.toLowerCase(),
       },
-      answers: app.testSession.answers.map((a) => ({
-        questionId: a.questionId,
-        title: a.question.title,
-        submittedCode: a.submittedCode,
-      })),
+      answers: [...app.testSession.answers]
+        .sort((a, b) => a.question.orderIndex - b.question.orderIndex)
+        .map((a) => ({
+          questionId: a.questionId,
+          orderIndex: a.question.orderIndex,
+          title: a.question.title,
+          instructions: a.question.instructions,
+          points: a.question.points,
+          language: a.question.language,
+          submittedCode: a.submittedCode,
+          notes: a.notes,
+        })),
       auditLogs: auditLogs.map((l) => ({
         pipeline: l.pipeline,
         model: l.model,

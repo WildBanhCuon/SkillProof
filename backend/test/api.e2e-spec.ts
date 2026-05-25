@@ -423,6 +423,10 @@ describe('SkillProof API (e2e)', () => {
       expect(res.body.candidate.profile).toBeDefined();
       expect(res.body.candidate.profile.phoneFormatted).toBe('+32 470 00 00 00');
       expect(res.body.requiredProfileFields).toContain('phone');
+      expect(res.body.answers.length).toBeGreaterThan(0);
+      expect(res.body.answers[0].instructions).toBeDefined();
+      expect(res.body.answers[0].instructions.length).toBeGreaterThan(10);
+      expect(res.body.answers[0].title).toBeDefined();
     });
 
     it('POST /v1/jobs/:id/archive', async () => {
