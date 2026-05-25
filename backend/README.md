@@ -243,13 +243,44 @@ Login requests auto-save `accessToken`, `refreshToken`, `jobId`, `sessionId`, an
 | Root Directory | `backend` |
 | Branch | `deploy` |
 | Build Command | `npm install --include=dev && npx prisma generate && npm run build` |
-| Start Command | `npx prisma migrate deploy && npm run start:prod` |
+| Start Command | `npm run start:render` |
 
-**Node:** `backend/.node-version` pins **22** (optional; set `NODE_VERSION=22` in Render if needed).
+**Node:** `backend/.node-version` pins **22**.
 
-**Important:** Use `npm install --include=dev` in the build command (or rely on `backend/.npmrc`). Render’s production install skips devDependencies by default, which breaks TypeScript and `@types/*`. Build-time packages (`@nestjs/cli`, `typescript`, `@types/*`) are also listed under `dependencies` as a fallback.
+**Important:** Use `npm install --include=dev` in the build command (or rely on `backend/.npmrc`).
 
-After first deploy, open **Shell** and run `npm run prisma:seed` once.
+### Required environment variables (API service)
+
+Create **PostgreSQL** and **Key Value (Redis)** in the **same region** as the web service, then set:
+
+| Variable | Where to get it |
+|----------|-----------------|
+| `DATABASE_URL` | Postgres → **Internal** URL. If Prisma cannot connect, append `?sslmode=require` (or `&sslmode=require` if the URL already has query params). Easiest: **Link** the database to the web service in Render. |
+| `REDIS_URL` | Key Value → **Internal** URL (`redis://...`). **Required** — the API uses Bull for grading; without Redis the process exits on startup. |
+| `JWT_SECRET` | Long random string (you generate) |
+| `GEMINI_API_KEY` | Google AI Studio key |
+| `GEMINI_MODEL` | `gemini-2.0-flash` |
+| `CORS_ORIGINS` | Your frontend URL, e.g. `https://skillproof-web.onrender.com` (add `http://localhost:5173` for local dev) |
+
+Optional: `JWT_ACCESS_EXPIRES`, `JWT_REFRESH_EXPIRES`, `PORT` (Render sets `PORT` automatically).
+
+### After first successful deploy
+
+1. Open **Shell** on the API service.
+2. Run: `npm run prisma:seed`
+3. Hit `GET https://<your-api>.onrender.com/v1/health`
+
+### Build succeeded but deploy exits with status 1
+
+The start command runs **migrations then the API**. Open the **deploy logs** (not build logs) and scroll above `Exited with status 1` for the real error.
+
+| Log message | Fix |
+|-------------|-----|
+| `Can't reach database server` / `P1001` | Set `DATABASE_URL` to the Postgres **Internal** URL; link DB to service; add `sslmode=require` if needed. |
+| `Authentication failed` / `P1000` | Wrong credentials — re-link database or copy URL again from Render. |
+| `ECONNREFUSED 127.0.0.1:6379` | Set `REDIS_URL` to Render Key Value **Internal** URL (not localhost). |
+| `prisma: command not found` | Use start command `npm run start:render` (needs latest `deploy` branch). |
+| App starts then crashes | Check `GEMINI_API_KEY`, `REDIS_URL`, and full deploy log stack trace. |
 
 ## Notes
 
