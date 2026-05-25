@@ -19,6 +19,7 @@ import { AssessmentPage } from './pages/candidate/AssessmentPage';
 import { ResultPage } from './pages/candidate/ResultPage';
 import { MyApplicationsPage } from './pages/candidate/MyApplicationsPage';
 import { ApplicationDetailPage } from './pages/candidate/ApplicationDetailPage';
+import { CandidateProfilePage } from './pages/candidate/CandidateProfilePage';
 import { useAuth } from './auth/AuthContext';
 
 function HomeRedirect() {
@@ -93,6 +94,17 @@ export default function App() {
           >
             <Route index element={<MyApplicationsPage />} />
             <Route path=":sessionId" element={<ApplicationDetailPage />} />
+          </Route>
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute role="candidate">
+                <CandidateLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<CandidateProfilePage />} />
           </Route>
 
           <Route

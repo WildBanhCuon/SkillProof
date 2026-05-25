@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ApiError } from '../../api/client';
+import { profileFieldLabel } from '../../data/profileFields';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { formatApiError } from '../../utils/errors';
@@ -31,6 +33,22 @@ export function JobDetailPage() {
       });
       navigate(`/sessions/${session.id}`, { state: { session } });
     } catch (e) {
+      if (e instanceof ApiError && e.status === 400) {
+        const body = e.body as {
+          message?: { missingProfileFields?: string[] };
+          missingProfileFields?: string[];
+        };
+        const nested = body?.message;
+        const missing =
+          (typeof nested === 'object' && nested?.missingProfileFields) ||
+          body?.missingProfileFields;
+        if (missing?.length) {
+          setError(
+            `Complete your profile before applying. Missing: ${missing.map((f) => profileFieldLabel(f)).join(', ')}.`,
+          );
+          return;
+        }
+      }
       setError(formatApiError(e, 'Start assessment session'));
     } finally {
       setLoading('');
@@ -64,6 +82,25 @@ export function JobDetailPage() {
           Assessment: {job.assessment.durationMinutes} minutes ·{' '}
           {job.assessment.totalPoints} points
         </p>
+      )}
+
+      {job.requiredProfileFields && job.requiredProfileFields.length > 0 && (
+        <Card className="mt-6 border-amber-100 bg-amber-50/40 p-4">
+          <p className="text-sm font-medium text-amber-900">Profile required to apply</p>
+          <p className="mt-1 text-sm text-amber-800/90">
+            This employer requires:{' '}
+            {job.requiredProfileFields.map((f) => profileFieldLabel(f)).join(', ')}.
+          </p>
+          {job.missingProfileFields && job.missingProfileFields.length > 0 && (
+            <p className="mt-2 text-sm text-amber-900">
+              You still need:{' '}
+              {job.missingProfileFields.map((f) => profileFieldLabel(f)).join(', ')}.{' '}
+              <Link to="/profile" className="font-medium text-indigo-700 underline">
+                Complete your profile
+              </Link>
+            </p>
+          )}
+        </Card>
       )}
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">

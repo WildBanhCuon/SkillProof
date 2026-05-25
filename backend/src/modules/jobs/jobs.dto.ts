@@ -1,4 +1,11 @@
-import { IsIn, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsArray,
+  IsIn,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
+import { PROFILE_FIELD_KEYS } from '../../common/profile-fields';
 
 export class GenerateJobFromWizardDto {
   @IsString()
@@ -50,6 +57,11 @@ export class CreateJobDto {
   @IsString()
   @MinLength(20)
   description!: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsIn([...PROFILE_FIELD_KEYS], { each: true })
+  requiredProfileFields?: string[];
 }
 
 export class UpdateJobDto {
@@ -62,4 +74,9 @@ export class UpdateJobDto {
   @IsString()
   @MinLength(20)
   description?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsIn([...PROFILE_FIELD_KEYS], { each: true })
+  requiredProfileFields?: string[];
 }

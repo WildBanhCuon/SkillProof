@@ -6,6 +6,7 @@ import { Button } from '../ui/Button';
 const nav = [
   { to: '/jobs', label: 'Browse jobs' },
   { to: '/my-applications', label: 'My applications' },
+  { to: '/profile', label: 'Profile' },
 ];
 
 export function CandidateHeader() {
@@ -24,7 +25,9 @@ export function CandidateHeader() {
                   item.to === '/jobs'
                     ? location.pathname === '/jobs' ||
                       /^\/jobs\/[^/]+$/.test(location.pathname)
-                    : location.pathname.startsWith('/my-applications');
+                    : item.to === '/profile'
+                      ? location.pathname.startsWith('/profile')
+                      : location.pathname.startsWith('/my-applications');
                 return (
                   <Link
                     key={item.to}

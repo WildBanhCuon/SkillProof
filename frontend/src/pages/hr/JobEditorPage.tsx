@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Check, Sparkles, Wand2 } from 'lucide-react';
 import { api } from '../../api/client';
-import type { JobPosting, ListingIssue } from '../../api/types';
+import type { JobPosting, ListingIssue, ProfileFieldKey } from '../../api/types';
+import { ProfileRequirementsEditor } from '../../components/hr/ProfileRequirementsEditor';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -39,6 +40,9 @@ export function JobEditorPage() {
     after: string;
   } | null>(null);
   const [suggestionsApplied, setSuggestionsApplied] = useState(false);
+  const [requiredProfileFields, setRequiredProfileFields] = useState<
+    ProfileFieldKey[]
+  >([]);
 
   const { data: job } = useQuery({
     queryKey: ['job', jobId],
@@ -57,6 +61,7 @@ export function JobEditorPage() {
         if (analysis?.issues) setIssues(analysis.issues as ListingIssue[]);
       }
       setSuggestionsApplied(!!job.suggestionsAppliedAt);
+      setRequiredProfileFields(job.requiredProfileFields ?? []);
     }
   }, [job]);
 
@@ -65,11 +70,19 @@ export function JobEditorPage() {
     setBusy('save');
     try {
       if (!jobId) {
-        const created = await api.post<JobPosting>('/jobs', { title, description });
+        const created = await api.post<JobPosting>('/jobs', {
+          title,
+          description,
+          requiredProfileFields,
+        });
         setJobId(created.id);
         navigate(`/hr/jobs/${created.id}`, { replace: true });
       } else {
-        await api.patch(`/jobs/${jobId}`, { title, description });
+        await api.patch(`/jobs/${jobId}`, {
+          title,
+          description,
+          requiredProfileFields,
+        });
       }
       setSuccess('Draft saved');
       queryClient.invalidateQueries({ queryKey: ['hr', 'jobs'] });
@@ -78,7 +91,7 @@ export function JobEditorPage() {
     } finally {
       setBusy('');
     }
-  }, [jobId, title, description, navigate, queryClient]);
+  }, [jobId, title, description, requiredProfileFields, navigate, queryClient]);
 
   const hasContent = title.trim().length > 0 && description.trim().length > 0;
 
@@ -93,7 +106,11 @@ export function JobEditorPage() {
     try {
       let idToUse = jobId;
       if (!idToUse) {
-        const created = await api.post<JobPosting>('/jobs', { title, description });
+        const created = await api.post<JobPosting>('/jobs', {
+          title,
+          description,
+          requiredProfileFields,
+        });
         idToUse = created.id;
         setJobId(created.id);
         navigate(`/hr/jobs/${created.id}`, { replace: true });
@@ -282,6 +299,29 @@ export function JobEditorPage() {
             <p className="mt-2 text-xs text-slate-400">
               {description.trim() ? `${wordCount(description)} words` : 'Start typing or paste your job ad'}
             </p>
+          </Card>
+
+          <Card className="mt-6 p-6">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Candidate profile requirements
+            </span>
+            <p className="mt-1 text-sm text-slate-500">
+              Choose which information candidates must provide on their profile before
+              they can apply to this role. You will see their answers in results.
+            </p>
+            <div className="mt-4">
+              <ProfileRequirementsEditor
+                value={requiredProfileFields}
+                onChange={setRequiredProfileFields}
+                disabled={!isEditable}
+              />
+            </div>
+            {isEditable && (
+              <p className="mt-3 text-xs text-slate-400">
+                Save draft to keep these settings. Requirements cannot be changed after
+                publish.
+              </p>
+            )}
           </Card>
 
           {appliedDiff && (

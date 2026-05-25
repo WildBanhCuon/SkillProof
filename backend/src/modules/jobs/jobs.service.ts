@@ -10,6 +10,12 @@ import { GeminiService } from '../ai/gemini.service';
 import { AssessmentsService } from '../assessments/assessments.service';
 import { JwtPayload } from '../auth/auth.types';
 import {
+  missingRequiredProfileFields,
+  parseRequiredProfileFields,
+  profileValuesFromUser,
+  ProfileFieldKey,
+} from '../../common/profile-fields';
+import {
   CreateJobDto,
   GenerateJobFromWizardDto,
   UpdateJobDto,
@@ -39,35 +45,38 @@ export class JobsService {
   }
 
   async create(user: JwtPayload, dto: CreateJobDto) {
-    return this.prisma.jobPosting.create({
+    const job = await this.prisma.jobPosting.create({
       data: {
         companyId: user.companyId!,
         title: dto.title,
         description: dto.description,
+        requiredProfileFields: dto.requiredProfileFields ?? [],
         status: 'DRAFT',
       },
       include: { skillRequirements: true, assessment: true },
     });
+    return this.formatJob(job);
   }
 
   async list(user: JwtPayload, status?: JobStatus) {
     if (user.role === 'candidate') {
-      return this.prisma.jobPosting.findMany({
-        where: { status: 'PUBLISHED' },
-        include: {
-          company: { select: { name: true } },
-          assessment: {
-            select: {
-              durationMinutes: true,
-              totalPoints: true,
-              questions: { select: { id: true } },
-            },
+    const jobs = await this.prisma.jobPosting.findMany({
+      where: { status: 'PUBLISHED' },
+      include: {
+        company: { select: { name: true } },
+        assessment: {
+          select: {
+            durationMinutes: true,
+            totalPoints: true,
+            questions: { select: { id: true } },
           },
         },
-        orderBy: { publishedAt: 'desc' },
-      });
-    }
-    return this.prisma.jobPosting.findMany({
+      },
+      orderBy: { publishedAt: 'desc' },
+    });
+    return jobs.map((j) => this.formatJob(j));
+  }
+    const jobs = await this.prisma.jobPosting.findMany({
       where: {
         companyId: user.companyId,
         ...(status ? { status } : {}),
@@ -79,6 +88,7 @@ export class JobsService {
       },
       orderBy: { updatedAt: 'desc' },
     });
+    return jobs.map((j) => this.formatJob(j));
   }
 
   async findOne(user: JwtPayload, id: string) {
@@ -102,20 +112,41 @@ export class JobsService {
     if (user.role === 'candidate' && job.status !== 'PUBLISHED') {
       throw new NotFoundException('Job not found');
     }
-    return job;
+
+    const formatted = this.formatJob(job);
+    if (user.role === 'candidate') {
+      const candidate = await this.prisma.candidateUser.findUnique({
+        where: { id: user.sub },
+        include: { profile: true },
+      });
+      const values = profileValuesFromUser(
+        candidate!.displayName,
+        candidate!.profile,
+      );
+      const required = formatted.requiredProfileFields as ProfileFieldKey[];
+      return {
+        ...formatted,
+        missingProfileFields: missingRequiredProfileFields(required, values),
+      };
+    }
+    return formatted;
   }
 
   async update(user: JwtPayload, id: string, dto: UpdateJobDto) {
     const job = await this.ensureHrDraft(id, user.companyId!);
-    return this.prisma.jobPosting.update({
+    const updated = await this.prisma.jobPosting.update({
       where: { id: job.id },
       data: {
         title: dto.title,
         description: dto.description,
+        ...(dto.requiredProfileFields !== undefined
+          ? { requiredProfileFields: dto.requiredProfileFields }
+          : {}),
         status: dto.description ? 'DRAFT' : undefined,
       },
       include: { skillRequirements: true },
     });
+    return this.formatJob(updated);
   }
 
   async checkListing(user: JwtPayload, id: string) {
@@ -260,6 +291,15 @@ export class JobsService {
       throw new BadRequestException('Cannot edit published job');
     }
     return job;
+  }
+
+  private formatJob<T extends { requiredProfileFields: unknown }>(job: T) {
+    return {
+      ...job,
+      requiredProfileFields: parseRequiredProfileFields(
+        job.requiredProfileFields,
+      ),
+    };
   }
 
   private async ensureHrOwned(id: string, companyId: string) {

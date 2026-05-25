@@ -30,12 +30,35 @@ export interface SkillRequirement {
   testable: boolean;
 }
 
+export type ProfileFieldKey =
+  | 'displayName'
+  | 'bio'
+  | 'phone'
+  | 'linkedInUrl'
+  | 'portfolioUrl'
+  | 'githubUrl'
+  | 'websiteUrl'
+  | 'resumeUrl';
+
+export interface CandidateProfileData {
+  displayName: string;
+  bio: string | null;
+  phone: string | null;
+  linkedInUrl: string | null;
+  portfolioUrl: string | null;
+  githubUrl: string | null;
+  websiteUrl: string | null;
+  resumeUrl: string | null;
+}
+
 export interface JobPosting {
   id: string;
   title: string;
   description: string;
   status: string;
   publishedAt?: string;
+  requiredProfileFields?: ProfileFieldKey[];
+  missingProfileFields?: ProfileFieldKey[];
   skillRequirements?: SkillRequirement[];
   listingAnalyses?: { issues: ListingIssue[] }[];
   suggestedDescription?: string;
@@ -107,6 +130,7 @@ export interface CandidateRow {
     id: string;
     fullName: string;
     email: string;
+    profile?: CandidateProfileData;
   };
   overallScore: number;
   matchPercent: number;

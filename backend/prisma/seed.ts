@@ -229,6 +229,23 @@ async function main() {
     },
   });
 
+  await prisma.candidateProfile.upsert({
+    where: { candidateUserId: candidate.id },
+    update: {
+      bio: 'Junior developer passionate about React and clean UI.',
+      phone: null,
+      resumeUrl: null,
+      linkedInUrl: 'https://linkedin.com/in/sofiane-demo',
+      githubUrl: 'https://github.com/sofiane-demo',
+    },
+    create: {
+      candidateUserId: candidate.id,
+      bio: 'Junior developer passionate about React and clean UI.',
+      linkedInUrl: 'https://linkedin.com/in/sofiane-demo',
+      githubUrl: 'https://github.com/sofiane-demo',
+    },
+  });
+
   await seedDemoJob(company.id, candidate.id);
 
   console.log('Seed complete:');

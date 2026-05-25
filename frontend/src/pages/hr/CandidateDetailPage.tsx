@@ -16,12 +16,20 @@ import {
 } from '../../utils/format';
 import { formatApiError } from '../../utils/errors';
 import { rememberLastResultsJob } from '../../utils/hrNav';
+import { CandidateProfileCard } from '../../components/candidate/CandidateProfileCard';
+import type { CandidateProfileData } from '../../api/types';
 
 interface DetailResponse {
   applicationId: string;
   hrStatus: string;
   hrDecidedAt: string | null;
-  candidate: { id: string; fullName: string; email: string };
+  requiredProfileFields?: string[];
+  candidate: {
+    id: string;
+    fullName: string;
+    email: string;
+    profile?: CandidateProfileData;
+  };
   testResult: {
     overallScore: number;
     matchPercent: number;
@@ -122,6 +130,16 @@ export function CandidateDetailPage() {
           <Badge variant={bandVariant(rec)}>AI: {bandLabel(rec)}</Badge>
         </div>
       </div>
+
+      {data.candidate.profile && (
+        <div className="mt-6">
+          <CandidateProfileCard
+            profile={data.candidate.profile}
+            email={data.candidate.email}
+            requiredFields={data.requiredProfileFields}
+          />
+        </div>
+      )}
 
       <Card className="mt-6 border-indigo-100 bg-indigo-50/40 p-6">
         <h2 className="font-semibold text-slate-900">Hiring decision</h2>

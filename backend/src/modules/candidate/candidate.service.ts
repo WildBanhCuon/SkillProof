@@ -1,11 +1,84 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { profileForApi, profileValuesFromUser } from '../../common/profile-fields';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtPayload } from '../auth/auth.types';
 import { deriveCandidateApplicationStatus } from './candidate-application-status';
+import { UpdateCandidateProfileDto } from './candidate-profile.dto';
 
 @Injectable()
 export class CandidateService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async getProfile(user: JwtPayload) {
+    if (user.role !== 'candidate') {
+      throw new UnauthorizedException();
+    }
+    const candidate = await this.prisma.candidateUser.findUnique({
+      where: { id: user.sub },
+      include: { profile: true },
+    });
+    if (!candidate) throw new NotFoundException();
+    const values = profileValuesFromUser(
+      candidate.displayName,
+      candidate.profile,
+    );
+    return {
+      email: candidate.email,
+      profile: profileForApi(values),
+      updatedAt: candidate.profile?.updatedAt ?? null,
+    };
+  }
+
+  async updateProfile(user: JwtPayload, dto: UpdateCandidateProfileDto) {
+    if (user.role !== 'candidate') {
+      throw new UnauthorizedException();
+    }
+    const emptyToNull = (v?: string) =>
+      v === undefined ? undefined : v.trim() === '' ? null : v.trim();
+
+    if (dto.displayName) {
+      await this.prisma.candidateUser.update({
+        where: { id: user.sub },
+        data: { displayName: dto.displayName.trim() },
+      });
+    }
+
+    const profileData = {
+      bio: emptyToNull(dto.bio),
+      phoneCountryCode: emptyToNull(dto.phoneCountryCode),
+      phone: emptyToNull(dto.phone),
+      linkedInUrl: emptyToNull(dto.linkedInUrl),
+      portfolioUrl: emptyToNull(dto.portfolioUrl),
+      githubUrl: emptyToNull(dto.githubUrl),
+      websiteUrl: emptyToNull(dto.websiteUrl),
+      resumeUrl: emptyToNull(dto.resumeUrl),
+    };
+    const hasProfileUpdate = Object.values(profileData).some(
+      (v) => v !== undefined,
+    );
+
+    if (hasProfileUpdate) {
+      await this.prisma.candidateProfile.upsert({
+        where: { candidateUserId: user.sub },
+        create: {
+          candidateUserId: user.sub,
+          bio: profileData.bio ?? null,
+          phoneCountryCode: profileData.phoneCountryCode ?? null,
+          phone: profileData.phone ?? null,
+          linkedInUrl: profileData.linkedInUrl ?? null,
+          portfolioUrl: profileData.portfolioUrl ?? null,
+          githubUrl: profileData.githubUrl ?? null,
+          websiteUrl: profileData.websiteUrl ?? null,
+          resumeUrl: profileData.resumeUrl ?? null,
+        },
+        update: Object.fromEntries(
+          Object.entries(profileData).filter(([, v]) => v !== undefined),
+        ),
+      });
+    }
+
+    return this.getProfile(user);
+  }
 
   async listApplications(user: JwtPayload) {
     if (user.role !== 'candidate') {

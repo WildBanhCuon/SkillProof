@@ -5,6 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ApplicationHrStatus, Recommendation } from '@prisma/client';
+import {
+  parseRequiredProfileFields,
+  profileForApi,
+  profileValuesFromUser,
+} from '../../common/profile-fields';
 import { hrStatusToApi } from '../candidate/candidate-application-status';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtPayload } from '../auth/auth.types';
@@ -71,7 +76,7 @@ export class ResultsService {
           : {}),
       },
       include: {
-        candidateUser: true,
+        candidateUser: { include: { profile: true } },
         testSession: {
           include: {
             testResult: { include: { dimensionScores: true } },
@@ -90,6 +95,12 @@ export class ResultsService {
             id: a.candidateUser.id,
             fullName: a.candidateUser.displayName,
             email: a.candidateUser.email,
+            profile: profileForApi(
+              profileValuesFromUser(
+                a.candidateUser.displayName,
+                a.candidateUser.profile,
+              ),
+            ),
           },
           overallScore: r.overallScore,
           matchPercent: r.matchPercent,
@@ -130,7 +141,7 @@ export class ResultsService {
     const app = await this.prisma.application.findFirst({
       where: { id: applicationId, jobPostingId: jobId },
       include: {
-        candidateUser: true,
+        candidateUser: { include: { profile: true } },
         testSession: {
           include: {
             testResult: { include: { dimensionScores: true } },
@@ -149,14 +160,28 @@ export class ResultsService {
       take: 10,
     });
 
+    const job = await this.prisma.jobPosting.findUnique({
+      where: { id: jobId },
+      select: { requiredProfileFields: true },
+    });
+
     return {
       applicationId: app.id,
       hrStatus: hrStatusToApi(app.hrStatus),
       hrDecidedAt: app.hrDecidedAt,
+      requiredProfileFields: parseRequiredProfileFields(
+        job?.requiredProfileFields,
+      ),
       candidate: {
         id: app.candidateUser.id,
         fullName: app.candidateUser.displayName,
         email: app.candidateUser.email,
+        profile: profileForApi(
+          profileValuesFromUser(
+            app.candidateUser.displayName,
+            app.candidateUser.profile,
+          ),
+        ),
       },
       testResult: {
         ...app.testSession.testResult,

@@ -5,6 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SessionStatus, SessionType } from '@prisma/client';
+import {
+  missingRequiredProfileFields,
+  parseRequiredProfileFields,
+  profileValuesFromUser,
+} from '../../common/profile-fields';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AssessmentsService } from '../assessments/assessments.service';
 import { JwtPayload } from '../auth/auth.types';
@@ -29,6 +34,27 @@ export class SessionsService {
       where: { id: jobId, status: 'PUBLISHED' },
     });
     if (!job) throw new NotFoundException('Published job not found');
+
+    if (mode === 'application') {
+      const candidate = await this.prisma.candidateUser.findUnique({
+        where: { id: user.sub },
+        include: { profile: true },
+      });
+      if (!candidate) throw new ForbiddenException();
+      const required = parseRequiredProfileFields(job.requiredProfileFields);
+      const values = profileValuesFromUser(
+        candidate.displayName,
+        candidate.profile,
+      );
+      const missing = missingRequiredProfileFields(required, values);
+      if (missing.length) {
+        throw new BadRequestException({
+          message:
+            'Complete the required fields on your profile before applying.',
+          missingProfileFields: missing,
+        });
+      }
+    }
 
     const assessment = await this.assessments.getForJob(jobId);
     if (!assessment) {

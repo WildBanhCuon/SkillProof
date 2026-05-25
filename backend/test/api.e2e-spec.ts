@@ -214,6 +214,17 @@ describe('SkillProof API (e2e)', () => {
       expect(res.body.description).toContain('Junior Frontend');
     });
 
+    it('PATCH /v1/jobs/:id — required profile fields', async () => {
+      const res = await request(app.getHttpServer())
+        .patch(`/v1/jobs/${jobId}`)
+        .set(authHeader(hrToken))
+        .send({
+          requiredProfileFields: ['phone', 'resumeUrl'],
+        })
+        .expect(200);
+      expect(res.body.requiredProfileFields).toEqual(['phone', 'resumeUrl']);
+    });
+
     it('POST /v1/jobs/:id/publish', async () => {
       const res = await request(app.getHttpServer())
         .post(`/v1/jobs/${jobId}/publish`)
@@ -249,10 +260,46 @@ describe('SkillProof API (e2e)', () => {
     });
 
     it('GET /v1/jobs/:id — published job', async () => {
-      await request(app.getHttpServer())
+      const res = await request(app.getHttpServer())
         .get(`/v1/jobs/${jobId}`)
         .set(authHeader(candidateToken))
         .expect(200);
+      expect(res.body.requiredProfileFields).toContain('phone');
+      expect(res.body.missingProfileFields).toContain('phone');
+    });
+
+    it('GET /v1/candidate/profile', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/v1/candidate/profile')
+        .set(authHeader(candidateToken))
+        .expect(200);
+      expect(res.body.email).toBe(CANDIDATE_EMAIL);
+      expect(res.body.profile.displayName).toBeDefined();
+    });
+
+    it('POST /v1/jobs/:id/sessions — application blocked without profile', async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/v1/jobs/${jobId}/sessions`)
+        .set(authHeader(candidateToken))
+        .send({ mode: 'application' });
+      expect(res.status).toBe(400);
+      const missing =
+        res.body.missingProfileFields ??
+        res.body.message?.missingProfileFields;
+      expect(missing).toContain('phone');
+    });
+
+    it('PATCH /v1/candidate/profile', async () => {
+      const res = await request(app.getHttpServer())
+        .patch('/v1/candidate/profile')
+        .set(authHeader(candidateToken))
+        .send({
+          phone: '+32 470 00 00 00',
+          resumeUrl: 'https://example.com/cv.pdf',
+        })
+        .expect(200);
+      expect(res.body.profile.phone).toBe('+32 470 00 00 00');
+      expect(res.body.profile.resumeUrl).toBe('https://example.com/cv.pdf');
     });
 
     it('POST /v1/jobs/:id/sessions — application', async () => {
@@ -369,7 +416,10 @@ describe('SkillProof API (e2e)', () => {
         .get(`/v1/jobs/${jobId}/candidates/${applicationId}`)
         .set(authHeader(hrToken))
         .expect(200);
-      expect(res.body.applicationId ?? res.body.id).toBeDefined();
+      expect(res.body.applicationId).toBe(applicationId);
+      expect(res.body.candidate.profile).toBeDefined();
+      expect(res.body.candidate.profile.phone).toBe('+32 470 00 00 00');
+      expect(res.body.requiredProfileFields).toContain('phone');
     });
 
     it('POST /v1/jobs/:id/archive', async () => {
