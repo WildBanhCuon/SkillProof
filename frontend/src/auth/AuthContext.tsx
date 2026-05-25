@@ -30,6 +30,7 @@ interface AuthContextValue {
     fullName: string;
     companyName: string;
     teamProfile: string;
+    websiteUrl?: string;
   }) => Promise<void>;
   refreshUser: () => Promise<void>;
   registerCandidate: (data: {
@@ -136,6 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fullName: string;
     companyName: string;
     teamProfile: string;
+    websiteUrl?: string;
   }) => {
     setTokens(null);
     setUser(null);

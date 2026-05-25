@@ -18,7 +18,10 @@ import {
   listingRewriteSchema,
   sessionGradeSchema,
   SessionGradeResult,
+  teamProfileFromWebSchema,
+  TeamProfileFromWebResult,
 } from './ai.schemas';
+import type { PageExcerpt } from '../web/webpage-fetch.service';
 
 @Injectable()
 export class GeminiService {
@@ -147,6 +150,45 @@ ${JSON.stringify(answers, null, 2)}`;
       prompt,
       schemaHint,
       (raw) => jobWizardGenSchema.parse(raw),
+    );
+  }
+
+  generateTeamProfileFromWebsite(
+    companyId: string | undefined,
+    companyName: string,
+    websiteUrl: string,
+    excerpts: PageExcerpt[],
+  ): Promise<TeamProfileFromWebResult & { sources: string[] }> {
+    const combined = excerpts
+      .map((e) => `--- ${e.url} ---\n${e.text}`)
+      .join('\n\n')
+      .slice(0, 14000);
+
+    const prompt = `Write a short "about our team and product" blurb for job postings.
+
+Company name: ${companyName}
+Website: ${websiteUrl}
+
+Use ONLY facts supported by the public website excerpts below. Do not invent funding, headcount, or tech stack items that are not mentioned.
+- 2–4 sentences, plain professional English (match the site's language if clearly French)
+- Suitable to paste into a job creation wizard as context for candidates
+- Mention what the company does, who they serve, and team vibe if stated
+- No markdown headings; single paragraph or two short paragraphs
+
+Website excerpts:
+${combined}`;
+
+    const schemaHint = `{ "teamProfile": "string (min 10 chars)" }`;
+
+    return this.generateJson(
+      'company_profile_from_web',
+      companyId,
+      prompt,
+      schemaHint,
+      (raw) => {
+        const parsed = teamProfileFromWebSchema.parse(raw);
+        return { ...parsed, sources: excerpts.map((e) => e.url) };
+      },
     );
   }
 

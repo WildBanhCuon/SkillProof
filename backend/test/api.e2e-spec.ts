@@ -110,6 +110,19 @@ describe('SkillProof API (e2e)', () => {
       expect(hrToken).toBeTruthy();
     });
 
+    it('POST /v1/auth/generate-team-profile-from-website', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/v1/auth/generate-team-profile-from-website')
+        .send({
+          companyName: 'Acme Web',
+          websiteUrl: 'https://example.com',
+        })
+        .expect(201);
+      expect(res.body.teamProfile).toBeDefined();
+      expect(res.body.teamProfile.length).toBeGreaterThan(10);
+      expect(res.body.sources).toBeDefined();
+    });
+
     it('GET /v1/auth/me (HR)', async () => {
       const res = await request(app.getHttpServer())
         .get('/v1/auth/me')

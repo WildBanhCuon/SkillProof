@@ -30,6 +30,12 @@ export const jobWizardGenSchema = z.object({
 
 export type JobWizardGenResult = z.infer<typeof jobWizardGenSchema>;
 
+export const teamProfileFromWebSchema = z.object({
+  teamProfile: z.string().min(10),
+});
+
+export type TeamProfileFromWebResult = z.infer<typeof teamProfileFromWebSchema>;
+
 export const questionGenSchema = z.object({
   title: z.string(),
   instructions: z.string(),

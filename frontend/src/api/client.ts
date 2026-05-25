@@ -78,7 +78,8 @@ function isPublicAuthPath(path: string): boolean {
     path === '/auth/login' ||
     path === '/auth/hr/register' ||
     path === '/auth/candidate/register' ||
-    path === '/auth/refresh'
+    path === '/auth/refresh' ||
+    path === '/auth/generate-team-profile-from-website'
   );
 }
 

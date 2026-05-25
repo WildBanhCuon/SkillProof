@@ -7,17 +7,20 @@ import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Alert } from '../../components/ui/Alert';
 import { formatApiError } from '../../utils/errors';
+import { GenerateTeamProfileButton } from '../../components/hr/GenerateTeamProfileButton';
 
 export function HrProfilePage() {
   const { user, refreshUser } = useAuth();
   const [teamProfile, setTeamProfile] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setTeamProfile(user?.companyTeamProfile ?? '');
-  }, [user?.companyTeamProfile]);
+    setWebsiteUrl(user?.companyWebsiteUrl ?? '');
+  }, [user?.companyTeamProfile, user?.companyWebsiteUrl]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -25,7 +28,10 @@ export function HrProfilePage() {
     setSuccess('');
     setSaving(true);
     try {
-      await api.patch('/auth/company-profile', { teamProfile: teamProfile.trim() });
+      await api.patch('/auth/company-profile', {
+        teamProfile: teamProfile.trim(),
+        websiteUrl: websiteUrl.trim() || undefined,
+      });
       await refreshUser();
       setSuccess('Company profile saved. New job postings will use this text by default.');
     } catch (err) {
@@ -75,6 +81,31 @@ export function HrProfilePage() {
             readOnly
             className="bg-slate-50"
           />
+          <Input
+            label="Company website"
+            type="url"
+            value={websiteUrl}
+            onChange={(e) => setWebsiteUrl(e.target.value)}
+            placeholder="https://www.yourcompany.com"
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <GenerateTeamProfileButton
+              companyName={user?.companyName ?? ''}
+              websiteUrl={websiteUrl}
+              onGenerated={({ teamProfile: draft, websiteUrl: normalized }) => {
+                setTeamProfile(draft);
+                setWebsiteUrl(normalized);
+                setSuccess(
+                  'Draft generated from your website — review and edit before saving.',
+                );
+              }}
+              onError={setError}
+            />
+            <p className="text-xs text-slate-500">
+              We read public pages on your site (home, about, etc.) and draft text with AI.
+              Always review before saving.
+            </p>
+          </div>
           <label className="block w-full">
             <span className="mb-1 block text-sm font-medium text-slate-700">
               About your team and product

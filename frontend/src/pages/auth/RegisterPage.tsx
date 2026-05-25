@@ -6,6 +6,7 @@ import type { UserRole } from '../../api/types';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Alert } from '../../components/ui/Alert';
+import { GenerateTeamProfileButton } from '../../components/hr/GenerateTeamProfileButton';
 
 export function RegisterPage() {
   const { registerHr, registerCandidate } = useAuth();
@@ -18,6 +19,7 @@ export function RegisterPage() {
     password: '',
     fullName: '',
     companyName: '',
+    websiteUrl: '',
     teamProfile: '',
     displayName: '',
   });
@@ -34,6 +36,7 @@ export function RegisterPage() {
           fullName: form.fullName,
           companyName: form.companyName,
           teamProfile: form.teamProfile,
+          websiteUrl: form.websiteUrl.trim() || undefined,
         });
         navigate('/hr/jobs');
       } else {
@@ -109,6 +112,31 @@ export function RegisterPage() {
               value={form.companyName}
               onChange={(e) => setForm({ ...form, companyName: e.target.value })}
             />
+            <Input
+              label="Company website"
+              type="url"
+              value={form.websiteUrl}
+              onChange={(e) => setForm({ ...form, websiteUrl: e.target.value })}
+              placeholder="https://www.yourcompany.com"
+            />
+            <div className="flex flex-wrap items-center gap-2">
+              <GenerateTeamProfileButton
+                companyName={form.companyName}
+                websiteUrl={form.websiteUrl}
+                onGenerated={({ teamProfile, websiteUrl }) => {
+                  setForm((prev) => ({
+                    ...prev,
+                    teamProfile,
+                    websiteUrl,
+                  }));
+                  setError('');
+                }}
+                onError={setError}
+              />
+              <p className="text-xs text-slate-500">
+                Optional: draft “about your team” from your public website, then edit.
+              </p>
+            </div>
             <label className="block w-full">
               <span className="mb-1 block text-sm font-medium text-slate-700">
                 About your team and product

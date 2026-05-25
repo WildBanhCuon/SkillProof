@@ -8,8 +8,11 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
+import { GeminiService } from '../ai/gemini.service';
+import { WebpageFetchService } from '../web/webpage-fetch.service';
 import {
   CandidateRegisterDto,
+  GenerateTeamProfileFromWebsiteDto,
   HrRegisterDto,
   LoginDto,
   UpdateCompanyProfileDto,
@@ -22,6 +25,8 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly gemini: GeminiService,
+    private readonly webpage: WebpageFetchService,
   ) {}
 
   async registerHr(dto: HrRegisterDto) {
@@ -31,10 +36,15 @@ export class AuthService {
     if (existing) throw new ConflictException('Email already registered');
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
+    const websiteUrl = dto.websiteUrl
+      ? this.webpage.normalizeWebsiteUrl(dto.websiteUrl)
+      : undefined;
+
     const company = await this.prisma.company.create({
       data: {
         name: dto.companyName,
         teamProfile: dto.teamProfile,
+        websiteUrl,
         hrUsers: {
           create: {
             email: dto.email,
@@ -148,18 +158,56 @@ export class AuthService {
     }
   }
 
+  async generateTeamProfileFromWebsite(
+    dto: GenerateTeamProfileFromWebsiteDto,
+    user?: JwtPayload,
+  ) {
+    const websiteUrl = this.webpage.normalizeWebsiteUrl(dto.websiteUrl);
+    const excerpts = await this.webpage.collectPublicText(websiteUrl);
+    const companyId =
+      user?.role === 'hr' && user.companyId ? user.companyId : undefined;
+
+    const result = await this.gemini.generateTeamProfileFromWebsite(
+      companyId,
+      dto.companyName.trim(),
+      websiteUrl,
+      excerpts,
+    );
+
+    if (companyId) {
+      await this.prisma.company.update({
+        where: { id: companyId },
+        data: { websiteUrl },
+      });
+    }
+
+    return {
+      teamProfile: result.teamProfile,
+      websiteUrl,
+      sources: result.sources,
+    };
+  }
+
   async updateCompanyProfile(user: JwtPayload, dto: UpdateCompanyProfileDto) {
     if (user.role !== 'hr' || !user.companyId) {
       throw new UnauthorizedException();
     }
+    const websiteUrl = dto.websiteUrl?.trim()
+      ? this.webpage.normalizeWebsiteUrl(dto.websiteUrl)
+      : null;
+
     const company = await this.prisma.company.update({
       where: { id: user.companyId },
-      data: { teamProfile: dto.teamProfile },
+      data: {
+        teamProfile: dto.teamProfile,
+        websiteUrl,
+      },
     });
     return {
       companyId: company.id,
       companyName: company.name,
       companyTeamProfile: company.teamProfile ?? '',
+      companyWebsiteUrl: company.websiteUrl ?? '',
     };
   }
 
@@ -178,6 +226,7 @@ export class AuthService {
         companyId: hr.companyId,
         companyName: hr.company.name,
         companyTeamProfile: hr.company.teamProfile ?? '',
+        companyWebsiteUrl: hr.company.websiteUrl ?? '',
       };
     }
     const c = await this.prisma.candidateUser.findUnique({
@@ -211,12 +260,14 @@ export class AuthService {
 
     let companyTeamProfile: string | undefined;
     let companyName: string | undefined;
+    let companyWebsiteUrl: string | undefined;
     if (payload.role === 'hr' && payload.companyId) {
       const company = await this.prisma.company.findUnique({
         where: { id: payload.companyId },
       });
       companyName = company?.name;
       companyTeamProfile = company?.teamProfile ?? '';
+      companyWebsiteUrl = company?.websiteUrl ?? '';
     }
 
     return {
@@ -230,6 +281,7 @@ export class AuthService {
         companyId: payload.companyId,
         companyName,
         companyTeamProfile,
+        companyWebsiteUrl,
       },
     };
   }

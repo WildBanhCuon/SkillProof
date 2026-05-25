@@ -8,6 +8,7 @@ export interface AuthUser {
   companyId?: string;
   companyName?: string;
   companyTeamProfile?: string;
+  companyWebsiteUrl?: string;
 }
 
 export interface AuthTokens {

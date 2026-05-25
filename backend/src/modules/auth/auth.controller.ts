@@ -2,17 +2,19 @@ import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
   CandidateRegisterDto,
+  GenerateTeamProfileFromWebsiteDto,
   HrRegisterDto,
   LoginDto,
   LogoutDto,
   RefreshDto,
+  UpdateCompanyProfileDto,
 } from './auth.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { OptionalJwtAuthGuard } from './optional-jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtPayload } from './auth.types';
-import { UpdateCompanyProfileDto } from './auth.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -49,6 +51,15 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   me(@CurrentUser() user: JwtPayload) {
     return this.auth.me(user);
+  }
+
+  @Post('generate-team-profile-from-website')
+  @UseGuards(OptionalJwtAuthGuard)
+  generateTeamProfileFromWebsite(
+    @Body() dto: GenerateTeamProfileFromWebsiteDto,
+    @CurrentUser() user?: JwtPayload,
+  ) {
+    return this.auth.generateTeamProfileFromWebsite(dto, user);
   }
 
   @Patch('company-profile')

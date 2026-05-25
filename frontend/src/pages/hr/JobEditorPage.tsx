@@ -184,15 +184,26 @@ export function JobEditorPage() {
     job?.status !== 'PUBLISHED' &&
     job?.status !== 'CLOSED';
 
+  const isEditable =
+    isNew ||
+    !job ||
+    job.status === 'DRAFT' ||
+    job.status === 'ANALYZED';
+
+  const isPublished = job?.status === 'PUBLISHED';
+  const isClosed = job?.status === 'CLOSED';
+
   return (
     <div>
       <p className="text-sm text-slate-500">
         <Link to="/hr/jobs" className="hover:text-indigo-600">
           Jobs
         </Link>{' '}
-        / {isNew ? 'New posting' : 'Edit'}
+        / {isNew ? 'New posting' : isEditable ? 'Edit' : 'View'}
       </p>
-      <h1 className="mt-2 text-2xl font-bold text-slate-900">Create job posting</h1>
+      <h1 className="mt-2 text-2xl font-bold text-slate-900">
+        {isNew ? 'Create job posting' : isEditable ? 'Edit job posting' : 'Job posting'}
+      </h1>
       <p className="text-sm text-slate-500">
         {title.trim() || 'Untitled posting'} ·{' '}
         {job ? statusLabel(job.status) : 'Draft'}
@@ -211,7 +222,17 @@ export function JobEditorPage() {
         </div>
       )}
 
-      {!checked && (
+      {!isEditable && (isPublished || isClosed) && (
+        <div className="mt-4">
+          <Alert variant="info">
+            {isPublished
+              ? 'This listing is published and cannot be edited. Use View results for candidates, or Archive when hiring is complete.'
+              : 'This listing is archived and cannot be edited.'}
+          </Alert>
+        </div>
+      )}
+
+      {!checked && isEditable && (
         <Card className="mt-6 border-indigo-100 bg-indigo-50/40 p-4">
           <p className="text-sm font-medium text-indigo-900">
             Tips for a strong listing
@@ -242,13 +263,15 @@ export function JobEditorPage() {
               Job description
             </span>
             <input
-              className="mt-4 w-full rounded-lg border border-slate-200 px-3 py-2 text-lg font-semibold placeholder:font-normal placeholder:text-slate-400"
+              className="mt-4 w-full rounded-lg border border-slate-200 px-3 py-2 text-lg font-semibold placeholder:font-normal placeholder:text-slate-400 read-only:bg-slate-50 read-only:text-slate-700"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={TITLE_PLACEHOLDER}
+              readOnly={!isEditable}
             />
             <JobDescriptionEditor
               value={description}
+              editable={isEditable}
               onChange={(value) => {
                 setDescription(value);
                 if (appliedDiff && value !== appliedDiff.after) {
@@ -338,7 +361,7 @@ export function JobEditorPage() {
                   <Check className="h-4 w-4 shrink-0" />
                   Suggestions applied
                 </div>
-              ) : issues.length > 0 ? (
+              ) : issues.length > 0 && isEditable ? (
                 <Button
                   variant="secondary"
                   className="mt-4 w-full"
@@ -427,14 +450,16 @@ export function JobEditorPage() {
           </Button>
         </Link>
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            onClick={saveDraft}
-            disabled={!!busy}
-          >
-            Save draft
-          </Button>
-          {(!checked || canRecheckListing) && (
+          {isEditable && (
+            <Button
+              variant="outline"
+              onClick={saveDraft}
+              disabled={!!busy}
+            >
+              Save draft
+            </Button>
+          )}
+          {isEditable && (!checked || canRecheckListing) && (
             <Button
               variant={checked ? 'outline' : 'primary'}
               onClick={checkListing}
