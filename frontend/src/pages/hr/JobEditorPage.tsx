@@ -12,6 +12,7 @@ import { wordCount, statusLabel } from '../../utils/format';
 import { formatApiError } from '../../utils/errors';
 import { JobDescriptionEditor } from '../../components/hr/JobDescriptionEditor';
 import { JobPostingActions } from '../../components/hr/JobPostingActions';
+import { TextDiff } from '../../components/hr/TextDiff';
 
 const TITLE_PLACEHOLDER = 'e.g. Junior Frontend Developer';
 
@@ -33,6 +34,10 @@ export function JobEditorPage() {
     () => (location.state as { wizardSuccess?: string } | null)?.wizardSuccess ?? '',
   );
   const [busy, setBusy] = useState('');
+  const [appliedDiff, setAppliedDiff] = useState<{
+    before: string;
+    after: string;
+  } | null>(null);
 
   const { data: job } = useQuery({
     queryKey: ['job', jobId],
@@ -112,19 +117,28 @@ export function JobEditorPage() {
     if (!jobId) return;
     setError('');
     setBusy('apply');
+    const before = description;
     try {
       await api.post(`/jobs/${jobId}/accept-suggestions`);
       const updated = await api.post<JobPosting>(
         `/jobs/${jobId}/apply-suggestions`,
       );
       setDescription(updated.description);
-      setSuccess('Suggestions applied to description');
+      setAppliedDiff({ before, after: updated.description });
+      setSuccess('Suggestions applied — review the changes below');
       queryClient.invalidateQueries({ queryKey: ['job', jobId] });
     } catch (e) {
       setError(formatApiError(e, 'Apply suggestions'));
     } finally {
       setBusy('');
     }
+  };
+
+  const revertAppliedSuggestions = () => {
+    if (!appliedDiff) return;
+    setDescription(appliedDiff.before);
+    setAppliedDiff(null);
+    setSuccess('Reverted to the previous description');
   };
 
   const publish = async () => {
@@ -217,12 +231,55 @@ export function JobEditorPage() {
             />
             <JobDescriptionEditor
               value={description}
-              onChange={setDescription}
+              onChange={(value) => {
+                setDescription(value);
+                if (appliedDiff && value !== appliedDiff.after) {
+                  setAppliedDiff(null);
+                }
+              }}
             />
             <p className="mt-2 text-xs text-slate-400">
               {description.trim() ? `${wordCount(description)} words` : 'Start typing or paste your job ad'}
             </p>
           </Card>
+
+          {appliedDiff && (
+            <Card className="mt-4 p-6">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    Changes from AI suggestions
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Green lines were added, red lines were removed (like a pull request diff).
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={revertAppliedSuggestions}
+                  >
+                    Revert changes
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setAppliedDiff(null)}
+                  >
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+              <TextDiff
+                className="mt-4"
+                before={appliedDiff.before}
+                after={appliedDiff.after}
+              />
+            </Card>
+          )}
         </div>
 
         {checked && (
