@@ -79,8 +79,12 @@ export function JobDetailPage() {
 
       {job.assessment && (
         <p className="mt-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
-          Assessment: {job.assessment.durationMinutes} minutes ·{' '}
-          {job.assessment.totalPoints} points
+          Assessment:           {job.assessment.durationMinutes} minutes
+          {job.assessment.totalPoints != null &&
+            ` · ${job.assessment.totalPoints} points`}
+          {(job.assessment.questionCount ?? job.assessment.questions?.length) !=
+            null &&
+            ` · ${job.assessment.questionCount ?? job.assessment.questions?.length} questions`}
         </p>
       )}
 

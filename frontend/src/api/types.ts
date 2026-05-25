@@ -65,13 +65,20 @@ export interface JobPosting {
   description: string;
   status: string;
   publishedAt?: string;
+  company?: { name: string };
   requiredProfileFields?: ProfileFieldKey[];
   missingProfileFields?: ProfileFieldKey[];
   skillRequirements?: SkillRequirement[];
   listingAnalyses?: { issues: ListingIssue[] }[];
   suggestedDescription?: string;
   suggestionsAppliedAt?: string;
-  assessment?: { id: string; durationMinutes: number; questionCount?: number };
+  assessment?: {
+    id: string;
+    durationMinutes: number;
+    totalPoints?: number;
+    questionCount?: number;
+    questions?: { id: string }[];
+  };
 }
 
 export interface SessionQuestion {

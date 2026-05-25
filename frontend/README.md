@@ -47,6 +47,25 @@ A **published demo job** (seed: Junior Frontend Developer) with one graded candi
 | `/sessions/:id` | Candidate | Assessment |
 | `/sessions/:id/result` | Candidate | Graded result |
 
+## Deploy on Render (Static Site)
+
+| Setting | Value |
+|--------|--------|
+| Root Directory | `frontend` |
+| Branch | `deploy` |
+| Build Command | `npm install && npm run build` |
+| Publish directory | `dist` |
+
+**Environment variable (build time):**
+
+| Key | Value |
+|-----|--------|
+| `VITE_API_URL` | `https://<your-api>.onrender.com/v1` |
+
+**Redirects:** add rewrite `/*` → `/index.html` for React Router.
+
+Node **22** via `frontend/.node-version` (optional `NODE_VERSION=22` in Render).
+
 ## Stack
 
 - React 19, TypeScript, Vite

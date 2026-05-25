@@ -141,7 +141,10 @@ export function JobsBrowsePage() {
               {job.assessment && (
                 <p className="mt-4 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
                   {job.assessment.durationMinutes} min ·{' '}
-                  {job.assessment.questions?.length ?? 0} questions
+                  {job.assessment.questionCount ??
+                    job.assessment.questions?.length ??
+                    0}{' '}
+                  questions
                 </p>
               )}
             </Card>

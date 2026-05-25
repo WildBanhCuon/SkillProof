@@ -19,9 +19,11 @@ const LABELS: Record<string, string> = {
 export function DimensionRadar({
   scores,
   size = 160,
+  className = '',
 }: {
   scores: DimensionScore[];
   size?: number;
+  className?: string;
 }) {
   const data = scores.map((s) => ({
     subject: LABELS[s.dimension.toLowerCase()] ?? s.dimension,
@@ -32,7 +34,7 @@ export function DimensionRadar({
   if (!data.length) return null;
 
   return (
-    <div style={{ width: size, height: size }}>
+    <div className={className} style={{ width: size, height: size }}>
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data} cx="50%" cy="50%" outerRadius="70%">
           <PolarGrid stroke="#e2e8f0" />

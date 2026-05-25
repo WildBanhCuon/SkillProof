@@ -193,10 +193,7 @@ export function AssessmentPage() {
                 <li key={question.id}>
                   <button
                     type="button"
-                    onClick={() => {
-                      setCurrentIdx(i);
-                      setRuns(null);
-                    }}
+                    onClick={() => setCurrentIdx(i)}
                     className={`flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm ${
                       i === currentIdx
                         ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800'
