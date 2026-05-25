@@ -370,7 +370,9 @@ Bottom bar: `© 2026 SkillProof` · `Course prototype — ESCEN AI for Impact`
 
 ## Deliverable
 
-Single route `/` — full marketing landing page exportable as screenshots for pitch deck and eventual merge into the React app at `frontend/src/pages/landing/LandingPage.tsx`.
+Single route `/` — full marketing landing page exportable as screenshots for pitch deck.
+
+**Integrated in app:** `frontend/src/pages/landing/LandingPage.tsx` and `frontend/src/components/landing/`. Reference screenshot: [`mockups/lovable - landing page.png`](../../mockups/lovable%20-%20landing%20page.png). Lovable preview: [preview--skillproof-showcase.lovable.app](https://preview--skillproof-showcase.lovable.app/).
 
 ---
 
