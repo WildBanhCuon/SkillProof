@@ -26,7 +26,7 @@ After `npm run prisma:seed` in `backend/`:
 | HR | marion@acme.test | Password123! |
 | Candidate | sofiane@test.com | Password123! |
 
-A **published** Junior Frontend Developer job with one graded candidate is included — log in as HR and open **View results** on that row.
+A **published demo job** (seed: Junior Frontend Developer) with one graded candidate is included — log in as HR and open **View results** on that row.
 
 ## Routes
 

@@ -4,7 +4,7 @@ Too many junior applicants, not enough proof. SkillProof helps companies turn me
 
 SkillProof is a B2B SaaS concept for junior tech hiring. It helps HR and talent teams improve vague junior job ads, generate role-calibrated assessments, evaluate applicants against an explicit rubric, and produce a ranked shortlist backed by evidence instead of CV keywords.
 
-The MVP focuses on one role: **Junior Frontend Developer**.
+The app supports **any junior tech role** (WordPress, frontend, etc.); AI adapts listings, skills, and assessments to each posting. The database seed ships one **demo** frontend job for local testing.
 
 ## Problem
 
@@ -148,7 +148,7 @@ Demo logins after `npm run prisma:seed` in `backend/`:
 | HR | marion@acme.test | Password123! |
 | Candidate | sofiane@test.com | Password123! |
 
-The seed includes a **published** Junior Frontend Developer role with one graded application — open HR results at `/hr/jobs` → **View results** on the demo job.
+The seed includes a **published demo job** (Junior Frontend Developer) with one graded application — open HR results at `/hr/jobs` → **View results** on that row.
 
 ## Project structure
 
@@ -172,9 +172,9 @@ project/
 
 ## MVP Scope
 
-The 4-week prototype demonstrates the complete B2B value chain for a single role:
+The 4-week prototype demonstrates the complete B2B value chain end-to-end:
 
-1. Improve a junior frontend job ad.
+1. Improve a junior tech job ad.
 2. Generate a validated assessment.
 3. Collect candidate submissions.
 4. Evaluate answers against a rubric.

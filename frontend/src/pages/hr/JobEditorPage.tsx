@@ -14,7 +14,7 @@ import { JobDescriptionEditor } from '../../components/hr/JobDescriptionEditor';
 import { JobPostingActions } from '../../components/hr/JobPostingActions';
 import { TextDiff } from '../../components/hr/TextDiff';
 
-const TITLE_PLACEHOLDER = 'e.g. Junior Frontend Developer';
+const TITLE_PLACEHOLDER = 'e.g. Junior WordPress Developer';
 
 export function JobEditorPage() {
   const { id } = useParams();

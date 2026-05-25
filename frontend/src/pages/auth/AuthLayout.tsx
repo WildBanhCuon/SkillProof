@@ -10,7 +10,7 @@ export function AuthLayout() {
         <Outlet />
       </Card>
       <p className="mt-6 text-center text-sm text-slate-500">
-        Junior Frontend Developer MVP · SkillProof
+        SkillProof · Hire with evidence, not guesswork
       </p>
     </div>
   );

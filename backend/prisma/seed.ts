@@ -17,6 +17,7 @@ const DEMO_SESSION_ID = '00000000-0000-0000-0000-000000000012';
 const DEMO_APPLICATION_ID = '00000000-0000-0000-0000-000000000013';
 const DEMO_RESULT_ID = '00000000-0000-0000-0000-000000000014';
 
+/** Demo seed only — product supports any role; assessments are generated from each job posting. */
 const DEMO_DESCRIPTION = `We are hiring a Junior Frontend Developer to join our product team.
 
 Responsibilities:

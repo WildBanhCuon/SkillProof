@@ -197,7 +197,7 @@ export function JobWizardPage() {
                 required
                 value={answers.roleTitle}
                 onChange={(e) => update('roleTitle', e.target.value)}
-                placeholder="e.g. Junior Frontend Developer"
+                placeholder="e.g. Junior WordPress Developer"
               />
               <div>
                 <span className="mb-2 block text-sm font-medium text-slate-700">

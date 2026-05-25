@@ -259,7 +259,15 @@ export function AssessmentPage() {
                 <div className="min-h-[320px]">
                   <Editor
                     height="320px"
-                    language={q.language === 'typescript' ? 'typescript' : 'javascript'}
+                    language={
+                      q.language === 'typescript'
+                        ? 'typescript'
+                        : q.language === 'css'
+                          ? 'css'
+                          : q.language === 'php'
+                            ? 'php'
+                            : 'javascript'
+                    }
                     value={codes[q.id] ?? q.starterCode}
                     onChange={(v) =>
                       setCodes((prev) => ({ ...prev, [q.id]: v ?? '' }))

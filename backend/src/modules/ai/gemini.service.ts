@@ -239,17 +239,26 @@ Rules:
     description: string,
     skills: { skillName: string; importance: string; testable: boolean }[],
   ): Promise<AssessmentGenResult> {
-    const prompt = `Generate a technical assessment for a Junior Frontend Developer role.
+    const testableSkills = skills.filter((s) => s.testable);
+    const prompt = `Generate a technical assessment tailored to THIS job posting — not a generic frontend template.
 
 Job title: ${title}
 Description:
 ${description}
 
-Skills matrix:
+Skills matrix (full):
 ${JSON.stringify(skills, null, 2)}
 
-Create exactly 4 coding-focused questions (React, TypeScript, APIs, CSS, debugging). Total 100 points. Duration 90 minutes.
-Each question needs starter code, clear instructions, and a rubric object with criteria the grader will use (no automated test cases).`;
+Testable skills (build questions ONLY from these — one question should map to each testable skill when possible):
+${JSON.stringify(testableSkills, null, 2)}
+
+Rules:
+- Create exactly 4 coding-focused questions. Total 100 points. Duration 90 minutes.
+- Match the stack in the job (e.g. WordPress/Elementor/WooCommerce/CSS/PHP — NOT React/TypeScript/Vue unless the job title or description explicitly requires them).
+- Do NOT invent React, SPA, or jsonplaceholder API exercises for WordPress/CMS roles.
+- Prefer exercises the candidate can do in the Monaco editor: CSS, HTML snippets, JavaScript for DOM/fetch, PHP for WordPress hooks/templates when PHP is testable.
+- Set "language" to javascript, css, or php as appropriate (css for pure styling tasks).
+- Each question needs starter code, clear instructions, and a rubric object for AI grading (no automated test cases).`;
 
     const schemaHint = `{
   "durationMinutes": 90,
@@ -259,7 +268,7 @@ Each question needs starter code, clear instructions, and a rubric object with c
     "instructions": "string",
     "starterCode": "string",
     "points": number,
-    "language": "javascript",
+    "language": "javascript|css|php",
     "rubric": {}
   }]
 }`;
@@ -292,7 +301,7 @@ Each question needs starter code, clear instructions, and a rubric object with c
       }[];
     },
   ): Promise<SessionGradeResult> {
-    const prompt = `Grade this junior frontend assessment submission. Evaluate each answer against the question instructions and rubric. Consider code quality, correctness, and fit for the role.
+    const prompt = `Grade this technical assessment submission for the role below. Evaluate each answer against the question instructions and rubric. Consider code quality, correctness, and fit for THIS job — not a generic React developer bar.
 
 Job: ${context.jobTitle}
 Required skills: ${context.skills.join(', ')}
