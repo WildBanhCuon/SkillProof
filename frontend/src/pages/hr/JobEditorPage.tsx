@@ -10,18 +10,9 @@ import { Badge } from '../../components/ui/Badge';
 import { Alert } from '../../components/ui/Alert';
 import { wordCount, statusLabel } from '../../utils/format';
 import { formatApiError } from '../../utils/errors';
+import { JobDescriptionEditor } from '../../components/hr/JobDescriptionEditor';
 
-const DEFAULT_DESCRIPTION = `We are hiring a Junior Frontend Developer to join our product team.
-
-Responsibilities:
-- Build features in React and TypeScript
-- Collaborate with designers and backend engineers
-
-Requirements:
-- 3+ years of professional experience
-- React, TypeScript, HTML, CSS, Git
-- Kubernetes and AWS experience required
-- Strong communication skills`;
+const TITLE_PLACEHOLDER = 'e.g. Junior Frontend Developer';
 
 export function JobEditorPage() {
   const { id } = useParams();
@@ -29,8 +20,8 @@ export function JobEditorPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [title, setTitle] = useState('Junior Frontend Developer');
-  const [description, setDescription] = useState(DEFAULT_DESCRIPTION);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [jobId, setJobId] = useState<string | null>(isNew ? null : id ?? null);
   const [checked, setChecked] = useState(false);
   const [issues, setIssues] = useState<ListingIssue[]>([]);
@@ -78,7 +69,13 @@ export function JobEditorPage() {
     }
   }, [jobId, title, description, navigate, queryClient]);
 
+  const hasContent = title.trim().length > 0 && description.trim().length > 0;
+
   const checkListing = async () => {
+    if (!hasContent) {
+      setError('Add a job title and description before running Check listing.');
+      return;
+    }
     setError('');
     setSuccess('');
     setBusy('check');
@@ -161,7 +158,8 @@ export function JobEditorPage() {
       </p>
       <h1 className="mt-2 text-2xl font-bold text-slate-900">Create job posting</h1>
       <p className="text-sm text-slate-500">
-        {title} · {job ? statusLabel(job.status) : 'Draft'}
+        {title.trim() || 'Untitled posting'} ·{' '}
+        {job ? statusLabel(job.status) : 'Draft'}
       </p>
 
       {error && (
@@ -177,30 +175,48 @@ export function JobEditorPage() {
         </div>
       )}
 
+      {!checked && (
+        <Card className="mt-6 border-indigo-100 bg-indigo-50/40 p-4">
+          <p className="text-sm font-medium text-indigo-900">
+            Tips for a strong listing
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+            <li>Use a clear job title that matches the seniority you are hiring for.</li>
+            <li>
+              Separate responsibilities from requirements; avoid asking juniors for
+              many years of experience or senior-only stacks unless truly needed.
+            </li>
+            <li>
+              Run <strong className="font-medium text-slate-700">Check listing</strong>{' '}
+              when your draft is ready — AI will flag issues and build a skills matrix.
+            </li>
+            <li>
+              Use the formatting toolbar for headings, bold text, and lists — candidates
+              will see a clean layout, not raw markdown.
+            </li>
+            <li>Apply suggestions, then publish to generate the candidate assessment.</li>
+          </ul>
+        </Card>
+      )}
+
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <div className={checked ? 'lg:col-span-2' : 'lg:col-span-3'}>
           <Card className="p-6">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Job description
-              </span>
-              <div className="flex gap-1 text-slate-400">
-                <span className="rounded px-2 py-1 text-xs font-bold">B</span>
-                <span className="rounded px-2 py-1 text-xs italic">I</span>
-              </div>
-            </div>
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Job description
+            </span>
             <input
-              className="mt-4 w-full rounded-lg border border-slate-200 px-3 py-2 text-lg font-semibold"
+              className="mt-4 w-full rounded-lg border border-slate-200 px-3 py-2 text-lg font-semibold placeholder:font-normal placeholder:text-slate-400"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              placeholder={TITLE_PLACEHOLDER}
             />
-            <textarea
-              className="mt-3 min-h-[280px] w-full resize-y rounded-lg border border-slate-200 p-4 text-sm leading-relaxed text-slate-700"
+            <JobDescriptionEditor
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={setDescription}
             />
             <p className="mt-2 text-xs text-slate-400">
-              {wordCount(description)} words
+              {description.trim() ? `${wordCount(description)} words` : 'Start typing or paste your job ad'}
             </p>
           </Card>
         </div>
@@ -312,7 +328,7 @@ export function JobEditorPage() {
             Save draft
           </Button>
           {!checked && (
-            <Button onClick={checkListing} disabled={!!busy}>
+            <Button onClick={checkListing} disabled={!!busy || !hasContent}>
               <Sparkles className="h-4 w-4" />
               {busy === 'check' ? 'Checking…' : 'Check listing'}
             </Button>
