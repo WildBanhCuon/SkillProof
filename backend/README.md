@@ -236,6 +236,21 @@ Login requests auto-save `accessToken`, `refreshToken`, `jobId`, `sessionId`, an
 
 
 
+## Deploy on Render
+
+| Setting | Value |
+|--------|--------|
+| Root Directory | `backend` |
+| Branch | `deploy` |
+| Build Command | `npm install && npx prisma generate && npm run build` |
+| Start Command | `npx prisma migrate deploy && npm run start:prod` |
+
+**Node:** `backend/.node-version` pins **22** (optional; set `NODE_VERSION=22` in Render if needed).
+
+**Important:** Do not set `NODE_ENV=production` during the build phase, or dev-only tools may be skipped. `@nestjs/cli` is listed under `dependencies` so `nest build` works on Render.
+
+After first deploy, open **Shell** and run `npm run prisma:seed` once.
+
 ## Notes
 
 
