@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { formatApiError } from '../../utils/errors';
+import { formatAuthError } from '../../utils/errors';
 import { useAuth } from '../../auth/AuthContext';
 import type { UserRole } from '../../api/types';
 import { Button } from '../../components/ui/Button';
@@ -24,7 +24,7 @@ export function LoginPage() {
       await login(email, password, role);
       navigate(role === 'hr' ? '/hr/jobs' : '/jobs');
     } catch (err) {
-      setError(formatApiError(err, 'Login'));
+      setError(formatAuthError(err, 'Sign in failed'));
     } finally {
       setLoading(false);
     }

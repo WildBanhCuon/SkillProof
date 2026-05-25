@@ -24,3 +24,21 @@ export function formatApiError(error: unknown, action: string): string {
 
   return `${action}: An unexpected error occurred.`;
 }
+
+const INVALID_CREDENTIALS = /invalid credentials|unauthorized/i;
+
+/** User-friendly messages for login / register failures. */
+export function formatAuthError(error: unknown, action: string): string {
+  if (error instanceof ApiError) {
+    if (error.status === 401 && INVALID_CREDENTIALS.test(error.message)) {
+      return `${action}: Email or password is incorrect. If you have an account, make sure you selected the right role (HR or Candidate).`;
+    }
+    if (error.status === 409) {
+      return `${action}: An account with this email already exists. Try signing in instead.`;
+    }
+    if (error.status === 400) {
+      return formatApiError(error, action);
+    }
+  }
+  return formatApiError(error, action);
+}

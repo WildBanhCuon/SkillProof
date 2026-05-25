@@ -72,6 +72,16 @@ async function parseErrorResponse(
   return { message: fallback, body };
 }
 
+/** Routes that must not send a stale Bearer token or trigger session refresh. */
+function isPublicAuthPath(path: string): boolean {
+  return (
+    path === '/auth/login' ||
+    path === '/auth/hr/register' ||
+    path === '/auth/candidate/register' ||
+    path === '/auth/refresh'
+  );
+}
+
 async function refreshAccessToken(): Promise<boolean> {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return false;
@@ -102,15 +112,21 @@ export async function apiRequest<T>(
     headers.set('Content-Type', 'application/json');
   }
   const token = getAccessToken();
-  if (token) headers.set('Authorization', `Bearer ${token}`);
+  const publicAuth = isPublicAuthPath(path);
+  if (token && !publicAuth) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
 
   const res = await fetch(`${API_URL}${path}`, { ...options, headers });
 
-  if (res.status === 401 && retry) {
+  if (res.status === 401 && retry && !publicAuth) {
     const refreshed = await refreshAccessToken();
     if (refreshed) return apiRequest<T>(path, options, false);
     onUnauthorized();
-    throw new ApiError('Session expired', 401);
+    throw new ApiError(
+      'Your session has expired. Please sign in again.',
+      401,
+    );
   }
 
   if (!res.ok) {

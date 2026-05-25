@@ -112,6 +112,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = async (email: string, password: string, role: UserRole) => {
+    setTokens(null);
+    setUser(null);
     const auth = await api.post<AuthTokens>('/auth/login', {
       email,
       password,
@@ -126,6 +128,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fullName: string;
     companyName: string;
   }) => {
+    setTokens(null);
+    setUser(null);
     const auth = await api.post<AuthTokens>('/auth/hr/register', data);
     await applyTokens(auth);
   };
@@ -135,6 +139,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string;
     displayName: string;
   }) => {
+    setTokens(null);
+    setUser(null);
     const auth = await api.post<AuthTokens>('/auth/candidate/register', data);
     await applyTokens(auth);
   };
