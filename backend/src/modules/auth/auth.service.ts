@@ -16,8 +16,16 @@ import {
   HrRegisterDto,
   LoginDto,
   UpdateCompanyProfileDto,
+  UpdateHrProfileDto,
 } from './auth.dto';
 import { JwtPayload } from './auth.types';
+
+function defaultNameFromEmail(email: string): string {
+  const local = email.split('@')[0] ?? 'user';
+  const spaced = local.replace(/[._+-]+/g, ' ').trim();
+  if (!spaced) return 'User';
+  return spaced.replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 @Injectable()
 export class AuthService {
@@ -36,20 +44,23 @@ export class AuthService {
     if (existing) throw new ConflictException('Email already registered');
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
-    const websiteUrl = dto.websiteUrl
+    const websiteUrl = dto.websiteUrl?.trim()
       ? this.webpage.normalizeWebsiteUrl(dto.websiteUrl)
       : undefined;
+    const fullName = dto.fullName?.trim() || defaultNameFromEmail(dto.email);
+    const companyName = dto.companyName?.trim() || 'My company';
+    const teamProfile = dto.teamProfile?.trim() || null;
 
     const company = await this.prisma.company.create({
       data: {
-        name: dto.companyName,
-        teamProfile: dto.teamProfile,
+        name: companyName,
+        teamProfile,
         websiteUrl,
         hrUsers: {
           create: {
             email: dto.email,
             passwordHash,
-            fullName: dto.fullName,
+            fullName,
             role: 'ADMIN',
           },
         },
@@ -73,11 +84,13 @@ export class AuthService {
     if (existing) throw new ConflictException('Email already registered');
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
+    const displayName =
+      dto.displayName?.trim() || defaultNameFromEmail(dto.email);
     const user = await this.prisma.candidateUser.create({
       data: {
         email: dto.email,
         passwordHash,
-        displayName: dto.displayName,
+        displayName,
       },
     });
     return this.issueTokens({
@@ -188,27 +201,56 @@ export class AuthService {
     };
   }
 
-  async updateCompanyProfile(user: JwtPayload, dto: UpdateCompanyProfileDto) {
+  async updateHrProfile(user: JwtPayload, dto: UpdateHrProfileDto) {
     if (user.role !== 'hr' || !user.companyId) {
       throw new UnauthorizedException();
     }
-    const websiteUrl = dto.websiteUrl?.trim()
-      ? this.webpage.normalizeWebsiteUrl(dto.websiteUrl)
-      : null;
 
-    const company = await this.prisma.company.update({
-      where: { id: user.companyId },
-      data: {
-        teamProfile: dto.teamProfile,
-        websiteUrl,
-      },
+    const hrData: { fullName?: string } = {};
+    if (dto.fullName?.trim()) hrData.fullName = dto.fullName.trim();
+
+    const companyData: {
+      name?: string;
+      teamProfile?: string | null;
+      websiteUrl?: string | null;
+    } = {};
+    if (dto.companyName?.trim()) companyData.name = dto.companyName.trim();
+    if (dto.teamProfile !== undefined) {
+      companyData.teamProfile = dto.teamProfile.trim() || null;
+    }
+    if (dto.websiteUrl !== undefined) {
+      companyData.websiteUrl = dto.websiteUrl.trim()
+        ? this.webpage.normalizeWebsiteUrl(dto.websiteUrl)
+        : null;
+    }
+
+    await this.prisma.$transaction([
+      ...(Object.keys(hrData).length
+        ? [
+            this.prisma.hrUser.update({
+              where: { id: user.sub },
+              data: hrData,
+            }),
+          ]
+        : []),
+      ...(Object.keys(companyData).length
+        ? [
+            this.prisma.company.update({
+              where: { id: user.companyId },
+              data: companyData,
+            }),
+          ]
+        : []),
+    ]);
+
+    return this.me(user);
+  }
+
+  async updateCompanyProfile(user: JwtPayload, dto: UpdateCompanyProfileDto) {
+    return this.updateHrProfile(user, {
+      teamProfile: dto.teamProfile,
+      websiteUrl: dto.websiteUrl,
     });
-    return {
-      companyId: company.id,
-      companyName: company.name,
-      companyTeamProfile: company.teamProfile ?? '',
-      companyWebsiteUrl: company.websiteUrl ?? '',
-    };
   }
 
   async me(user: JwtPayload) {

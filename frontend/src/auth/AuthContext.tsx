@@ -24,20 +24,9 @@ interface AuthContextValue {
     password: string,
     role: UserRole,
   ) => Promise<void>;
-  registerHr: (data: {
-    email: string;
-    password: string;
-    fullName: string;
-    companyName: string;
-    teamProfile: string;
-    websiteUrl?: string;
-  }) => Promise<void>;
+  registerHr: (data: { email: string; password: string }) => Promise<void>;
   refreshUser: () => Promise<void>;
-  registerCandidate: (data: {
-    email: string;
-    password: string;
-    displayName: string;
-  }) => Promise<void>;
+  registerCandidate: (data: { email: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -131,25 +120,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(me);
   }, [tokens?.accessToken]);
 
-  const registerHr = async (data: {
-    email: string;
-    password: string;
-    fullName: string;
-    companyName: string;
-    teamProfile: string;
-    websiteUrl?: string;
-  }) => {
+  const registerHr = async (data: { email: string; password: string }) => {
     setTokens(null);
     setUser(null);
     const auth = await api.post<AuthTokens>('/auth/hr/register', data);
     await applyTokens(auth);
   };
 
-  const registerCandidate = async (data: {
-    email: string;
-    password: string;
-    displayName: string;
-  }) => {
+  const registerCandidate = async (data: { email: string; password: string }) => {
     setTokens(null);
     setUser(null);
     const auth = await api.post<AuthTokens>('/auth/candidate/register', data);

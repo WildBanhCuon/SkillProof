@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import { api } from '../../api/client';
 import { Button } from '../../components/ui/Button';
@@ -11,6 +11,12 @@ import { GenerateTeamProfileButton } from '../../components/hr/GenerateTeamProfi
 
 export function HrProfilePage() {
   const { user, refreshUser } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const onboarding = searchParams.get('onboarding') === '1';
+
+  const [fullName, setFullName] = useState('');
+  const [companyName, setCompanyName] = useState('');
   const [teamProfile, setTeamProfile] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [error, setError] = useState('');
@@ -18,9 +24,16 @@ export function HrProfilePage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    setFullName(user?.fullName ?? '');
+    setCompanyName(user?.companyName ?? '');
     setTeamProfile(user?.companyTeamProfile ?? '');
     setWebsiteUrl(user?.companyWebsiteUrl ?? '');
-  }, [user?.companyTeamProfile, user?.companyWebsiteUrl]);
+  }, [
+    user?.fullName,
+    user?.companyName,
+    user?.companyTeamProfile,
+    user?.companyWebsiteUrl,
+  ]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -28,31 +41,55 @@ export function HrProfilePage() {
     setSuccess('');
     setSaving(true);
     try {
-      await api.patch('/auth/company-profile', {
+      await api.patch('/auth/hr/profile', {
+        fullName: fullName.trim(),
+        companyName: companyName.trim(),
         teamProfile: teamProfile.trim(),
         websiteUrl: websiteUrl.trim() || undefined,
       });
       await refreshUser();
-      setSuccess('Company profile saved. New job postings will use this text by default.');
+      if (onboarding) {
+        navigate('/hr/jobs');
+        return;
+      }
+      setSuccess('Profile saved. New job postings will use this text by default.');
     } catch (err) {
-      setError(formatApiError(err, 'Save company profile'));
+      setError(formatApiError(err, 'Save profile'));
     } finally {
       setSaving(false);
     }
   };
 
+  const canSave =
+    fullName.trim().length > 0 &&
+    companyName.trim().length > 0 &&
+    teamProfile.trim().length >= 10;
+
   return (
     <div className="mx-auto max-w-2xl">
-      <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
+      <p className="text-sm text-slate-500 dark:text-slate-400">
         <Link to="/hr/jobs" className="hover:text-indigo-600 dark:text-indigo-400">
           Jobs
         </Link>{' '}
         / Company profile
       </p>
-      <h1 className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">Company profile</h1>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
-        This description is reused when you create job postings with Guided setup.
+      <h1 className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
+        {onboarding ? 'Complete your profile' : 'Company profile'}
+      </h1>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        {onboarding
+          ? 'A few details about you and your company — then you can create job postings.'
+          : 'This description is reused when you create job postings with Guided setup.'}
       </p>
+
+      {onboarding && (
+        <div className="mt-4">
+          <Alert variant="info">
+            You&apos;re almost done. Add your name, company, and a short team description to
+            continue.
+          </Alert>
+        </div>
+      )}
 
       {error && (
         <div className="mt-4">
@@ -71,15 +108,15 @@ export function HrProfilePage() {
         <form onSubmit={onSubmit} className="space-y-4">
           <Input
             label="Your name"
-            value={user?.fullName ?? ''}
-            readOnly
-            className="bg-slate-50 dark:bg-slate-950"
+            required
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
           />
           <Input
-            label="Company"
-            value={user?.companyName ?? ''}
-            readOnly
-            className="bg-slate-50 dark:bg-slate-950"
+            label="Company name"
+            required
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value)}
           />
           <Input
             label="Company website"
@@ -90,7 +127,7 @@ export function HrProfilePage() {
           />
           <div className="flex flex-wrap items-center gap-2">
             <GenerateTeamProfileButton
-              companyName={user?.companyName ?? ''}
+              companyName={companyName}
               websiteUrl={websiteUrl}
               onGenerated={({ teamProfile: draft, websiteUrl: normalized }) => {
                 setTeamProfile(draft);
@@ -101,9 +138,8 @@ export function HrProfilePage() {
               }}
               onError={setError}
             />
-            <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
-              We read public pages on your site (home, about, etc.) and draft text with AI.
-              Always review before saving.
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Optional: draft “about your team” from your public website, then edit.
             </p>
           </div>
           <label className="block w-full">
@@ -112,19 +148,33 @@ export function HrProfilePage() {
             </span>
             <textarea
               required
+              minLength={10}
               rows={6}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600"
               value={teamProfile}
               onChange={(e) => setTeamProfile(e.target.value)}
-              placeholder="Describe your company, product, and the team the hire will join. This is prefilled in the job creation wizard."
+              placeholder="Describe your company, product, and the team the hire will join."
             />
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               Minimum 10 characters. You can still tweak this per job in the wizard.
             </p>
           </label>
-          <Button type="submit" disabled={saving || teamProfile.trim().length < 10}>
-            {saving ? 'Saving…' : 'Save profile'}
-          </Button>
+          <div className="flex flex-wrap gap-3">
+            <Button type="submit" disabled={saving || !canSave}>
+              {saving
+                ? 'Saving…'
+                : onboarding
+                  ? 'Continue to jobs'
+                  : 'Save profile'}
+            </Button>
+            {onboarding && (
+              <Link to="/hr/jobs">
+                <Button type="button" variant="outline">
+                  Skip for now
+                </Button>
+              </Link>
+            )}
+          </div>
         </form>
       </Card>
     </div>

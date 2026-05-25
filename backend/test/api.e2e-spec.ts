@@ -81,10 +81,6 @@ describe('SkillProof API (e2e)', () => {
         .send({
           email: `hr.e2e.${unique}@test.com`,
           password: PASSWORD,
-          fullName: 'E2E HR',
-          companyName: 'E2E Co',
-          teamProfile:
-            'E2E test company building hiring tools for technical recruiters.',
         })
         .expect(201);
       expect(res.body.accessToken).toBeDefined();
@@ -97,7 +93,6 @@ describe('SkillProof API (e2e)', () => {
         .send({
           email: `candidate.e2e.${unique}@test.com`,
           password: PASSWORD,
-          displayName: 'E2E Candidate',
         })
         .expect(201);
       expect(res.body.accessToken).toBeDefined();

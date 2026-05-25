@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { useAuth } from '../../auth/AuthContext';
@@ -22,6 +23,9 @@ interface ProfileResponse {
 
 export function CandidateProfilePage() {
   const { refreshUser } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const onboarding = searchParams.get('onboarding') === '1';
   const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY_PROFILE);
   const [error, setError] = useState('');
@@ -76,6 +80,10 @@ export function CandidateProfilePage() {
       await refreshUser();
       await queryClient.invalidateQueries({ queryKey: ['candidate', 'profile'] });
       await queryClient.invalidateQueries({ queryKey: ['job'] });
+      if (onboarding) {
+        navigate('/jobs');
+        return;
+      }
       setSuccess('Profile saved.');
     } catch (err) {
       setError(formatApiError(err, 'Save profile'));
@@ -90,11 +98,22 @@ export function CandidateProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Your profile</h1>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
-        Employers may require some of these fields when you apply. Keep your profile
-        up to date so you can start assessments without delays.
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+        {onboarding ? 'Complete your profile' : 'Your profile'}
+      </h1>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        {onboarding
+          ? 'Add how employers should see you — you can fill in more details later.'
+          : 'Employers may require some of these fields when you apply. Keep your profile up to date so you can start assessments without delays.'}
       </p>
+
+      {onboarding && (
+        <div className="mt-4">
+          <Alert variant="info">
+            Welcome! Enter your name to finish signing up, then browse open roles.
+          </Alert>
+        </div>
+      )}
 
       {error && (
         <div className="mt-4">
@@ -176,9 +195,22 @@ export function CandidateProfilePage() {
             onChange={(e) => set('resumeUrl', e.target.value)}
             placeholder="https://… (PDF or hosted CV)"
           />
-          <Button type="submit" disabled={saving}>
-            {saving ? 'Saving…' : 'Save profile'}
-          </Button>
+          <div className="flex flex-wrap gap-3">
+            <Button type="submit" disabled={saving || form.displayName.trim().length < 2}>
+              {saving
+                ? 'Saving…'
+                : onboarding
+                  ? 'Continue to jobs'
+                  : 'Save profile'}
+            </Button>
+            {onboarding && (
+              <Link to="/jobs">
+                <Button type="button" variant="outline">
+                  Skip for now
+                </Button>
+              </Link>
+            )}
+          </div>
         </form>
       </Card>
     </div>

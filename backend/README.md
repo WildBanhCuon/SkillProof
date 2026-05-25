@@ -101,7 +101,8 @@ Health: `GET /v1/health`
 - `GET /v1/auth/me` — includes `companyTeamProfile` for HR
 
 - `POST /v1/auth/generate-team-profile-from-website` — draft “about team” from public website (optional auth)
-- `PATCH /v1/auth/company-profile` — HR updates default “about team” text and website URL
+- `PATCH /v1/auth/hr/profile` — HR updates name, company, team description, website
+- `PATCH /v1/auth/company-profile` — HR updates default “about team” text and website URL (subset of hr/profile)
 
 
 

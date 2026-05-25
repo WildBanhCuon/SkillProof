@@ -14,15 +14,39 @@ export class HrRegisterDto {
   @MinLength(8)
   password!: string;
 
+  @IsOptional()
   @IsString()
-  fullName!: string;
+  fullName?: string;
 
+  @IsOptional()
   @IsString()
-  companyName!: string;
+  companyName?: string;
 
+  @IsOptional()
   @IsString()
   @MinLength(10)
-  teamProfile!: string;
+  teamProfile?: string;
+
+  @IsOptional()
+  @IsString()
+  websiteUrl?: string;
+}
+
+export class UpdateHrProfileDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  fullName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  companyName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(10)
+  teamProfile?: string;
 
   @IsOptional()
   @IsString()
@@ -56,8 +80,9 @@ export class CandidateRegisterDto {
   @MinLength(8)
   password!: string;
 
+  @IsOptional()
   @IsString()
-  displayName!: string;
+  displayName?: string;
 }
 
 export class LoginDto {

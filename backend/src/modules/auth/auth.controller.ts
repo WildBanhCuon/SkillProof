@@ -8,6 +8,7 @@ import {
   LogoutDto,
   RefreshDto,
   UpdateCompanyProfileDto,
+  UpdateHrProfileDto,
 } from './auth.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { OptionalJwtAuthGuard } from './optional-jwt-auth.guard';
@@ -60,6 +61,16 @@ export class AuthController {
     @CurrentUser() user?: JwtPayload,
   ) {
     return this.auth.generateTeamProfileFromWebsite(dto, user);
+  }
+
+  @Patch('hr/profile')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('hr')
+  updateHrProfile(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdateHrProfileDto,
+  ) {
+    return this.auth.updateHrProfile(user, dto);
   }
 
   @Patch('company-profile')

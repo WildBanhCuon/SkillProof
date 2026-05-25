@@ -6,7 +6,6 @@ import type { UserRole } from '../../api/types';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Alert } from '../../components/ui/Alert';
-import { GenerateTeamProfileButton } from '../../components/hr/GenerateTeamProfileButton';
 
 export function RegisterPage() {
   const { registerHr, registerCandidate } = useAuth();
@@ -14,15 +13,8 @@ export function RegisterPage() {
   const [role, setRole] = useState<UserRole>('hr');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    email: '',
-    password: '',
-    fullName: '',
-    companyName: '',
-    websiteUrl: '',
-    teamProfile: '',
-    displayName: '',
-  });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -30,22 +22,11 @@ export function RegisterPage() {
     setLoading(true);
     try {
       if (role === 'hr') {
-        await registerHr({
-          email: form.email,
-          password: form.password,
-          fullName: form.fullName,
-          companyName: form.companyName,
-          teamProfile: form.teamProfile,
-          websiteUrl: form.websiteUrl.trim() || undefined,
-        });
-        navigate('/hr/jobs');
+        await registerHr({ email, password });
+        navigate('/hr/profile?onboarding=1');
       } else {
-        await registerCandidate({
-          email: form.email,
-          password: form.password,
-          displayName: form.displayName,
-        });
-        navigate('/jobs');
+        await registerCandidate({ email, password });
+        navigate('/profile?onboarding=1');
       }
     } catch (err) {
       setError(formatAuthError(err, 'Registration failed'));
@@ -57,9 +38,11 @@ export function RegisterPage() {
   return (
     <>
       <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Create account</h1>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">Join SkillProof to hire or apply with proof</p>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        Sign up with email and password — you&apos;ll add profile details right after.
+      </p>
 
-      <div className="mt-6 flex rounded-lg border border-slate-200 dark:border-slate-700 p-1">
+      <div className="mt-6 flex rounded-lg border border-slate-200 p-1 dark:border-slate-700">
         {(['hr', 'candidate'] as const).map((r) => (
           <button
             key={r}
@@ -68,7 +51,7 @@ export function RegisterPage() {
             className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
               role === r
                 ? 'bg-indigo-600 text-white'
-                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-950'
+                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
             }`}
           >
             {r === 'hr' ? 'Company / HR' : 'Candidate'}
@@ -87,82 +70,19 @@ export function RegisterPage() {
           label="Email"
           type="email"
           required
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
         <Input
           label="Password"
           type="password"
           required
           minLength={8}
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          autoComplete="new-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
         />
-        {role === 'hr' ? (
-          <>
-            <Input
-              label="Full name"
-              required
-              value={form.fullName}
-              onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-            />
-            <Input
-              label="Company name"
-              required
-              value={form.companyName}
-              onChange={(e) => setForm({ ...form, companyName: e.target.value })}
-            />
-            <Input
-              label="Company website"
-              type="url"
-              value={form.websiteUrl}
-              onChange={(e) => setForm({ ...form, websiteUrl: e.target.value })}
-              placeholder="https://www.yourcompany.com"
-            />
-            <div className="flex flex-wrap items-center gap-2">
-              <GenerateTeamProfileButton
-                companyName={form.companyName}
-                websiteUrl={form.websiteUrl}
-                onGenerated={({ teamProfile, websiteUrl }) => {
-                  setForm((prev) => ({
-                    ...prev,
-                    teamProfile,
-                    websiteUrl,
-                  }));
-                  setError('');
-                }}
-                onError={setError}
-              />
-              <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
-                Optional: draft “about your team” from your public website, then edit.
-              </p>
-            </div>
-            <label className="block w-full">
-              <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                About your team and product
-              </span>
-              <textarea
-                required
-                minLength={10}
-                rows={4}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-                value={form.teamProfile}
-                onChange={(e) => setForm({ ...form, teamProfile: e.target.value })}
-                placeholder="e.g. We are a 20-person SaaS team building a learning platform for enterprises."
-              />
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
-                Used as the default in job posting wizard — you can edit it anytime in your profile.
-              </p>
-            </label>
-          </>
-        ) : (
-          <Input
-            label="Display name"
-            required
-            value={form.displayName}
-            onChange={(e) => setForm({ ...form, displayName: e.target.value })}
-          />
-        )}
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? 'Creating…' : 'Create account'}
         </Button>
@@ -170,7 +90,7 @@ export function RegisterPage() {
 
       <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-300">
         Already have an account?{' '}
-        <Link to="/login" className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
+        <Link to="/login" className="font-medium text-indigo-600 hover:underline dark:text-indigo-400">
           Sign in
         </Link>
       </p>
