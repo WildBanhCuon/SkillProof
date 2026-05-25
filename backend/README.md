@@ -59,7 +59,8 @@ Health: `GET /v1/health`
 - `POST /v1/jobs/:id/accept-suggestions`
 - `POST /v1/jobs/:id/apply-suggestions`
 - `POST /v1/jobs/:id/publish` — generates assessment (Gemini)
-- `POST /v1/jobs/:id/archive`
+- `POST /v1/jobs/:id/archive` — closes listing (`CLOSED`); candidates can no longer apply
+- `DELETE /v1/jobs/:id` — permanent delete (draft, analyzed, or archived only; archive published jobs first)
 - `GET /v1/jobs/:id/assessment`
 
 ### HR — Results

@@ -203,11 +203,27 @@ export class JobsService {
   }
 
   async archive(user: JwtPayload, id: string) {
-    await this.ensureHrOwned(id, user.companyId!);
+    const job = await this.ensureHrOwned(id, user.companyId!);
+    if (job.status !== 'PUBLISHED') {
+      throw new BadRequestException(
+        'Only published jobs can be archived. Drafts can be deleted instead.',
+      );
+    }
     return this.prisma.jobPosting.update({
       where: { id },
       data: { status: 'CLOSED' },
+      include: { skillRequirements: true, assessment: { select: { id: true } } },
     });
+  }
+
+  async remove(user: JwtPayload, id: string) {
+    const job = await this.ensureHrOwned(id, user.companyId!);
+    if (job.status === 'PUBLISHED') {
+      throw new BadRequestException(
+        'Archive this job first so candidates can no longer apply, then you can delete it.',
+      );
+    }
+    await this.prisma.jobPosting.delete({ where: { id } });
   }
 
   private async ensureHrDraft(id: string, companyId: string) {

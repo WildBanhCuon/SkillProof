@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -83,6 +86,13 @@ export class JobsController {
   @Roles('hr')
   archive(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     return this.jobs.archive(user, id);
+  }
+
+  @Delete(':id')
+  @Roles('hr')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.jobs.remove(user, id);
   }
 
   @Get(':id/assessment')

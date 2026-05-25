@@ -21,7 +21,7 @@ export function statusLabel(status: string): string {
     DRAFT: 'Draft',
     ANALYZED: 'Analyzed',
     PUBLISHED: 'Published',
-    CLOSED: 'Closed',
+    CLOSED: 'Archived',
   };
   return map[status] ?? status;
 }

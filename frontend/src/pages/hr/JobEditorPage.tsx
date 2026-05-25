@@ -11,6 +11,7 @@ import { Alert } from '../../components/ui/Alert';
 import { wordCount, statusLabel } from '../../utils/format';
 import { formatApiError } from '../../utils/errors';
 import { JobDescriptionEditor } from '../../components/hr/JobDescriptionEditor';
+import { JobPostingActions } from '../../components/hr/JobPostingActions';
 
 const TITLE_PLACEHOLDER = 'e.g. Junior Frontend Developer';
 
@@ -342,6 +343,13 @@ export function JobEditorPage() {
             <Link to={`/hr/jobs/${jobId}/results`}>
               <Button variant="secondary">View results</Button>
             </Link>
+          )}
+          {job && jobId && (
+            <JobPostingActions
+              job={job}
+              onError={setError}
+              redirectAfterDelete
+            />
           )}
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
@@ -6,9 +7,13 @@ import type { JobPosting } from '../../api/types';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { Alert } from '../../components/ui/Alert';
+import { JobPostingActions } from '../../components/hr/JobPostingActions';
+import { markdownExcerpt } from '../../components/ui/MarkdownContent';
 import { statusLabel, statusVariant } from '../../utils/format';
 
 export function JobsListPage() {
+  const [error, setError] = useState('');
   const { data: jobs = [], isLoading } = useQuery({
     queryKey: ['hr', 'jobs'],
     queryFn: () => api.get<JobPosting[]>('/jobs'),
@@ -29,6 +34,12 @@ export function JobsListPage() {
         </Link>
       </div>
 
+      {error && (
+        <div className="mt-4">
+          <Alert onDismiss={() => setError('')}>{error}</Alert>
+        </div>
+      )}
+
       {isLoading && (
         <p className="mt-8 text-slate-500">Loading jobs…</p>
       )}
@@ -47,10 +58,10 @@ export function JobsListPage() {
                 </Badge>
               </div>
               <p className="mt-1 line-clamp-2 text-sm text-slate-500">
-                {job.description.slice(0, 120)}…
+                {markdownExcerpt(job.description, 120)}
               </p>
             </div>
-            <div className="flex shrink-0 gap-2">
+            <div className="flex shrink-0 flex-wrap justify-end gap-2">
               <Link to={`/hr/jobs/${job.id}`}>
                 <Button variant="outline" size="sm">
                   Edit
@@ -61,6 +72,10 @@ export function JobsListPage() {
                   <Button size="sm">View results</Button>
                 </Link>
               )}
+              <JobPostingActions
+                job={job}
+                onError={setError}
+              />
             </div>
           </Card>
         ))}
