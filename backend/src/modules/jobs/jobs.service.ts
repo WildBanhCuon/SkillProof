@@ -149,7 +149,11 @@ export class JobsService {
 
     return this.prisma.jobPosting.update({
       where: { id },
-      data: { status: 'ANALYZED' },
+      data: {
+        status: 'ANALYZED',
+        suggestedDescription: null,
+        suggestionsAppliedAt: null,
+      },
       include: {
         skillRequirements: true,
         listingAnalyses: { orderBy: { createdAt: 'desc' }, take: 1 },
@@ -183,7 +187,11 @@ export class JobsService {
     }
     return this.prisma.jobPosting.update({
       where: { id },
-      data: { description: job.suggestedDescription },
+      data: {
+        description: job.suggestedDescription,
+        suggestedDescription: null,
+        suggestionsAppliedAt: new Date(),
+      },
       include: { skillRequirements: true },
     });
   }

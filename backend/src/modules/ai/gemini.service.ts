@@ -155,16 +155,37 @@ ${JSON.stringify(answers, null, 2)}`;
     title: string,
     description: string,
   ): Promise<ListingCheckResult> {
-    const prompt = `You are an expert technical recruiter reviewing a JUNIOR FRONTEND DEVELOPER job posting.
+    const prompt = `You are a pragmatic technical recruiter reviewing a job posting.
 
 Title: ${title}
 
 Description:
 ${description}
 
-Analyze for: unrealistic seniority, vague responsibilities, too many mandatory skills, inconsistent junior/senior stack.
+Your job is to decide if this listing is **good enough to publish** for the seniority level stated in the title — not to achieve perfection.
 
-Extract a skills matrix from the posting. Mark skills as testable if they can be assessed with a coding exercise.`;
+## When to return ZERO issues (issues: [])
+Return an empty issues array when:
+- Seniority in the title matches the experience and tasks described (e.g. junior + 0-1 years + mentorship/supervision is fine)
+- Responsibilities are plausible for that level, even if some tasks touch PHP, WooCommerce, etc. for a junior WordPress role when framed as assisted/supervised work
+- Wording is clear enough for candidates; minor style preferences are NOT issues
+- Subjective phrases ("strong coding logic", "proactive mindset") are NOT issues unless they are the ONLY concrete requirement
+- The listing was already improved and remaining concerns are nitpicks, not blockers
+
+It is valid and expected to return **no issues** for a solid posting. Do not invent issues to be helpful.
+
+## Only flag substantive issues (max 3 unless severe)
+Use **high** only for clear blockers: wrong seniority band (junior title + 5+ years required), contradictory requirements, or scope far above the role level with no mentorship framing.
+Use **medium** for fixable clarity problems: vague critical requirements, too many must-haves for a junior, internal contradictions.
+Use **low** sparingly — omit low issues if the listing is otherwise publishable.
+
+Do NOT flag:
+- Tasks that are reasonable with "under supervision", "assist", "support", or "mentorship" already stated
+- Title vs stack mismatch when the stack matches the job (WordPress junior + Elementor is fine)
+- Preference for more specificity when the posting is already adequate
+
+## Skills matrix
+Extract skills from the posting (role-appropriate). Mark testable=true only for skills assessable with a coding exercise; WordPress/CMS-only configuration may be testable=false.`;
 
     const schemaHint = `{
   "issues": [{ "type": "string", "severity": "low|medium|high", "message": "string", "excerpt": "string" }],
@@ -186,14 +207,20 @@ Extract a skills matrix from the posting. Mark skills as testable if they can be
     description: string,
     issues: unknown,
   ): Promise<{ improvedDescription: string }> {
-    const prompt = `Rewrite this junior frontend job posting to fix these issues while keeping it professional and realistic.
+    const prompt = `Rewrite this job posting to address ONLY the listed issues. Do not introduce new requirements or keep editing for hypothetical improvements.
 
 Title: ${title}
 Current:
 ${description}
 
-Issues found:
-${JSON.stringify(issues, null, 2)}`;
+Issues to fix (if empty, return the description with light polish only):
+${JSON.stringify(issues, null, 2)}
+
+Rules:
+- Fix high and medium issues; ignore subjective nitpicks unless explicitly listed as high/medium
+- Preserve tone, location, work mode, and seniority level
+- Keep markdown structure (### headings, bullet lists)
+- If issues are minor, make minimal targeted edits — do not rewrite the whole ad unnecessarily`;
 
     const schemaHint = `{ "improvedDescription": "string (markdown ok)" }`;
 

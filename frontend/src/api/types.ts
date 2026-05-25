@@ -35,6 +35,7 @@ export interface JobPosting {
   title: string;
   description: string;
   suggestedDescription?: string | null;
+  suggestionsAppliedAt?: string | null;
   status: string;
   publishedAt?: string | null;
   createdAt?: string;

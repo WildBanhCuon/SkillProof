@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Sparkles, Wand2 } from 'lucide-react';
+import { ArrowLeft, Check, Sparkles, Wand2 } from 'lucide-react';
 import { api } from '../../api/client';
 import type { JobPosting, ListingIssue } from '../../api/types';
 import { Button } from '../../components/ui/Button';
@@ -38,6 +38,7 @@ export function JobEditorPage() {
     before: string;
     after: string;
   } | null>(null);
+  const [suggestionsApplied, setSuggestionsApplied] = useState(false);
 
   const { data: job } = useQuery({
     queryKey: ['job', jobId],
@@ -55,6 +56,7 @@ export function JobEditorPage() {
         const analysis = job.listingAnalyses?.[0];
         if (analysis?.issues) setIssues(analysis.issues as ListingIssue[]);
       }
+      setSuggestionsApplied(!!job.suggestionsAppliedAt);
     }
   }, [job]);
 
@@ -102,9 +104,17 @@ export function JobEditorPage() {
         `/jobs/${idToUse}/check-listing`,
       );
       setChecked(true);
+      setSuggestionsApplied(false);
+      setAppliedDiff(null);
       setSkills(updated.skillRequirements ?? []);
       const analysis = updated.listingAnalyses?.[0];
-      setIssues((analysis?.issues as ListingIssue[]) ?? []);
+      const foundIssues = (analysis?.issues as ListingIssue[]) ?? [];
+      setIssues(foundIssues);
+      setSuccess(
+        foundIssues.length === 0
+          ? 'Listing looks good — no major issues. You can publish when ready.'
+          : `Found ${foundIssues.length} issue${foundIssues.length === 1 ? '' : 's'} to review`,
+      );
       queryClient.invalidateQueries({ queryKey: ['job', idToUse] });
     } catch (e) {
       setError(formatApiError(e, 'AI listing check'));
@@ -125,6 +135,7 @@ export function JobEditorPage() {
       );
       setDescription(updated.description);
       setAppliedDiff({ before, after: updated.description });
+      setSuggestionsApplied(true);
       setSuccess('Suggestions applied — review the changes below');
       queryClient.invalidateQueries({ queryKey: ['job', jobId] });
     } catch (e) {
@@ -138,7 +149,8 @@ export function JobEditorPage() {
     if (!appliedDiff) return;
     setDescription(appliedDiff.before);
     setAppliedDiff(null);
-    setSuccess('Reverted to the previous description');
+    setSuggestionsApplied(false);
+    setSuccess('Reverted to the previous description — you can apply suggestions again');
   };
 
   const publish = async () => {
@@ -165,6 +177,12 @@ export function JobEditorPage() {
 
   const canPublish =
     checked && (skills?.length ?? 0) > 0 && job?.status !== 'PUBLISHED';
+
+  const canRecheckListing =
+    checked &&
+    hasContent &&
+    job?.status !== 'PUBLISHED' &&
+    job?.status !== 'CLOSED';
 
   return (
     <div>
@@ -293,27 +311,55 @@ export function JobEditorPage() {
                 <Badge variant="info">AI Assistant</Badge>
               </div>
               <div className="mt-4 space-y-3">
-                {issues.map((issue, i) => (
-                  <div
-                    key={i}
-                    className={`rounded-lg p-3 text-sm ${severityStyle(issue.severity)}`}
-                  >
-                    <p className="font-medium text-slate-900">{issue.message}</p>
-                    {issue.excerpt && (
-                      <p className="mt-1 text-slate-600">"{issue.excerpt}"</p>
-                    )}
+                {issues.length === 0 ? (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                    <p className="font-medium">Listing looks good</p>
+                    <p className="mt-1 text-emerald-800/90">
+                      No substantive issues for this seniority level. Review the skills matrix
+                      below, then publish when you are ready.
+                    </p>
                   </div>
-                ))}
+                ) : (
+                  issues.map((issue, i) => (
+                    <div
+                      key={i}
+                      className={`rounded-lg p-3 text-sm ${severityStyle(issue.severity)}`}
+                    >
+                      <p className="font-medium text-slate-900">{issue.message}</p>
+                      {issue.excerpt && (
+                        <p className="mt-1 text-slate-600">"{issue.excerpt}"</p>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
-              <Button
-                variant="secondary"
-                className="mt-4 w-full"
-                onClick={applySuggestions}
-                disabled={busy === 'apply'}
-              >
-                <Wand2 className="h-4 w-4" />
-                Apply suggestions
-              </Button>
+              {suggestionsApplied ? (
+                <div className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+                  <Check className="h-4 w-4 shrink-0" />
+                  Suggestions applied
+                </div>
+              ) : issues.length > 0 ? (
+                <Button
+                  variant="secondary"
+                  className="mt-4 w-full"
+                  onClick={applySuggestions}
+                  disabled={busy === 'apply'}
+                >
+                  <Wand2 className="h-4 w-4" />
+                  {busy === 'apply' ? 'Applying…' : 'Apply suggestions'}
+                </Button>
+              ) : null}
+              {suggestionsApplied && canRecheckListing && (
+                <Button
+                  variant="outline"
+                  className="mt-3 w-full"
+                  onClick={checkListing}
+                  disabled={busy === 'check'}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {busy === 'check' ? 'Checking…' : 'Re-check listing'}
+                </Button>
+              )}
             </Card>
           </div>
         )}
@@ -388,10 +434,18 @@ export function JobEditorPage() {
           >
             Save draft
           </Button>
-          {!checked && (
-            <Button onClick={checkListing} disabled={!!busy || !hasContent}>
+          {(!checked || canRecheckListing) && (
+            <Button
+              variant={checked ? 'outline' : 'primary'}
+              onClick={checkListing}
+              disabled={!!busy || !hasContent}
+            >
               <Sparkles className="h-4 w-4" />
-              {busy === 'check' ? 'Checking…' : 'Check listing'}
+              {busy === 'check'
+                ? 'Checking…'
+                : checked
+                  ? 'Re-check listing'
+                  : 'Check listing'}
             </Button>
           )}
           {canPublish && (

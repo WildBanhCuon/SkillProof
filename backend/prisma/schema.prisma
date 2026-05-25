@@ -99,8 +99,9 @@ model JobPosting {
   companyId            String
   title                String
   description          String   @db.Text
-  suggestedDescription String?  @db.Text
-  status               JobStatus @default(DRAFT)
+  suggestedDescription   String?   @db.Text
+  suggestionsAppliedAt   DateTime?
+  status                 JobStatus @default(DRAFT)
   publishedAt          DateTime?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
