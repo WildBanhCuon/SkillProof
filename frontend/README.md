@@ -35,6 +35,7 @@ A **published** Junior Frontend Developer job with one graded candidate is inclu
 | `/` | Public | Landing |
 | `/login`, `/register` | Public | Auth |
 | `/hr/jobs` | HR | Job list |
+| `/hr/profile` | HR | Company team profile (wizard default) |
 | `/hr/jobs/wizard` | HR | Guided questionnaire → AI draft |
 | `/hr/jobs/new`, `/hr/jobs/:id` | HR | Create / edit + AI check |
 | `/hr/jobs/:id/results` | HR | Ranked candidates |

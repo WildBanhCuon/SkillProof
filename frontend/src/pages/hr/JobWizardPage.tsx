@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
 import { api } from '../../api/client';
@@ -17,6 +17,7 @@ import {
   WORK_MODE_OPTIONS,
 } from '../../data/jobWizard';
 import { formatApiError } from '../../utils/errors';
+import { useAuth } from '../../auth/AuthContext';
 
 function OptionCard({
   selected,
@@ -60,10 +61,19 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
 
 export function JobWizardPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const teamPrefilled = useRef(false);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<JobWizardAnswers>(INITIAL_WIZARD_ANSWERS);
   const [error, setError] = useState('');
   const [generating, setGenerating] = useState(false);
+
+  useEffect(() => {
+    const profile = user?.companyTeamProfile?.trim();
+    if (!profile || teamPrefilled.current) return;
+    teamPrefilled.current = true;
+    setAnswers((a) => ({ ...a, teamContext: profile }));
+  }, [user?.companyTeamProfile]);
 
   const update = <K extends keyof JobWizardAnswers>(
     key: K,
@@ -212,6 +222,23 @@ export function JobWizardPage() {
               <span className="mb-1 block text-sm font-medium text-slate-700">
                 About your team and product
               </span>
+              {user?.companyTeamProfile?.trim() ? (
+                <p className="mb-2 text-xs text-slate-500">
+                  Prefilled from your{' '}
+                  <Link to="/hr/profile" className="font-medium text-indigo-600 hover:underline">
+                    company profile
+                  </Link>
+                  . Adjust here only if this role differs.
+                </p>
+              ) : (
+                <p className="mb-2 text-xs text-amber-700">
+                  Add a default in your{' '}
+                  <Link to="/hr/profile" className="font-medium text-indigo-600 hover:underline">
+                    company profile
+                  </Link>{' '}
+                  to skip retyping this next time.
+                </p>
+              )}
               <textarea
                 required
                 rows={5}

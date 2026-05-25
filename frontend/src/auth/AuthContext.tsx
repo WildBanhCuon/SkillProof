@@ -29,7 +29,9 @@ interface AuthContextValue {
     password: string;
     fullName: string;
     companyName: string;
+    teamProfile: string;
   }) => Promise<void>;
+  refreshUser: () => Promise<void>;
   registerCandidate: (data: {
     email: string;
     password: string;
@@ -122,11 +124,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await applyTokens(auth);
   };
 
+  const refreshUser = useCallback(async () => {
+    if (!tokens?.accessToken) return;
+    const me = await api.get<AuthUser>('/auth/me');
+    setUser(me);
+  }, [tokens?.accessToken]);
+
   const registerHr = async (data: {
     email: string;
     password: string;
     fullName: string;
     companyName: string;
+    teamProfile: string;
   }) => {
     setTokens(null);
     setUser(null);
@@ -165,9 +174,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       registerHr,
       registerCandidate,
       logout,
+      refreshUser,
       isAuthenticated: !!user,
     }),
-    [user, loading],
+    [user, loading, refreshUser],
   );
 
   return (

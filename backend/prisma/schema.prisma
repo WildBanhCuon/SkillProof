@@ -51,9 +51,10 @@ enum Dimension {
 }
 
 model Company {
-  id        String   @id @default(uuid())
-  name      String
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  name        String
+  teamProfile String?  @db.Text
+  createdAt   DateTime @default(now())
   hrUsers   HrUser[]
   jobs      JobPosting[]
 }

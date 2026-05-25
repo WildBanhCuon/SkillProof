@@ -18,6 +18,7 @@ export function RegisterPage() {
     password: '',
     fullName: '',
     companyName: '',
+    teamProfile: '',
     displayName: '',
   });
 
@@ -32,6 +33,7 @@ export function RegisterPage() {
           password: form.password,
           fullName: form.fullName,
           companyName: form.companyName,
+          teamProfile: form.teamProfile,
         });
         navigate('/hr/jobs');
       } else {
@@ -107,6 +109,23 @@ export function RegisterPage() {
               value={form.companyName}
               onChange={(e) => setForm({ ...form, companyName: e.target.value })}
             />
+            <label className="block w-full">
+              <span className="mb-1 block text-sm font-medium text-slate-700">
+                About your team and product
+              </span>
+              <textarea
+                required
+                minLength={10}
+                rows={4}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                value={form.teamProfile}
+                onChange={(e) => setForm({ ...form, teamProfile: e.target.value })}
+                placeholder="e.g. We are a 20-person SaaS team building a learning platform for enterprises."
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                Used as the default in job posting wizard — you can edit it anytime in your profile.
+              </p>
+            </label>
           </>
         ) : (
           <Input

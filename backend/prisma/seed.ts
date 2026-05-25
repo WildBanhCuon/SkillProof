@@ -222,12 +222,16 @@ async function seedDemoJob(
 async function main() {
   const passwordHash = await bcrypt.hash('Password123!', 10);
 
+  const acmeTeamProfile =
+    'Acme Corp is a 40-person B2B SaaS company building workforce tools. Product squads include design, frontend, and backend engineers shipping weekly releases.';
+
   const company = await prisma.company.upsert({
     where: { id: '00000000-0000-0000-0000-000000000001' },
-    update: {},
+    update: { teamProfile: acmeTeamProfile },
     create: {
       id: '00000000-0000-0000-0000-000000000001',
       name: 'Acme Corp',
+      teamProfile: acmeTeamProfile,
       hrUsers: {
         create: {
           email: 'marion@acme.test',

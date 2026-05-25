@@ -1,4 +1,4 @@
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { Logo } from '../ui/Logo';
@@ -67,9 +67,13 @@ export function HrNav() {
             <p className="text-sm font-medium text-slate-900">{user?.fullName}</p>
             <p className="text-xs text-slate-500">HR Manager</p>
           </div>
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700">
+          <Link
+            to="/hr/profile"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700 hover:bg-indigo-200"
+            title="Company profile"
+          >
             {initials ?? 'HR'}
-          </span>
+          </Link>
           <Button variant="ghost" size="sm" onClick={handleLogout} aria-label="Log out">
             <LogOut className="h-4 w-4" />
           </Button>

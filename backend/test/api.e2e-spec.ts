@@ -83,6 +83,8 @@ describe('SkillProof API (e2e)', () => {
           password: PASSWORD,
           fullName: 'E2E HR',
           companyName: 'E2E Co',
+          teamProfile:
+            'E2E test company building hiring tools for technical recruiters.',
         })
         .expect(201);
       expect(res.body.accessToken).toBeDefined();

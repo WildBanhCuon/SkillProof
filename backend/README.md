@@ -48,7 +48,8 @@ Health: `GET /v1/health`
 - `POST /v1/auth/login` — body: `{ email, password, role: "hr" | "candidate" }`
 - `POST /v1/auth/refresh`
 - `POST /v1/auth/logout`
-- `GET /v1/auth/me`
+- `GET /v1/auth/me` — includes `companyTeamProfile` for HR
+- `PATCH /v1/auth/company-profile` — HR updates default “about team” text
 
 ### HR — Jobs
 - `POST /v1/jobs`

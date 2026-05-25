@@ -12,6 +12,7 @@ import {
   CandidateRegisterDto,
   HrRegisterDto,
   LoginDto,
+  UpdateCompanyProfileDto,
 } from './auth.dto';
 import { JwtPayload } from './auth.types';
 
@@ -33,6 +34,7 @@ export class AuthService {
     const company = await this.prisma.company.create({
       data: {
         name: dto.companyName,
+        teamProfile: dto.teamProfile,
         hrUsers: {
           create: {
             email: dto.email,
@@ -146,6 +148,21 @@ export class AuthService {
     }
   }
 
+  async updateCompanyProfile(user: JwtPayload, dto: UpdateCompanyProfileDto) {
+    if (user.role !== 'hr' || !user.companyId) {
+      throw new UnauthorizedException();
+    }
+    const company = await this.prisma.company.update({
+      where: { id: user.companyId },
+      data: { teamProfile: dto.teamProfile },
+    });
+    return {
+      companyId: company.id,
+      companyName: company.name,
+      companyTeamProfile: company.teamProfile ?? '',
+    };
+  }
+
   async me(user: JwtPayload) {
     if (user.role === 'hr') {
       const hr = await this.prisma.hrUser.findUnique({
@@ -160,6 +177,7 @@ export class AuthService {
         fullName: hr.fullName,
         companyId: hr.companyId,
         companyName: hr.company.name,
+        companyTeamProfile: hr.company.teamProfile ?? '',
       };
     }
     const c = await this.prisma.candidateUser.findUnique({
@@ -191,6 +209,16 @@ export class AuthService {
       },
     });
 
+    let companyTeamProfile: string | undefined;
+    let companyName: string | undefined;
+    if (payload.role === 'hr' && payload.companyId) {
+      const company = await this.prisma.company.findUnique({
+        where: { id: payload.companyId },
+      });
+      companyName = company?.name;
+      companyTeamProfile = company?.teamProfile ?? '';
+    }
+
     return {
       accessToken,
       refreshToken,
@@ -200,14 +228,8 @@ export class AuthService {
         email: payload.email,
         fullName: payload.fullName,
         companyId: payload.companyId,
-        companyName:
-          payload.role === 'hr'
-            ? (
-                await this.prisma.company.findUnique({
-                  where: { id: payload.companyId! },
-                })
-              )?.name
-            : undefined,
+        companyName,
+        companyTeamProfile,
       },
     };
   }

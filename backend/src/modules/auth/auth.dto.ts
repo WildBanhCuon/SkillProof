@@ -13,6 +13,16 @@ export class HrRegisterDto {
 
   @IsString()
   companyName!: string;
+
+  @IsString()
+  @MinLength(10)
+  teamProfile!: string;
+}
+
+export class UpdateCompanyProfileDto {
+  @IsString()
+  @MinLength(10)
+  teamProfile!: string;
 }
 
 export class CandidateRegisterDto {
