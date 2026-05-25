@@ -464,6 +464,37 @@ describe('SkillProof API (e2e)', () => {
     });
   });
 
+  describe('Auth — delete account', () => {
+    it('POST /v1/auth/delete-account removes the user', async () => {
+      const unique = Date.now();
+      const email = `delete.e2e.${unique}@test.com`;
+      const reg = await request(app.getHttpServer())
+        .post('/v1/auth/candidate/register')
+        .send({ email, password: PASSWORD })
+        .expect(201);
+      const token = reg.body.accessToken as string;
+
+      await request(app.getHttpServer())
+        .post('/v1/auth/delete-account')
+        .set(authHeader(token))
+        .send({ password: PASSWORD })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .get('/v1/auth/me')
+        .set(authHeader(token))
+        .expect(401);
+    });
+
+    it('rejects delete-account with wrong password', async () => {
+      await request(app.getHttpServer())
+        .post('/v1/auth/delete-account')
+        .set(authHeader(candidateToken))
+        .send({ password: 'not-the-real-password' })
+        .expect(401);
+    });
+  });
+
   describe('Auth — logout', () => {
     it('POST /v1/auth/logout', async () => {
       await request(app.getHttpServer())

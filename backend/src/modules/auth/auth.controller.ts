@@ -7,6 +7,7 @@ import {
   LoginDto,
   LogoutDto,
   RefreshDto,
+  DeleteAccountDto,
   UpdateCompanyProfileDto,
   UpdateHrProfileDto,
 } from './auth.dto';
@@ -81,5 +82,14 @@ export class AuthController {
     @Body() dto: UpdateCompanyProfileDto,
   ) {
     return this.auth.updateCompanyProfile(user, dto);
+  }
+
+  @Post('delete-account')
+  @UseGuards(JwtAuthGuard)
+  deleteAccount(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: DeleteAccountDto,
+  ) {
+    return this.auth.deleteAccount(user, dto);
   }
 }

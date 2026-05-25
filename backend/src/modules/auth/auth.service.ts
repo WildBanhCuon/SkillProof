@@ -12,6 +12,7 @@ import { GeminiService } from '../ai/gemini.service';
 import { WebpageFetchService } from '../web/webpage-fetch.service';
 import {
   CandidateRegisterDto,
+  DeleteAccountDto,
   GenerateTeamProfileFromWebsiteDto,
   HrRegisterDto,
   LoginDto,
@@ -251,6 +252,44 @@ export class AuthService {
       teamProfile: dto.teamProfile,
       websiteUrl: dto.websiteUrl,
     });
+  }
+
+  async deleteAccount(user: JwtPayload, dto: DeleteAccountDto) {
+    if (user.role === 'candidate') {
+      const candidate = await this.prisma.candidateUser.findUnique({
+        where: { id: user.sub },
+      });
+      if (!candidate) throw new UnauthorizedException();
+      if (!(await bcrypt.compare(dto.password, candidate.passwordHash))) {
+        throw new UnauthorizedException('Invalid password');
+      }
+      await this.prisma.candidateUser.delete({ where: { id: user.sub } });
+      return { ok: true };
+    }
+
+    if (user.role !== 'hr' || !user.companyId) {
+      throw new UnauthorizedException();
+    }
+    const hr = await this.prisma.hrUser.findUnique({
+      where: { id: user.sub },
+    });
+    if (!hr) throw new UnauthorizedException();
+    if (!(await bcrypt.compare(dto.password, hr.passwordHash))) {
+      throw new UnauthorizedException('Invalid password');
+    }
+
+    const otherHrCount = await this.prisma.hrUser.count({
+      where: { companyId: hr.companyId, id: { not: hr.id } },
+    });
+
+    await this.prisma.$transaction([
+      this.prisma.hrUser.delete({ where: { id: hr.id } }),
+      ...(otherHrCount === 0
+        ? [this.prisma.company.delete({ where: { id: hr.companyId } })]
+        : []),
+    ]);
+
+    return { ok: true };
   }
 
   async me(user: JwtPayload) {

@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/Input';
 import { Alert } from '../../components/ui/Alert';
 import { formatApiError } from '../../utils/errors';
 import { GenerateTeamProfileButton } from '../../components/hr/GenerateTeamProfileButton';
+import { DeleteAccountSection } from '../../components/account/DeleteAccountSection';
 
 export function HrProfilePage() {
   const { user, refreshUser } = useAuth();
@@ -177,6 +178,8 @@ export function HrProfilePage() {
           </div>
         </form>
       </Card>
+
+      <DeleteAccountSection role="hr" />
     </div>
   );
 }

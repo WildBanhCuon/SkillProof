@@ -14,6 +14,7 @@ import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Alert } from '../../components/ui/Alert';
 import { formatApiError } from '../../utils/errors';
+import { DeleteAccountSection } from '../../components/account/DeleteAccountSection';
 
 interface ProfileResponse {
   email: string;
@@ -213,6 +214,8 @@ export function CandidateProfilePage() {
           </div>
         </form>
       </Card>
+
+      <DeleteAccountSection role="candidate" />
     </div>
   );
 }

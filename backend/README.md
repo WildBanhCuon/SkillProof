@@ -97,6 +97,7 @@ Health: `GET /v1/health`
 - `POST /v1/auth/refresh`
 
 - `POST /v1/auth/logout`
+- `POST /v1/auth/delete-account` — authenticated; body `{ "password" }` permanently deletes the account
 
 - `GET /v1/auth/me` — includes `companyTeamProfile` for HR
 

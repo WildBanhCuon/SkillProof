@@ -106,3 +106,9 @@ export class LogoutDto {
   @IsString()
   refreshToken?: string;
 }
+
+export class DeleteAccountDto {
+  @IsString()
+  @MinLength(8)
+  password!: string;
+}
