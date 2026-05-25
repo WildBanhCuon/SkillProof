@@ -143,8 +143,10 @@ Health: `GET /v1/health`
 
 
 
-### Candidate — Sessions
+### Candidate — Applications & sessions
 
+- `GET /v1/candidate/applications` — list applications and practice tests with status
+- `GET /v1/candidate/applications/:sessionId` — detail and feedback summary
 - `POST /v1/jobs/:id/sessions` — `{ "mode": "practice" | "application" }`
 
 - `PATCH /v1/sessions/:id/answers/:questionId`

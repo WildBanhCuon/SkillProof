@@ -24,7 +24,6 @@ export interface ListingIssue {
 }
 
 export interface SkillRequirement {
-  id?: string;
   skillName: string;
   importance: string;
   expectedLevel: string;
@@ -35,31 +34,13 @@ export interface JobPosting {
   id: string;
   title: string;
   description: string;
-  suggestedDescription?: string | null;
-  suggestionsAppliedAt?: string | null;
   status: string;
-  publishedAt?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
+  publishedAt?: string;
   skillRequirements?: SkillRequirement[];
   listingAnalyses?: { issues: ListingIssue[] }[];
-  company?: { name: string };
-  assessment?: {
-    id: string;
-    durationMinutes: number;
-    totalPoints: number;
-    questions?: { id: string }[];
-  };
-}
-
-export interface AssessmentQuestion {
-  id: string;
-  orderIndex: number;
-  title: string;
-  instructions: string;
-  starterCode: string;
-  points: number;
-  language: string;
+  suggestedDescription?: string;
+  suggestionsAppliedAt?: string;
+  assessment?: { id: string; durationMinutes: number; questionCount?: number };
 }
 
 export interface SessionQuestion {
@@ -89,6 +70,33 @@ export interface TestSession {
 export interface DimensionScore {
   dimension: string;
   score: number;
+}
+
+export interface CandidateApplicationItem {
+  sessionId: string;
+  applicationId: string | null;
+  jobId: string;
+  jobTitle: string;
+  companyName: string;
+  jobStatus: string;
+  sessionType: 'practice' | 'application' | string;
+  sessionStatus: string;
+  applicationStatus: string;
+  startedAt: string;
+  submittedAt: string | null;
+  expiresAt: string;
+  overallScore: number | null;
+  matchPercent: number | null;
+  recommendation: string | null;
+  hasResult: boolean;
+}
+
+export interface CandidateApplicationDetail extends CandidateApplicationItem {
+  appliedAt: string | null;
+  strengths: string[] | null;
+  improvements: string[] | null;
+  aiSummary: string | null;
+  dimensionScores: DimensionScore[] | null;
 }
 
 export interface CandidateRow {

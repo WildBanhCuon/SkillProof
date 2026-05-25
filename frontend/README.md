@@ -41,6 +41,8 @@ A **published demo job** (seed: Junior Frontend Developer) with one graded candi
 | `/hr/jobs/:id/results` | HR | Ranked candidates |
 | `/hr/jobs/:id/candidates/:appId` | HR | Candidate detail |
 | `/jobs` | Candidate | Browse jobs |
+| `/my-applications` | Candidate | Applications & tests with status |
+| `/my-applications/:sessionId` | Candidate | Application detail |
 | `/jobs/:id` | Candidate | Apply / practice |
 | `/sessions/:id` | Candidate | Assessment |
 | `/sessions/:id/result` | Candidate | Graded result |

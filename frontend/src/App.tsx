@@ -17,6 +17,8 @@ import { JobsBrowsePage } from './pages/candidate/JobsBrowsePage';
 import { JobDetailPage } from './pages/candidate/JobDetailPage';
 import { AssessmentPage } from './pages/candidate/AssessmentPage';
 import { ResultPage } from './pages/candidate/ResultPage';
+import { MyApplicationsPage } from './pages/candidate/MyApplicationsPage';
+import { ApplicationDetailPage } from './pages/candidate/ApplicationDetailPage';
 import { useAuth } from './auth/AuthContext';
 
 function HomeRedirect() {
@@ -24,7 +26,7 @@ function HomeRedirect() {
   if (loading) return null;
   if (!isAuthenticated) return <LandingPage />;
   if (user?.role === 'hr') return <Navigate to="/hr/jobs" replace />;
-  return <Navigate to="/jobs" replace />;
+  return <Navigate to="/my-applications" replace />;
 }
 
 export default function App() {
@@ -79,6 +81,18 @@ export default function App() {
             }
           >
             <Route index element={<JobsBrowsePage />} />
+          </Route>
+
+          <Route
+            path="/my-applications"
+            element={
+              <ProtectedRoute role="candidate">
+                <CandidateLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<MyApplicationsPage />} />
+            <Route path=":sessionId" element={<ApplicationDetailPage />} />
           </Route>
 
           <Route

@@ -47,9 +47,9 @@ export function ResultPage() {
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
           <Logo to="/jobs" />
-          <Link to="/jobs">
+          <Link to="/my-applications">
             <Button variant="outline" size="sm">
-              Back to jobs
+              My applications
             </Button>
           </Link>
         </div>

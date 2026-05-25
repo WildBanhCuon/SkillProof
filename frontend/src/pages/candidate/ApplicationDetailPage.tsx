@@ -1,0 +1,167 @@
+import { Link, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { api } from '../../api/client';
+import type { CandidateApplicationDetail } from '../../api/types';
+import { Card } from '../../components/ui/Card';
+import { Badge } from '../../components/ui/Badge';
+import { Button } from '../../components/ui/Button';
+import { DimensionRadar } from '../../components/charts/DimensionRadar';
+import {
+  applicationStatusLabel,
+  applicationStatusVariant,
+  bandLabel,
+  bandVariant,
+} from '../../utils/format';
+
+export function ApplicationDetailPage() {
+  const { sessionId } = useParams<{ sessionId: string }>();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['candidate', 'application', sessionId],
+    queryFn: () =>
+      api.get<CandidateApplicationDetail>(
+        `/candidate/applications/${sessionId}`,
+      ),
+    enabled: !!sessionId,
+  });
+
+  if (isLoading || !data) {
+    return (
+      <p className="flex items-center gap-2 text-slate-500">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        Loading…
+      </p>
+    );
+  }
+
+  const isPractice = data.sessionType === 'practice';
+  const canContinue =
+    data.applicationStatus === 'in_progress' ||
+    data.applicationStatus === 'practice_in_progress';
+
+  return (
+    <div className="mx-auto max-w-3xl">
+      <Link to="/my-applications" className="text-sm text-slate-500 hover:text-indigo-600">
+        <span className="inline-flex items-center gap-1">
+          <ArrowLeft className="h-4 w-4" />
+          My applications
+        </span>
+      </Link>
+
+      <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">{data.jobTitle}</h1>
+          <p className="text-slate-500">{data.companyName}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Badge variant={applicationStatusVariant(data.applicationStatus)}>
+              {applicationStatusLabel(data.applicationStatus)}
+            </Badge>
+            {isPractice && <Badge variant="info">Practice</Badge>}
+            {data.recommendation && (
+              <Badge variant={bandVariant(data.recommendation)}>
+                {bandLabel(data.recommendation)}
+              </Badge>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {canContinue && (
+            <Link to={`/sessions/${data.sessionId}`}>
+              <Button>Continue test</Button>
+            </Link>
+          )}
+          {data.overallScore != null && (
+            <Link
+              to={`/sessions/${data.sessionId}/result`}
+              state={{ sessionType: data.sessionType }}
+            >
+              <Button variant="secondary">Full results</Button>
+            </Link>
+          )}
+        </div>
+      </div>
+
+      <Card className="mt-6 p-6">
+        <h2 className="text-sm font-semibold uppercase text-slate-500">Timeline</h2>
+        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-slate-500">Started</dt>
+            <dd className="font-medium text-slate-900">
+              {new Date(data.startedAt).toLocaleString()}
+            </dd>
+          </div>
+          {data.submittedAt && (
+            <div>
+              <dt className="text-slate-500">Submitted</dt>
+              <dd className="font-medium text-slate-900">
+                {new Date(data.submittedAt).toLocaleString()}
+              </dd>
+            </div>
+          )}
+          {data.appliedAt && (
+            <div>
+              <dt className="text-slate-500">Application recorded</dt>
+              <dd className="font-medium text-slate-900">
+                {new Date(data.appliedAt).toLocaleString()}
+              </dd>
+            </div>
+          )}
+          {data.overallScore != null && (
+            <div>
+              <dt className="text-slate-500">Overall score</dt>
+              <dd className="font-medium text-slate-900">{data.overallScore}%</dd>
+            </div>
+          )}
+        </dl>
+      </Card>
+
+      {data.aiSummary && (
+        <Card className="mt-6 p-6">
+          <h2 className="font-semibold text-slate-900">Summary</h2>
+          <p className="mt-3 text-sm leading-relaxed text-slate-700">
+            {data.aiSummary}
+          </p>
+          {data.strengths && data.strengths.length > 0 && (
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase text-slate-500">
+                Strengths
+              </p>
+              <ul className="mt-2 list-disc pl-5 text-sm text-slate-600">
+                {data.strengths.map((s, i) => (
+                  <li key={i}>{s}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {data.improvements && data.improvements.length > 0 && (
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase text-slate-500">
+                Areas to improve
+              </p>
+              <ul className="mt-2 list-disc pl-5 text-sm text-slate-600">
+                {data.improvements.map((s, i) => (
+                  <li key={i}>{s}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {data.dimensionScores && data.dimensionScores.length > 0 && (
+        <Card className="mt-6 flex flex-col items-center p-6">
+          <h2 className="self-start font-semibold text-slate-900">Skill breakdown</h2>
+          <DimensionRadar scores={data.dimensionScores} size={220} className="mt-4" />
+        </Card>
+      )}
+
+      {isPractice && (
+        <p className="mt-6 text-sm text-amber-800">
+          Practice results are for your learning only — they are not shared with
+          employers.
+        </p>
+      )}
+    </div>
+  );
+}

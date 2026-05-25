@@ -10,6 +10,7 @@ import { AiModule } from './modules/ai/ai.module';
 import { HealthModule } from './modules/health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { GradingModule } from './workers/grading.module';
+import { CandidateModule } from './modules/candidate/candidate.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { GradingModule } from './workers/grading.module';
     AssessmentsModule,
     SessionsModule,
     ResultsModule,
+    CandidateModule,
     GradingModule,
   ],
 })

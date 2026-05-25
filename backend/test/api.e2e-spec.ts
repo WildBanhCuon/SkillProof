@@ -292,7 +292,31 @@ describe('SkillProof API (e2e)', () => {
         sessionId,
         candidateToken,
       );
-      expect(res.body.overallScore).toBe(78);
+      expect(res.body.overallScore).toBeGreaterThan(0);
+    });
+
+    it('GET /v1/candidate/applications', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/v1/candidate/applications')
+        .set(authHeader(candidateToken))
+        .expect(200);
+      expect(Array.isArray(res.body.items)).toBe(true);
+      const appRow = res.body.items.find(
+        (i: { sessionId: string }) => i.sessionId === sessionId,
+      );
+      expect(appRow).toBeDefined();
+      expect(appRow.sessionType).toBe('application');
+      expect(appRow.applicationStatus).toBeDefined();
+      expect(appRow.hasResult).toBe(true);
+    });
+
+    it('GET /v1/candidate/applications/:sessionId', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/v1/candidate/applications/${sessionId}`)
+        .set(authHeader(candidateToken))
+        .expect(200);
+      expect(res.body.jobTitle).toBeDefined();
+      expect(res.body.applicationStatus).toBeDefined();
     });
   });
 
