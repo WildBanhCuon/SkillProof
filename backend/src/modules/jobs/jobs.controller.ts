@@ -17,7 +17,11 @@ import { JwtPayload } from '../auth/auth.types';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
-import { CreateJobDto, UpdateJobDto } from './jobs.dto';
+import {
+  CreateJobDto,
+  GenerateJobFromWizardDto,
+  UpdateJobDto,
+} from './jobs.dto';
 import { JobsService } from './jobs.service';
 import { AssessmentsService } from '../assessments/assessments.service';
 
@@ -33,6 +37,15 @@ export class JobsController {
   @Roles('hr')
   create(@CurrentUser() user: JwtPayload, @Body() dto: CreateJobDto) {
     return this.jobs.create(user, dto);
+  }
+
+  @Post('generate-from-wizard')
+  @Roles('hr')
+  generateFromWizard(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: GenerateJobFromWizardDto,
+  ) {
+    return this.jobs.generateFromWizard(user, dto);
   }
 
   @Get()

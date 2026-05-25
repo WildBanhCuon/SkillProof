@@ -34,6 +34,12 @@ export const mockListingRewrite = {
     'We are hiring a Junior Frontend Developer.\n\n- Build React features\n- Work with TypeScript',
 };
 
+export const mockJobWizardGen = {
+  title: 'Junior Frontend Developer',
+  description:
+    '### About the role\n\nJoin our product team.\n\n### Responsibilities\n\n- Build React features\n\n### Requirements\n\n- React, TypeScript',
+};
+
 export const mockAssessment: AssessmentGenResult = {
   durationMinutes: 90,
   totalPoints: 100,

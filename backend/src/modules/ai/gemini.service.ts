@@ -11,6 +11,8 @@ import { PrismaService } from '../../prisma/prisma.service';
 import {
   assessmentGenSchema,
   AssessmentGenResult,
+  jobWizardGenSchema,
+  JobWizardGenResult,
   listingCheckSchema,
   ListingCheckResult,
   listingRewriteSchema,
@@ -116,6 +118,36 @@ export class GeminiService {
       this.logger.error(`Gemini ${pipeline} failed`, err);
       this.throwGeminiError(pipeline, err);
     }
+  }
+
+  generateJobFromWizard(answers: Record<string, string>): Promise<JobWizardGenResult> {
+    const prompt = `You are an expert technical recruiter writing a job posting for a tech hire.
+
+Use the employer's questionnaire answers below. Write a complete, professional job ad in Markdown:
+- Use ### for section headings (e.g. About the role, Responsibilities, Requirements, Nice to have)
+- Use bullet lists for responsibilities and requirements
+- Use **bold** sparingly for emphasis
+- Keep seniority realistic: if they want a junior/intern, do NOT ask for 5+ years or staff-level stacks unless they explicitly asked
+- Separate must-have vs nice-to-have skills clearly
+- Include work mode and location when provided
+- Tone should match their preference
+- Be inclusive and clear; avoid buzzword soup
+
+Questionnaire answers:
+${JSON.stringify(answers, null, 2)}`;
+
+    const schemaHint = `{
+  "title": "string (concise job title)",
+  "description": "string (full markdown job posting body, do not repeat the title as H1)"
+}`;
+
+    return this.generateJson(
+      'job_wizard',
+      undefined,
+      prompt,
+      schemaHint,
+      (raw) => jobWizardGenSchema.parse(raw),
+    );
   }
 
   analyzeListing(

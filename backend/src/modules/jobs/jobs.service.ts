@@ -9,7 +9,11 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { GeminiService } from '../ai/gemini.service';
 import { AssessmentsService } from '../assessments/assessments.service';
 import { JwtPayload } from '../auth/auth.types';
-import { CreateJobDto, UpdateJobDto } from './jobs.dto';
+import {
+  CreateJobDto,
+  GenerateJobFromWizardDto,
+  UpdateJobDto,
+} from './jobs.dto';
 
 @Injectable()
 export class JobsService {
@@ -18,6 +22,21 @@ export class JobsService {
     private readonly gemini: GeminiService,
     private readonly assessments: AssessmentsService,
   ) {}
+
+  async generateFromWizard(user: JwtPayload, dto: GenerateJobFromWizardDto) {
+    return this.gemini.generateJobFromWizard({
+      roleTitle: dto.roleTitle,
+      seniority: dto.seniority,
+      teamContext: dto.teamContext,
+      responsibilities: dto.responsibilities,
+      mustHaveSkills: dto.mustHaveSkills,
+      niceToHaveSkills: dto.niceToHaveSkills ?? '',
+      experienceLevel: dto.experienceLevel,
+      workMode: dto.workMode,
+      location: dto.location ?? '',
+      tone: dto.tone,
+    });
+  }
 
   async create(user: JwtPayload, dto: CreateJobDto) {
     return this.prisma.jobPosting.create({

@@ -9,6 +9,7 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { JobsListPage } from './pages/hr/JobsListPage';
 import { JobEditorPage } from './pages/hr/JobEditorPage';
+import { JobWizardPage } from './pages/hr/JobWizardPage';
 import { JobResultsPage } from './pages/hr/JobResultsPage';
 import { CandidateDetailPage } from './pages/hr/CandidateDetailPage';
 import { JobsBrowsePage } from './pages/candidate/JobsBrowsePage';
@@ -46,6 +47,7 @@ export default function App() {
           >
             <Route index element={<Navigate to="/hr/jobs" replace />} />
             <Route path="jobs" element={<JobsListPage />} />
+            <Route path="jobs/wizard" element={<JobWizardPage />} />
             <Route path="jobs/new" element={<JobEditorPage />} />
             <Route path="jobs/:id" element={<JobEditorPage />} />
             <Route path="jobs/:id/results" element={<JobResultsPage />} />

@@ -23,6 +23,13 @@ export const listingRewriteSchema = z.object({
   improvedDescription: z.string(),
 });
 
+export const jobWizardGenSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+});
+
+export type JobWizardGenResult = z.infer<typeof jobWizardGenSchema>;
+
 export const testCaseSchema = z.object({
   input: z.string().nullable().optional(),
   expectedOutput: z.string(),

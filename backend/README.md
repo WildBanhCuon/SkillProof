@@ -52,6 +52,7 @@ Health: `GET /v1/health`
 
 ### HR — Jobs
 - `POST /v1/jobs`
+- `POST /v1/jobs/generate-from-wizard` — AI job ad from questionnaire answers
 - `GET /v1/jobs`
 - `GET /v1/jobs/:id`
 - `PATCH /v1/jobs/:id`

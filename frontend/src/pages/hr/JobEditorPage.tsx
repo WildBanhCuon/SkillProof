@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Sparkles, Wand2 } from 'lucide-react';
 import { api } from '../../api/client';
@@ -19,6 +19,7 @@ export function JobEditorPage() {
   const { id } = useParams();
   const isNew = !id || id === 'new';
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
 
   const [title, setTitle] = useState('');
@@ -28,7 +29,9 @@ export function JobEditorPage() {
   const [issues, setIssues] = useState<ListingIssue[]>([]);
   const [skills, setSkills] = useState<JobPosting['skillRequirements']>([]);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [success, setSuccess] = useState(
+    () => (location.state as { wizardSuccess?: string } | null)?.wizardSuccess ?? '',
+  );
   const [busy, setBusy] = useState('');
 
   const { data: job } = useQuery({

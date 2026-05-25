@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, Sparkles } from 'lucide-react';
 import { api } from '../../api/client';
 import type { JobPosting } from '../../api/types';
 import { Button } from '../../components/ui/Button';
@@ -26,12 +26,20 @@ export function JobsListPage() {
           <h1 className="text-2xl font-bold text-slate-900">Jobs</h1>
           <p className="text-sm text-slate-500">Manage postings and review candidates</p>
         </div>
-        <Link to="/hr/jobs/new">
-          <Button>
-            <Plus className="h-4 w-4" />
-            New posting
-          </Button>
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/hr/jobs/wizard">
+            <Button>
+              <Sparkles className="h-4 w-4" />
+              Guided setup
+            </Button>
+          </Link>
+          <Link to="/hr/jobs/new">
+            <Button variant="outline">
+              <Plus className="h-4 w-4" />
+              Blank posting
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {error && (
