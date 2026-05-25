@@ -159,22 +159,9 @@ model Question {
   rubric       Json
   language     String   @default("javascript")
   assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  testCases    SandboxTestCase[]
   answers      Answer[]
 
   @@index([assessmentId])
-}
-
-model SandboxTestCase {
-  id             String   @id @default(uuid())
-  questionId     String
-  isHidden       Boolean  @default(true)
-  input          String?  @db.Text
-  expectedOutput String   @db.Text
-  timeoutMs      Int      @default(5000)
-  question       Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-
-  @@index([questionId])
 }
 
 model TestSession {
@@ -204,21 +191,9 @@ model Answer {
   notes          String?  @db.Text
   session        TestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   question       Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  sandboxRuns    SandboxRun[]
 
   @@unique([sessionId, questionId])
   @@index([sessionId])
-}
-
-model SandboxRun {
-  id            String   @id @default(uuid())
-  answerId      String
-  isHiddenSuite Boolean
-  results       Json
-  ranAt         DateTime @default(now())
-  answer        Answer   @relation(fields: [answerId], references: [id], onDelete: Cascade)
-
-  @@index([answerId])
 }
 
 model Application {

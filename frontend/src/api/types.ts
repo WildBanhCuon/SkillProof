@@ -85,15 +85,6 @@ export interface TestSession {
   questions: SessionQuestion[];
 }
 
-export interface TestRun {
-  testCaseId: string;
-  passed: boolean;
-  stdout: string;
-  stderr: string;
-  status: string;
-  durationMs?: number;
-}
-
 export interface DimensionScore {
   dimension: string;
   score: number;

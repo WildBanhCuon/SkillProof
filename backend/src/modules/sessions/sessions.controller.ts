@@ -49,16 +49,6 @@ export class SessionsController {
     );
   }
 
-  @Post('sessions/:sessionId/answers/:questionId/run')
-  @Roles('candidate')
-  runCode(
-    @CurrentUser() user: JwtPayload,
-    @Param('sessionId') sessionId: string,
-    @Param('questionId') questionId: string,
-  ) {
-    return this.sessions.runPublicTests(user, sessionId, questionId);
-  }
-
   @Post('sessions/:sessionId/submit')
   @Roles('candidate')
   @HttpCode(HttpStatus.ACCEPTED)

@@ -8,7 +8,6 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { GeminiService } from '../modules/ai/gemini.service';
-import { Judge0Service } from '../modules/sandbox/judge0.service';
 import { GRADING_QUEUE } from './grading.constants';
 
 @Processor(GRADING_QUEUE)
@@ -18,7 +17,6 @@ export class GradingProcessor {
   constructor(
     private readonly prisma: PrismaService,
     private readonly gemini: GeminiService,
-    private readonly judge0: Judge0Service,
   ) {}
 
   @Process('grade-session')
@@ -31,11 +29,7 @@ export class GradingProcessor {
         where: { id: sessionId },
         include: {
           jobPosting: { include: { skillRequirements: true } },
-          answers: {
-            include: {
-              question: { include: { testCases: true } },
-            },
-          },
+          answers: { include: { question: true } },
         },
       });
 
@@ -43,35 +37,6 @@ export class GradingProcessor {
         this.logger.log(`Session ${sessionId} already graded, skipping`);
         return;
       }
-
-      for (const answer of session.answers) {
-        const hiddenTests = answer.question.testCases.filter((t) => t.isHidden);
-        const runs = await this.judge0.runTests(
-          answer.submittedCode,
-          answer.question.language,
-          hiddenTests.map((tc) => ({
-            id: tc.id,
-            input: tc.input,
-            expectedOutput: tc.expectedOutput,
-            timeoutMs: tc.timeoutMs,
-          })),
-        );
-        await this.prisma.sandboxRun.create({
-          data: {
-            answerId: answer.id,
-            isHiddenSuite: true,
-            results: runs as object,
-          },
-        });
-      }
-
-      const answersWithRuns = await this.prisma.answer.findMany({
-        where: { sessionId },
-        include: {
-          question: true,
-          sandboxRuns: { orderBy: { ranAt: 'desc' }, take: 1 },
-        },
-      });
 
       const grade = await this.gemini.gradeSession(sessionId, {
         jobTitle: session.jobPosting.title,
@@ -81,11 +46,12 @@ export class GradingProcessor {
           title: a.question.title,
           points: a.question.points,
           rubric: a.question.rubric,
+          instructions: a.question.instructions,
         })),
-        answers: answersWithRuns.map((a) => ({
+        answers: session.answers.map((a) => ({
           questionId: a.questionId,
           code: a.submittedCode,
-          sandboxResults: a.sandboxRuns[0]?.results ?? [],
+          notes: a.notes,
         })),
       });
 

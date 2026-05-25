@@ -30,12 +30,6 @@ export const jobWizardGenSchema = z.object({
 
 export type JobWizardGenResult = z.infer<typeof jobWizardGenSchema>;
 
-export const testCaseSchema = z.object({
-  input: z.string().nullable().optional(),
-  expectedOutput: z.string(),
-  isHidden: z.boolean().default(true),
-});
-
 export const questionGenSchema = z.object({
   title: z.string(),
   instructions: z.string(),
@@ -43,7 +37,6 @@ export const questionGenSchema = z.object({
   points: z.number(),
   language: z.string().default('javascript'),
   rubric: z.record(z.unknown()),
-  testCases: z.array(testCaseSchema),
 });
 
 export const assessmentGenSchema = z.object({

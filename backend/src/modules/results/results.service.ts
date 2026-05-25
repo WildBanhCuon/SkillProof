@@ -130,12 +130,7 @@ export class ResultsService {
         testSession: {
           include: {
             testResult: { include: { dimensionScores: true } },
-            answers: {
-              include: {
-                question: true,
-                sandboxRuns: { orderBy: { ranAt: 'desc' }, take: 1 },
-              },
-            },
+            answers: { include: { question: true } },
           },
         },
       },
@@ -162,7 +157,6 @@ export class ResultsService {
         questionId: a.questionId,
         title: a.question.title,
         submittedCode: a.submittedCode,
-        sandboxResults: a.sandboxRuns[0]?.results,
       })),
       auditLogs: auditLogs.map((l) => ({
         pipeline: l.pipeline,

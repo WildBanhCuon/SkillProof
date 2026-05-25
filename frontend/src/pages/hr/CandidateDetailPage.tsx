@@ -26,7 +26,6 @@ interface DetailResponse {
     questionId: string;
     title: string;
     submittedCode: string;
-    sandboxResults?: unknown;
   }[];
   auditLogs: { pipeline: string; model: string; createdAt: string }[];
 }

@@ -451,13 +451,6 @@
           }
         },
         {
-          "name": "Run code (public tests)",
-          "request": {
-            "method": "POST",
-            "url": "{{baseUrl}}/sessions/{{sessionId}}/answers/{{questionId}}/run"
-          }
-        },
-        {
           "name": "Submit session",
           "request": {
             "method": "POST",

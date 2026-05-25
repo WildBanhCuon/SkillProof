@@ -108,11 +108,11 @@ The planned architecture separates HR and candidate frontends from a shared Skil
 - **Core modules**: authentication, jobs and listings, assessments and sessions, results and ranking, and AI orchestration.
 - **AI orchestration**: Gemini-backed workflows for job ad analysis, assessment generation, evaluation, recommendations, and feedback.
 - **Infrastructure**: PostgreSQL for application data, Redis for sessions and job queues, object storage for code snapshots and logs.
-- **External services**: Google Gemini API and a code sandbox runner such as Judge0, Piston, or a Docker worker.
+- **External services**: Google Gemini API for listing AI, assessment generation, and grading.
 
 See [backend architecture](docs/architecture/backend-architecture.md) for system diagrams (Mermaid).
 
-The REST API contract is in [`docs/api/openapi.yaml`](docs/api/openapi.yaml), including route examples for authentication, jobs, AI orchestration, assessments, applications, candidate sessions, results, and sandbox runs.
+The REST API contract is in [`docs/api/openapi.yaml`](docs/api/openapi.yaml), including route examples for authentication, jobs, AI orchestration, assessments, applications, candidate sessions, and results.
 
 ## Run backend
 
@@ -155,7 +155,7 @@ The seed includes a **published** Junior Frontend Developer role with one graded
 ```
 project/
 ├── README.md                 # This file
-├── backend/                  # NestJS API (Prisma, Gemini, Judge0)
+├── backend/                  # NestJS API (Prisma, Gemini)
 ├── frontend/                 # React + Vite SPA (HR + candidate flows)
 ├── docs/
 │   ├── README.md             # Documentation index

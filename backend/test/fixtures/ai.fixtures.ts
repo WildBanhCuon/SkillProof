@@ -51,10 +51,6 @@ export const mockAssessment: AssessmentGenResult = {
       points: 25,
       language: 'javascript',
       rubric: { clarity: 5 },
-      testCases: [
-        { input: null, expectedOutput: 'ok', isHidden: false },
-        { input: '1', expectedOutput: 'ok', isHidden: true },
-      ],
     },
     {
       title: 'API fetch',
@@ -63,10 +59,6 @@ export const mockAssessment: AssessmentGenResult = {
       points: 25,
       language: 'javascript',
       rubric: { error_handling: 5 },
-      testCases: [
-        { input: null, expectedOutput: '[]', isHidden: false },
-        { input: null, expectedOutput: '[]', isHidden: true },
-      ],
     },
     {
       title: 'TypeScript types',
@@ -75,7 +67,6 @@ export const mockAssessment: AssessmentGenResult = {
       points: 25,
       language: 'javascript',
       rubric: { types: 5 },
-      testCases: [{ input: null, expectedOutput: '1', isHidden: true }],
     },
     {
       title: 'Debug UI',
@@ -84,7 +75,6 @@ export const mockAssessment: AssessmentGenResult = {
       points: 25,
       language: 'javascript',
       rubric: { debugging: 5 },
-      testCases: [{ input: null, expectedOutput: 'hi', isHidden: true }],
     },
   ],
 };

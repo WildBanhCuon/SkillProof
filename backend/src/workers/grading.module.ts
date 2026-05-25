@@ -1,15 +1,15 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
-import { GradingProcessor } from './grading.processor';
-import { GRADING_QUEUE } from './grading.constants';
 import { AiModule } from '../modules/ai/ai.module';
-import { SandboxModule } from '../modules/sandbox/sandbox.module';
+import { PrismaModule } from '../prisma/prisma.module';
+import { GRADING_QUEUE } from './grading.constants';
+import { GradingProcessor } from './grading.processor';
 
 @Module({
   imports: [
     BullModule.registerQueue({ name: GRADING_QUEUE }),
+    PrismaModule,
     AiModule,
-    SandboxModule,
   ],
   providers: [GradingProcessor],
 })

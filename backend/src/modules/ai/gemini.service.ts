@@ -248,8 +248,8 @@ ${description}
 Skills matrix:
 ${JSON.stringify(skills, null, 2)}
 
-Create exactly 4 coding-focused questions (React, TypeScript, APIs, debugging). Total 100 points. Duration 90 minutes.
-Each question needs starter code (JavaScript/React), instructions, rubric object, and 2-3 hidden test cases (input/expectedOutput for Judge0). Include at least 1 public sample test case per question with isHidden false.`;
+Create exactly 4 coding-focused questions (React, TypeScript, APIs, CSS, debugging). Total 100 points. Duration 90 minutes.
+Each question needs starter code, clear instructions, and a rubric object with criteria the grader will use (no automated test cases).`;
 
     const schemaHint = `{
   "durationMinutes": 90,
@@ -260,8 +260,7 @@ Each question needs starter code (JavaScript/React), instructions, rubric object
     "starterCode": "string",
     "points": number,
     "language": "javascript",
-    "rubric": {},
-    "testCases": [{ "input": "string|null", "expectedOutput": "string", "isHidden": boolean }]
+    "rubric": {}
   }]
 }`;
 
@@ -279,32 +278,36 @@ Each question needs starter code (JavaScript/React), instructions, rubric object
     context: {
       jobTitle: string;
       skills: string[];
-      questions: { id: string; title: string; points: number; rubric: unknown }[];
+      questions: {
+        id: string;
+        title: string;
+        points: number;
+        rubric: unknown;
+        instructions: string;
+      }[];
       answers: {
         questionId: string;
         code: string;
-        sandboxResults: unknown;
+        notes?: string | null;
       }[];
     },
   ): Promise<SessionGradeResult> {
-    const prompt = `Grade this junior frontend assessment submission. Use sandbox results and code quality.
+    const prompt = `Grade this junior frontend assessment submission. Evaluate each answer against the question instructions and rubric. Consider code quality, correctness, and fit for the role.
 
 Job: ${context.jobTitle}
 Required skills: ${context.skills.join(', ')}
 
 ${context.questions
-  .map(
-    (q) => `
+  .map((q) => {
+    const answer = context.answers.find((a) => a.questionId === q.id);
+    return `
 Question ${q.title} (${q.points} pts):
+Instructions: ${q.instructions}
 Rubric: ${JSON.stringify(q.rubric)}
-Answer: ${
-      context.answers.find((a) => a.questionId === q.id)?.code ?? '(empty)'
-    }
-Sandbox: ${JSON.stringify(
-      context.answers.find((a) => a.questionId === q.id)?.sandboxResults ?? {},
-    )}
-`,
-  )
+Submitted code:
+${answer?.code?.trim() ? answer.code : '(empty)'}
+${answer?.notes ? `Candidate notes: ${answer.notes}` : ''}`;
+  })
   .join('\n')}
 
 Provide overallScore 0-100, matchPercent vs job skills, recommendation (ready_now|trainable|at_risk), strengths[], improvements[], aiSummary, dimensionScores for technical, problem_solving, code_quality, communication.`;

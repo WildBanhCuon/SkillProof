@@ -114,10 +114,7 @@ export class JobsController {
     @Param('id') id: string,
   ) {
     await this.jobs.findOne(user, id);
-    const assessment = await this.assessments.getForJob(
-      id,
-      user.role === 'hr',
-    );
+    const assessment = await this.assessments.getForJob(id);
     if (!assessment) return null;
     return this.assessments.toPublicAssessment(assessment);
   }

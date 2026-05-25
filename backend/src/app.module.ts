@@ -7,7 +7,6 @@ import { AssessmentsModule } from './modules/assessments/assessments.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
 import { ResultsModule } from './modules/results/results.module';
 import { AiModule } from './modules/ai/ai.module';
-import { SandboxModule } from './modules/sandbox/sandbox.module';
 import { HealthModule } from './modules/health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { GradingModule } from './workers/grading.module';
@@ -26,7 +25,6 @@ import { GradingModule } from './workers/grading.module';
     HealthModule,
     AuthModule,
     AiModule,
-    SandboxModule,
     JobsModule,
     AssessmentsModule,
     SessionsModule,

@@ -36,8 +36,6 @@ const DEMO_QUESTIONS = [
     points: 25,
     language: 'javascript',
     rubric: { clarity: 5 },
-    publicCase: { expectedOutput: 'ok' },
-    hiddenCase: { expectedOutput: 'ok' },
   },
   {
     orderIndex: 1,
@@ -47,8 +45,6 @@ const DEMO_QUESTIONS = [
     points: 25,
     language: 'javascript',
     rubric: { error_handling: 5 },
-    publicCase: { expectedOutput: '[]' },
-    hiddenCase: { expectedOutput: '[]' },
   },
   {
     orderIndex: 2,
@@ -58,8 +54,6 @@ const DEMO_QUESTIONS = [
     points: 25,
     language: 'javascript',
     rubric: { types: 5 },
-    publicCase: null,
-    hiddenCase: { expectedOutput: '1' },
   },
   {
     orderIndex: 3,
@@ -69,8 +63,6 @@ const DEMO_QUESTIONS = [
     points: 25,
     language: 'javascript',
     rubric: { debugging: 5 },
-    publicCase: null,
-    hiddenCase: { expectedOutput: 'hi' },
   },
 ];
 
@@ -136,24 +128,6 @@ async function seedDemoJob(
               points: q.points,
               language: q.language,
               rubric: q.rubric,
-              testCases: {
-                create: [
-                  ...(q.publicCase
-                    ? [
-                        {
-                          isHidden: false,
-                          input: null,
-                          expectedOutput: q.publicCase.expectedOutput,
-                        },
-                      ]
-                    : []),
-                  {
-                    isHidden: true,
-                    input: null,
-                    expectedOutput: q.hiddenCase.expectedOutput,
-                  },
-                ],
-              },
             })),
           },
         },

@@ -7,7 +7,6 @@ import {
 import { SessionStatus, SessionType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AssessmentsService } from '../assessments/assessments.service';
-import { Judge0Service } from '../sandbox/judge0.service';
 import { JwtPayload } from '../auth/auth.types';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
@@ -18,7 +17,6 @@ export class SessionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly assessments: AssessmentsService,
-    private readonly judge0: Judge0Service,
     @InjectQueue(GRADING_QUEUE) private readonly gradingQueue: Queue,
   ) {}
 
@@ -32,7 +30,7 @@ export class SessionsService {
     });
     if (!job) throw new NotFoundException('Published job not found');
 
-    const assessment = await this.assessments.getForJob(jobId, false);
+    const assessment = await this.assessments.getForJob(jobId);
     if (!assessment) {
       throw new BadRequestException('Job has no assessment');
     }
@@ -103,36 +101,6 @@ export class SessionsService {
       },
       update: { submittedCode: code, notes },
     });
-  }
-
-  async runPublicTests(
-    user: JwtPayload,
-    sessionId: string,
-    questionId: string,
-  ) {
-    const session = await this.ensureCandidateSession(sessionId, user.sub);
-    const answer = await this.prisma.answer.findUnique({
-      where: { sessionId_questionId: { sessionId, questionId } },
-      include: {
-        question: {
-          include: { testCases: { where: { isHidden: false } } },
-        },
-      },
-    });
-    if (!answer) throw new NotFoundException('Answer not found');
-
-    const runs = await this.judge0.runTests(
-      answer.submittedCode,
-      answer.question.language,
-      answer.question.testCases.map((tc) => ({
-        id: tc.id,
-        input: tc.input,
-        expectedOutput: tc.expectedOutput,
-        timeoutMs: tc.timeoutMs,
-      })),
-    );
-
-    return { runs };
   }
 
   async submit(user: JwtPayload, sessionId: string) {
@@ -206,10 +174,7 @@ export class SessionsService {
       throw new ForbiddenException();
     }
 
-    const assessment = await this.assessments.getForJob(
-      session.jobPostingId,
-      false,
-    );
+    const assessment = await this.assessments.getForJob(session.jobPostingId);
 
     return {
       id: session.id,

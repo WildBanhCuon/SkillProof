@@ -15,15 +15,5 @@ services:
     ports:
       - "6379:6379"
 
-  judge0:
-    image: judge0/judge0:1.13.0
-    ports:
-      - "2358:2358"
-    environment:
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-    depends_on:
-      - redis
-
 volumes:
   postgres_data:

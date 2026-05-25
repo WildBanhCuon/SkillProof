@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { SkillImportance } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { GeminiService } from '../ai/gemini.service';
 
@@ -20,9 +19,6 @@ export class AssessmentsService {
       where: { jobPostingId: jobId },
     });
     if (existing) {
-      await this.prisma.sandboxTestCase.deleteMany({
-        where: { question: { assessmentId: existing.id } },
-      });
       await this.prisma.question.deleteMany({
         where: { assessmentId: existing.id },
       });
@@ -54,40 +50,24 @@ export class AssessmentsService {
             points: q.points,
             rubric: q.rubric as object,
             language: q.language,
-            testCases: {
-              create: q.testCases.map((tc) => ({
-                isHidden: tc.isHidden ?? true,
-                input: tc.input ?? null,
-                expectedOutput: tc.expectedOutput,
-                timeoutMs: 5000,
-              })),
-            },
           })),
         },
       },
       include: {
-        questions: { include: { testCases: true }, orderBy: { orderIndex: 'asc' } },
+        questions: { orderBy: { orderIndex: 'asc' } },
       },
     });
 
     return assessment;
   }
 
-  async getForJob(jobId: string, includeHiddenTests: boolean) {
-    const assessment = await this.prisma.assessment.findUnique({
+  async getForJob(jobId: string) {
+    return this.prisma.assessment.findUnique({
       where: { jobPostingId: jobId },
       include: {
-        questions: {
-          orderBy: { orderIndex: 'asc' },
-          include: {
-            testCases: includeHiddenTests
-              ? true
-              : { where: { isHidden: false } },
-          },
-        },
+        questions: { orderBy: { orderIndex: 'asc' } },
       },
     });
-    return assessment;
   }
 
   toPublicAssessment(assessment: NonNullable<Awaited<ReturnType<typeof this.getForJob>>>) {

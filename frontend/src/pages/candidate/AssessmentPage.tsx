@@ -8,11 +8,10 @@ import {
   Circle,
   Clock,
   Loader2,
-  Play,
 } from 'lucide-react';
 import { api } from '../../api/client';
 import { formatApiError } from '../../utils/errors';
-import type { TestRun, TestSession } from '../../api/types';
+import type { TestSession } from '../../api/types';
 import { Logo } from '../../components/ui/Logo';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -26,10 +25,8 @@ export function AssessmentPage() {
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [codes, setCodes] = useState<Record<string, string>>({});
-  const [runs, setRuns] = useState<TestRun[] | null>(null);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [running, setRunning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState('');
 
@@ -97,23 +94,6 @@ export function AssessmentPage() {
     }, 1200);
     return () => clearTimeout(t);
   }, [codes, q?.id, sessionId]);
-
-  const runTests = async () => {
-    if (!sessionId || !q) return;
-    setRunning(true);
-    setError('');
-    try {
-      await saveAnswer();
-      const res = await api.post<{ runs: TestRun[] }>(
-        `/sessions/${sessionId}/answers/${q.id}/run`,
-      );
-      setRuns(res.runs);
-    } catch (e) {
-      setError(formatApiError(e, 'Run public tests'));
-    } finally {
-      setRunning(false);
-    }
-  };
 
   const submitAll = async () => {
     if (!sessionId) return;
@@ -293,56 +273,23 @@ export function AssessmentPage() {
                   />
                 </div>
               </div>
-              {runs && (
-                <div className="border-t border-slate-100 px-6 py-4">
-                  <p className="text-xs font-semibold uppercase text-slate-500">
-                    Public test results
-                  </p>
-                  <ul className="mt-2 space-y-1 text-sm">
-                    {runs.map((r) => (
-                      <li
-                        key={r.testCaseId}
-                        className={r.passed ? 'text-emerald-600' : 'text-red-600'}
-                      >
-                        {r.passed ? '✓' : '✗'} {r.status}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-6 py-4">
                 <Button
                   variant="outline"
                   disabled={currentIdx === 0}
-                  onClick={() => {
-                    setCurrentIdx((i) => i - 1);
-                    setRuns(null);
-                  }}
+                  onClick={() => setCurrentIdx((i) => i - 1)}
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Previous
                 </Button>
-                <div className="flex gap-2">
-                  <Button variant="secondary" onClick={runTests} disabled={running}>
-                    {running ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Play className="h-4 w-4" />
-                    )}
-                    Run tests
-                  </Button>
-                  {saving && (
-                    <span className="self-center text-xs text-slate-400">
-                      Saving…
-                    </span>
-                  )}
-                </div>
+                {saving && (
+                  <span className="self-center text-xs text-slate-400">
+                    Saving…
+                  </span>
+                )}
                 {currentIdx < questions.length - 1 ? (
                   <Button
-                    onClick={() => {
-                      setCurrentIdx((i) => i + 1);
-                      setRuns(null);
-                    }}
+                    onClick={() => setCurrentIdx((i) => i + 1)}
                   >
                     Next
                     <ArrowRight className="h-4 w-4" />

@@ -265,16 +265,6 @@ describe('SkillProof API (e2e)', () => {
         .expect(200);
     });
 
-    it('POST /v1/sessions/:id/answers/:questionId/run', async () => {
-      const res = await request(app.getHttpServer())
-        .post(`/v1/sessions/${sessionId}/answers/${questionId}/run`)
-        .set(authHeader(candidateToken))
-        .expect(201);
-      expect(res.body.runs).toBeDefined();
-      expect(res.body.runs.length).toBeGreaterThan(0);
-      expect(res.body.runs[0].passed).toBe(true);
-    });
-
     it('POST /v1/sessions/:id/submit', async () => {
       const res = await request(app.getHttpServer())
         .post(`/v1/sessions/${sessionId}/submit`)
