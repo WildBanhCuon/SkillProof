@@ -198,9 +198,13 @@ export function JobEditorPage() {
   };
 
   const severityStyle = (s: string) => {
-    if (s === 'high') return 'border-l-4 border-l-amber-500 bg-amber-50 dark:bg-amber-950/40';
-    if (s === 'medium') return 'border-l-4 border-l-amber-400 bg-amber-50 dark:bg-amber-950/40/80';
-    return 'border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-950/40';
+    if (s === 'high') {
+      return 'border-l-4 border-l-amber-500 bg-amber-50 text-amber-950 dark:border-l-amber-400 dark:bg-amber-950/50 dark:text-amber-100';
+    }
+    if (s === 'medium') {
+      return 'border-l-4 border-l-amber-400 bg-amber-50 text-amber-950 dark:border-l-amber-400 dark:bg-amber-950/40 dark:text-amber-100';
+    }
+    return 'border-l-4 border-l-blue-500 bg-blue-50 text-blue-950 dark:border-l-blue-400 dark:bg-blue-950/50 dark:text-blue-100';
   };
 
   const canPublish =
@@ -399,9 +403,9 @@ export function JobEditorPage() {
                       key={i}
                       className={`rounded-lg p-3 text-sm ${severityStyle(issue.severity)}`}
                     >
-                      <p className="font-medium text-slate-900 dark:text-slate-100">{issue.message}</p>
+                      <p className="font-medium">{issue.message}</p>
                       {issue.excerpt && (
-                        <p className="mt-1 text-slate-600 dark:text-slate-300">"{issue.excerpt}"</p>
+                        <p className="mt-1 opacity-90">"{issue.excerpt}"</p>
                       )}
                     </div>
                   ))
