@@ -215,7 +215,7 @@ export function CandidateProfilePage() {
         </form>
       </Card>
 
-      <DeleteAccountSection role="candidate" />
+      {!onboarding && <DeleteAccountSection role="candidate" />}
     </div>
   );
 }

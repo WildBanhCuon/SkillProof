@@ -179,7 +179,7 @@ export function HrProfilePage() {
         </form>
       </Card>
 
-      <DeleteAccountSection role="hr" />
+      {!onboarding && <DeleteAccountSection role="hr" />}
     </div>
   );
 }
