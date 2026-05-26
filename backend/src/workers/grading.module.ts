@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { AiModule } from '../modules/ai/ai.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { GRADING_QUEUE } from './grading.constants';
+import { GradingService } from '../grading/grading.service';
 import { GradingProcessor } from './grading.processor';
 
 @Module({
@@ -11,6 +12,7 @@ import { GradingProcessor } from './grading.processor';
     PrismaModule,
     AiModule,
   ],
-  providers: [GradingProcessor],
+  providers: [GradingProcessor, GradingService],
+  exports: [GradingService],
 })
 export class GradingModule {}

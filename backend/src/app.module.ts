@@ -9,6 +9,7 @@ import { ResultsModule } from './modules/results/results.module';
 import { AiModule } from './modules/ai/ai.module';
 import { HealthModule } from './modules/health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { createBullRedisOptions } from './config/bull-redis.config';
 import { GradingModule } from './workers/grading.module';
 import { CandidateModule } from './modules/candidate/candidate.module';
 
@@ -18,25 +19,7 @@ import { CandidateModule } from './modules/candidate/candidate.module';
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        // Bull uses ioredis under the hood. Render-managed Redis is often `rediss://...`
-        // (TLS) and may require an insecure cert skip in some environments.
-        redis: (() => {
-          const url = config.get<string>('REDIS_URL', 'redis://localhost:6379');
-          const isTls = url.startsWith('rediss://');
-          return {
-            url,
-            ...(isTls
-              ? {
-                  tls: {
-                    rejectUnauthorized: false,
-                  },
-                }
-              : {}),
-            // Default ioredis max is 20; Render cold starts / brief network glitches
-            // can otherwise surface as a hard 500.
-            maxRetriesPerRequest: 50,
-          };
-        })(),
+        redis: createBullRedisOptions(config),
       }),
       inject: [ConfigService],
     }),

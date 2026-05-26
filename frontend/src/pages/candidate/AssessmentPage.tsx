@@ -108,6 +108,7 @@ export function AssessmentPage() {
       });
     } catch (e) {
       setError(formatApiError(e, 'Submit assessment'));
+    } finally {
       setSubmitting(false);
     }
   };

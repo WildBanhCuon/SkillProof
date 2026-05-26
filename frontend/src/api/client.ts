@@ -108,6 +108,7 @@ export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
   retry = true,
+  timeoutMs = 120_000,
 ): Promise<T> {
   const headers = new Headers(options.headers);
   if (!headers.has('Content-Type') && options.body) {
@@ -119,7 +120,28 @@ export async function apiRequest<T>(
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  const controller = new AbortController();
+  const timeout = timeoutMs > 0 ? setTimeout(() => controller.abort(), timeoutMs) : undefined;
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers,
+      signal: options.signal ?? controller.signal,
+    });
+  } catch (err) {
+    if (timeout) clearTimeout(timeout);
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new ApiError(
+        'The request timed out. Check your connection or try again.',
+        408,
+      );
+    }
+    throw err;
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
 
   if (res.status === 401 && retry && !publicAuth) {
     const refreshed = await refreshAccessToken();

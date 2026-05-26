@@ -2,8 +2,8 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
-  ServiceUnavailableException,
 } from '@nestjs/common';
 import { SessionStatus, SessionType } from '@prisma/client';
 import {
@@ -16,13 +16,19 @@ import { AssessmentsService } from '../assessments/assessments.service';
 import { JwtPayload } from '../auth/auth.types';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import { GradingService } from '../../grading/grading.service';
 import { GRADING_QUEUE } from '../../workers/grading.constants';
+
+const QUEUE_ENQUEUE_TIMEOUT_MS = 4_000;
 
 @Injectable()
 export class SessionsService {
+  private readonly logger = new Logger(SessionsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly assessments: AssessmentsService,
+    private readonly grading: GradingService,
     @InjectQueue(GRADING_QUEUE) private readonly gradingQueue: Queue,
   ) {}
 
@@ -168,24 +174,50 @@ export class SessionsService {
       data: { status: 'GRADING', submittedAt: new Date() },
     });
 
-    try {
-      await this.gradingQueue.add('grade-session', { sessionId });
-    } catch (e) {
-      // Avoid leaving the session stuck in GRADING if Redis/Bull is unavailable.
-      await this.prisma.testSession.update({
-        where: { id: sessionId },
-        data: { status: 'IN_PROGRESS', submittedAt: null },
-      });
-      throw new ServiceUnavailableException(
-        'Grading queue is temporarily unavailable. Please try again in a moment.',
-      );
-    }
+    const gradingMode = await this.scheduleGrading(sessionId);
 
     return {
       sessionId,
       submissionId: sessionId,
-      status: 'queued',
+      status: gradingMode === 'queue' ? 'queued' : 'grading',
+      gradingMode,
     };
+  }
+
+  /** Enqueue on Bull when Redis is up; otherwise grade in-process (Render without queue). */
+  private async scheduleGrading(
+    sessionId: string,
+  ): Promise<'queue' | 'inline'> {
+    try {
+      await Promise.race([
+        this.gradingQueue.add('grade-session', { sessionId }),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error('grading-queue-timeout')),
+            QUEUE_ENQUEUE_TIMEOUT_MS,
+          ),
+        ),
+      ]);
+      return 'queue';
+    } catch (err) {
+      this.logger.warn(
+        `Redis queue unavailable for session ${sessionId}, grading inline`,
+        err instanceof Error ? err.message : String(err),
+      );
+      void this.grading.gradeSession(sessionId).catch((inlineErr) => {
+        this.logger.error(
+          `Inline grading failed for ${sessionId}`,
+          inlineErr,
+        );
+        void this.prisma.testSession
+          .update({
+            where: { id: sessionId },
+            data: { status: 'SUBMITTED' },
+          })
+          .catch(() => undefined);
+      });
+      return 'inline';
+    }
   }
 
   async getResult(user: JwtPayload, sessionId: string) {

@@ -3,11 +3,13 @@ import { Module } from '@nestjs/common';
 import { SessionsController } from './sessions.controller';
 import { SessionsService } from './sessions.service';
 import { AssessmentsModule } from '../assessments/assessments.module';
+import { GradingModule } from '../../workers/grading.module';
 import { GRADING_QUEUE } from '../../workers/grading.constants';
 
 @Module({
   imports: [
     AssessmentsModule,
+    GradingModule,
     BullModule.registerQueue({ name: GRADING_QUEUE }),
   ],
   controllers: [SessionsController],
