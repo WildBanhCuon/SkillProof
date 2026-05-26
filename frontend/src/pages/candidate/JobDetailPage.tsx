@@ -1,184 +1,177 @@
-import { useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ApiError } from '../../api/client';
-import { profileFieldLabel } from '../../data/profileFields';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '../../api/client';
-import { formatApiError } from '../../utils/errors';
-import type { CandidateApplicationItem, JobPosting, TestSession } from '../../api/types';
-import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
-import { Alert } from '../../components/ui/Alert';
-import { MarkdownContent } from '../../components/ui/MarkdownContent';
-
-export function JobDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState('');
-
-  const { data: job, isLoading } = useQuery({
-    queryKey: ['job', id, 'public'],
-    queryFn: () => api.get<JobPosting>(`/jobs/${id}`),
-    enabled: !!id,
-  });
-
-  const { data: myApplications } = useQuery({
-    queryKey: ['candidate', 'applications'],
-    queryFn: () =>
-      api.get<{ items: CandidateApplicationItem[] }>(
-        '/candidate/applications',
-      ),
-  });
-
-  const appliedApplication = useMemo(() => {
-    if (!id) return null;
-    return (
-      (myApplications?.items ?? [])
-        .filter(
-          (a) =>
-            a.sessionType === 'application' &&
-            a.jobId === id &&
-            a.applicationStatus !== 'expired',
-        )
-        .sort(
-          (a, b) =>
-            new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime(),
-        )[0] ?? null
-    );
-  }, [id, myApplications?.items]);
-
-  const hasApplied = !!appliedApplication;
-
-  const startSession = async (mode: 'practice' | 'application') => {
-    if (!id) return;
-    setError('');
-    setLoading(mode);
-
-    if (mode === 'application' && hasApplied) {
-      setError('You already applied to this offer. Check “My applications”.');
-      setLoading('');
-      return;
-    }
-
-    try {
-      const session = await api.post<TestSession>(`/jobs/${id}/sessions`, {
-        mode,
-      });
-      navigate(`/sessions/${session.id}`, { state: { session } });
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 400) {
-        const body = e.body as {
-          message?: { missingProfileFields?: string[] };
-          missingProfileFields?: string[];
-        };
-        const nested = body?.message;
-        const missing =
-          (typeof nested === 'object' && nested?.missingProfileFields) ||
-          body?.missingProfileFields;
-        if (missing?.length) {
-          setError(
-            `Complete your profile before applying. Missing: ${missing.map((f) => profileFieldLabel(f)).join(', ')}.`,
-          );
-          return;
-        }
-      }
-      setError(formatApiError(e, 'Start assessment session'));
-    } finally {
-      setLoading('');
-    }
-  };
-
-  if (isLoading || !job) {
-    return <p className="text-slate-500 dark:text-slate-400 dark:text-slate-500">Loading job…</p>;
-  }
-
-  return (
-    <div className="mx-auto max-w-3xl">
-      <Link to="/jobs" className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
-        ← All jobs
-      </Link>
-      <h1 className="mt-4 text-3xl font-bold text-slate-900 dark:text-slate-100">{job.title}</h1>
-      <p className="text-lg text-indigo-600 dark:text-indigo-400">{job.company?.name}</p>
-
-      {error && (
-        <div className="mt-4">
-          <Alert onDismiss={() => setError('')}>{error}</Alert>
-        </div>
-      )}
-
-      <Card className="mt-6 p-6">
-        <MarkdownContent content={job.description} />
-      </Card>
-
-      {job.assessment && (
-        <p className="mt-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
-          Assessment:           {job.assessment.durationMinutes} minutes
-          {job.assessment.totalPoints != null &&
-            ` · ${job.assessment.totalPoints} points`}
-          {(job.assessment.questionCount ?? job.assessment.questions?.length) !=
-            null &&
-            ` · ${job.assessment.questionCount ?? job.assessment.questions?.length} questions`}
-        </p>
-      )}
-
-      {job.requiredProfileFields && job.requiredProfileFields.length > 0 && (
-        <Card className="mt-6 border-amber-100 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40/40 p-4">
-          <p className="text-sm font-medium text-amber-900 dark:text-amber-200">Profile required to apply</p>
-          <p className="mt-1 text-sm text-amber-800 dark:text-amber-200/90">
-            This employer requires:{' '}
-            {job.requiredProfileFields.map((f) => profileFieldLabel(f)).join(', ')}.
-          </p>
-          {job.missingProfileFields && job.missingProfileFields.length > 0 && (
-            <p className="mt-2 text-sm text-amber-900 dark:text-amber-200">
-              You still need:{' '}
-              {job.missingProfileFields.map((f) => profileFieldLabel(f)).join(', ')}.{' '}
-              <Link to="/profile" className="font-medium text-indigo-700 dark:text-indigo-300 underline">
-                Complete your profile
-              </Link>
-            </p>
-          )}
-        </Card>
-      )}
-
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-        <Button
-          variant="outline"
-          className="flex-1"
-          disabled={!!loading}
-          onClick={() => startSession('practice')}
-        >
-          {loading === 'practice' ? 'Starting…' : 'Practice test'}
-        </Button>
-        <Button
-          className="flex-1"
-          disabled={!!loading || hasApplied}
-          onClick={() => startSession('application')}
-        >
-          {hasApplied
-            ? 'Already applied'
-            : loading === 'application'
-              ? 'Starting…'
-              : 'Apply — take assessment'}
-        </Button>
-      </div>
-      {hasApplied && appliedApplication && (
-        <Card className="mt-4 border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-900 dark:bg-indigo-950/40">
-          <p className="text-sm text-slate-700 dark:text-slate-300">
-            You have already applied to this role.
-          </p>
-          <Link
-            to={`/my-applications/${appliedApplication.sessionId}`}
-            className="mt-3 inline-flex text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-          >
-            View in My applications →
-          </Link>
-        </Card>
-      )}
-
-      <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400">
-        Practice results are private. Apply submits your score to the employer.
-      </p>
-    </div>
-  );
-}
+import { useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../../api/client';
+import { formatApiError } from '../../utils/errors';
+import type { CandidateApplicationItem, JobPosting, TestSession } from '../../api/types';
+import type { ProfileFieldKey } from '../../data/profileFields';
+import { ApplyRequiredProfileForm } from '../../components/candidate/ApplyRequiredProfileForm';
+import { Button } from '../../components/ui/Button';
+import { Card } from '../../components/ui/Card';
+import { Alert } from '../../components/ui/Alert';
+import { MarkdownContent } from '../../components/ui/MarkdownContent';
+
+export function JobDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState('');
+  const [showApplyProfile, setShowApplyProfile] = useState(false);
+
+  const { data: job, isLoading } = useQuery({
+    queryKey: ['job', id, 'public'],
+    queryFn: () => api.get<JobPosting>(`/jobs/${id}`),
+    enabled: !!id,
+  });
+
+  const { data: myApplications } = useQuery({
+    queryKey: ['candidate', 'applications'],
+    queryFn: () =>
+      api.get<{ items: CandidateApplicationItem[] }>(
+        '/candidate/applications',
+      ),
+  });
+
+  const appliedApplication = useMemo(() => {
+    if (!id) return null;
+    return (
+      (myApplications?.items ?? [])
+        .filter(
+          (a) =>
+            a.sessionType === 'application' &&
+            a.jobId === id &&
+            a.applicationStatus !== 'expired',
+        )
+        .sort(
+          (a, b) =>
+            new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime(),
+        )[0] ?? null
+    );
+  }, [id, myApplications?.items]);
+
+  const hasApplied = !!appliedApplication;
+
+  const requiredFields = (job?.requiredProfileFields ?? []) as ProfileFieldKey[];
+
+  const startSession = async (mode: 'practice' | 'application') => {
+    if (!id) return;
+    setError('');
+    setLoading(mode);
+
+    if (mode === 'application' && hasApplied) {
+      setError('You already applied to this offer. Check “My applications”.');
+      setLoading('');
+      return;
+    }
+
+    try {
+      const session = await api.post<TestSession>(`/jobs/${id}/sessions`, {
+        mode,
+      });
+      navigate(`/sessions/${session.id}`, { state: { session } });
+    } catch (e) {
+      setError(formatApiError(e, 'Start assessment session'));
+    } finally {
+      setLoading('');
+    }
+  };
+
+  const onApplyClick = () => {
+    if (hasApplied) return;
+    const missing = job?.missingProfileFields ?? [];
+    if (requiredFields.length > 0 && missing.length > 0) {
+      setShowApplyProfile(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    void startSession('application');
+  };
+
+  if (isLoading || !job) {
+    return <p className="text-slate-500 dark:text-slate-400 dark:text-slate-500">Loading job…</p>;
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl">
+      <Link to="/jobs" className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
+        ← All jobs
+      </Link>
+      <h1 className="mt-4 text-3xl font-bold text-slate-900 dark:text-slate-100">{job.title}</h1>
+      <p className="text-lg text-indigo-600 dark:text-indigo-400">{job.company?.name}</p>
+
+      {error && (
+        <div className="mt-4">
+          <Alert onDismiss={() => setError('')}>{error}</Alert>
+        </div>
+      )}
+
+      {showApplyProfile && requiredFields.length > 0 && id && (
+        <ApplyRequiredProfileForm
+          jobId={id}
+          jobTitle={job.title}
+          requiredFields={requiredFields}
+          onCancel={() => setShowApplyProfile(false)}
+          onComplete={async () => {
+            setShowApplyProfile(false);
+            await startSession('application');
+          }}
+        />
+      )}
+
+      <Card className="mt-6 p-6">
+        <MarkdownContent content={job.description} />
+      </Card>
+
+      {job.assessment && (
+        <p className="mt-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
+          Assessment:           {job.assessment.durationMinutes} minutes
+          {job.assessment.totalPoints != null &&
+            ` · ${job.assessment.totalPoints} points`}
+          {(job.assessment.questionCount ?? job.assessment.questions?.length) !=
+            null &&
+            ` · ${job.assessment.questionCount ?? job.assessment.questions?.length} questions`}
+        </p>
+      )}
+
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <Button
+          variant="outline"
+          className="flex-1"
+          disabled={!!loading || showApplyProfile}
+          onClick={() => startSession('practice')}
+        >
+          {loading === 'practice' ? 'Starting…' : 'Practice test (different questions)'}
+        </Button>
+        <Button
+          className="flex-1"
+          disabled={!!loading || hasApplied || showApplyProfile}
+          onClick={onApplyClick}
+        >
+          {hasApplied
+            ? 'Already applied'
+            : loading === 'application'
+              ? 'Starting…'
+              : 'Apply — take assessment'}
+        </Button>
+      </div>
+      {hasApplied && appliedApplication && (
+        <Card className="mt-4 border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-900 dark:bg-indigo-950/40">
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            You have already applied to this role.
+          </p>
+          <Link
+            to={`/my-applications/${appliedApplication.sessionId}`}
+            className="mt-3 inline-flex text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+          >
+            View in My applications →
+          </Link>
+        </Card>
+      )}
+
+      <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400">
+        Practice results are private. Apply submits your score to the employer.
+      </p>
+    </div>
+  );
+}
+

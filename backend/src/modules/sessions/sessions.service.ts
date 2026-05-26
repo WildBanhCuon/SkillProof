@@ -5,7 +5,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { SessionStatus, SessionType } from '@prisma/client';
+import { AssessmentPurpose, SessionStatus, SessionType } from '@prisma/client';
 import {
   missingRequiredProfileFields,
   parseRequiredProfileFields,
@@ -66,7 +66,11 @@ export class SessionsService {
       }
     }
 
-    const assessment = await this.assessments.getForJob(jobId);
+    const purpose = this.assessments.purposeForSessionType(mode);
+    let assessment = await this.assessments.getForJob(jobId, purpose);
+    if (!assessment && mode === 'practice') {
+      assessment = await this.assessments.ensurePracticeAssessment(jobId);
+    }
     if (!assessment) {
       throw new BadRequestException('Job has no assessment');
     }
@@ -271,7 +275,14 @@ export class SessionsService {
       throw new ForbiddenException();
     }
 
-    const assessment = await this.assessments.getForJob(session.jobPostingId);
+    const purpose =
+      session.sessionType === SessionType.PRACTICE
+        ? AssessmentPurpose.PRACTICE
+        : AssessmentPurpose.APPLICATION;
+    const assessment = await this.assessments.getForJob(
+      session.jobPostingId,
+      purpose,
+    );
 
     return {
       id: session.id,

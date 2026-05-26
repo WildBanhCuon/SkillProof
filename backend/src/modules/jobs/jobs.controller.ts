@@ -11,7 +11,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { JobStatus } from '@prisma/client';
+import { AssessmentPurpose, JobStatus } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { JwtPayload } from '../auth/auth.types';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -119,7 +119,10 @@ export class JobsController {
     @Param('id') id: string,
   ) {
     await this.jobs.findOne(user, id);
-    const assessment = await this.assessments.getForJob(id);
+    const assessment = await this.assessments.getForJob(
+      id,
+      AssessmentPurpose.APPLICATION,
+    );
     if (!assessment) return null;
     return this.assessments.toPublicAssessment(assessment);
   }

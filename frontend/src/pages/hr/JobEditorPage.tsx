@@ -95,9 +95,14 @@ export function JobEditorPage() {
 
   const hasContent = title.trim().length > 0 && description.trim().length > 0;
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const checkListing = async () => {
     if (!hasContent) {
       setError('Add a job title and description before running Check listing.');
+      scrollToTop();
       return;
     }
     setError('');
@@ -115,7 +120,11 @@ export function JobEditorPage() {
         setJobId(created.id);
         navigate(`/hr/jobs/${created.id}`, { replace: true });
       } else {
-        await api.patch(`/jobs/${idToUse}`, { title, description });
+        await api.patch(`/jobs/${idToUse}`, {
+          title,
+          description,
+          requiredProfileFields,
+        });
       }
       const updated = await api.post<JobPosting>(
         `/jobs/${idToUse}/check-listing`,
@@ -137,6 +146,7 @@ export function JobEditorPage() {
       setError(formatApiError(e, 'AI listing check'));
     } finally {
       setBusy('');
+      scrollToTop();
     }
   };
 
@@ -179,6 +189,7 @@ export function JobEditorPage() {
       setSuccess('Listing published · Assessment generated');
       queryClient.invalidateQueries({ queryKey: ['hr', 'jobs'] });
       queryClient.invalidateQueries({ queryKey: ['job', jobId] });
+      navigate('/hr/jobs', { replace: true });
     } catch (e) {
       setError(formatApiError(e, 'Publish listing'));
     } finally {
@@ -250,7 +261,7 @@ export function JobEditorPage() {
       )}
 
       {!checked && isEditable && (
-        <Card className="mt-6 border-indigo-100 dark:border-indigo-900 bg-indigo-50 dark:bg-indigo-950/50/40 p-4">
+        <Card className="mt-6 border-indigo-100 bg-indigo-50 p-4 dark:border-indigo-900 dark:bg-indigo-950/50">
           <p className="text-sm font-medium text-indigo-900">
             Tips for a strong listing
           </p>

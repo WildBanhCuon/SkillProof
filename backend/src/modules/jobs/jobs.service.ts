@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  AssessmentPurpose,
   JobStatus,
   Prisma,
   SkillImportance,
@@ -59,7 +60,7 @@ export class JobsService {
         requiredProfileFields: dto.requiredProfileFields ?? [],
         status: 'DRAFT',
       },
-      include: { skillRequirements: true, assessment: true },
+      include: { skillRequirements: true, assessments: true },
     });
     return this.formatJob(job);
   }
@@ -75,12 +76,16 @@ export class JobsService {
     const where = this.candidateJobsWhere(opts);
     const orderBy = this.candidateJobsOrderBy(opts.sort);
 
+    const durationSort =
+      opts.sort === 'duration_asc' || opts.sort === 'duration_desc';
+
     const [jobs, companyRows] = await Promise.all([
       this.prisma.jobPosting.findMany({
         where,
         include: {
           company: { select: { name: true } },
-          assessment: {
+          assessments: {
+            where: { purpose: AssessmentPurpose.APPLICATION },
             select: {
               durationMinutes: true,
               totalPoints: true,
@@ -88,7 +93,7 @@ export class JobsService {
             },
           },
         },
-        orderBy,
+        orderBy: durationSort ? { publishedAt: 'desc' } : orderBy,
       }),
       this.prisma.company.findMany({
         where: {
@@ -98,6 +103,15 @@ export class JobsService {
         orderBy: { name: 'asc' },
       }),
     ]);
+
+    if (durationSort) {
+      const dir = opts.sort === 'duration_asc' ? 1 : -1;
+      jobs.sort((a, b) => {
+        const da = a.assessments[0]?.durationMinutes ?? 0;
+        const db = b.assessments[0]?.durationMinutes ?? 0;
+        return (da - db) * dir;
+      });
+    }
 
     return {
       items: jobs.map((j) => this.formatJob(j)),
@@ -114,7 +128,10 @@ export class JobsService {
       },
       include: {
         skillRequirements: true,
-        assessment: { select: { id: true, durationMinutes: true } },
+        assessments: {
+          where: { purpose: AssessmentPurpose.APPLICATION },
+          select: { id: true, durationMinutes: true },
+        },
         _count: { select: { applications: true } },
       },
       orderBy: { updatedAt: 'desc' },
@@ -129,7 +146,8 @@ export class JobsService {
         company: { select: { name: true } },
         skillRequirements: true,
         listingAnalyses: { orderBy: { createdAt: 'desc' }, take: 1 },
-        assessment: {
+        assessments: {
+          where: { purpose: AssessmentPurpose.APPLICATION },
           include: {
             questions: { orderBy: { orderIndex: 'asc' } },
           },
@@ -284,7 +302,8 @@ export class JobsService {
       data: { status: 'PUBLISHED', publishedAt: new Date() },
       include: {
         skillRequirements: true,
-        assessment: {
+        assessments: {
+          where: { purpose: AssessmentPurpose.APPLICATION },
           include: { questions: { orderBy: { orderIndex: 'asc' } } },
         },
       },
@@ -301,7 +320,13 @@ export class JobsService {
     return this.prisma.jobPosting.update({
       where: { id },
       data: { status: 'CLOSED' },
-      include: { skillRequirements: true, assessment: { select: { id: true } } },
+      include: {
+        skillRequirements: true,
+        assessments: {
+          where: { purpose: AssessmentPurpose.APPLICATION },
+          select: { id: true },
+        },
+      },
     });
   }
 
@@ -364,19 +389,33 @@ export class JobsService {
         return { title: 'asc' };
       case 'title_desc':
         return { title: 'desc' };
-      case 'duration_asc':
-        return { assessment: { durationMinutes: 'asc' } };
-      case 'duration_desc':
-        return { assessment: { durationMinutes: 'desc' } };
       case 'newest':
       default:
         return { publishedAt: 'desc' };
     }
   }
 
-  private formatJob<T extends { requiredProfileFields: unknown }>(job: T) {
+  private formatJob<
+    T extends {
+      requiredProfileFields: unknown;
+      assessments?: Array<{
+        purpose?: AssessmentPurpose;
+        questions?: unknown[];
+        [key: string]: unknown;
+      }>;
+      assessment?: unknown;
+    },
+  >(job: T) {
+    const { assessments, assessment: legacyAssessment, ...rest } = job;
+    const applicationAssessment =
+      assessments?.find((a) => a.purpose === AssessmentPurpose.APPLICATION) ??
+      assessments?.[0] ??
+      legacyAssessment ??
+      null;
+
     return {
-      ...job,
+      ...rest,
+      assessment: applicationAssessment,
       requiredProfileFields: parseRequiredProfileFields(
         job.requiredProfileFields,
       ),

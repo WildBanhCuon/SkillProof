@@ -4,13 +4,13 @@ type Variant = 'primary' | 'secondary' | 'outline' | 'ghost';
 
 const variants: Record<Variant, string> = {
   primary:
-    'bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 dark:bg-indigo-50 dark:bg-indigo-950/500 dark:hover:bg-indigo-600',
+    'bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 dark:bg-indigo-600 dark:text-white dark:hover:bg-indigo-500',
   secondary:
-    'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-950 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-700',
+    'bg-white text-slate-800 border border-slate-200 hover:bg-slate-50 disabled:opacity-50 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-800',
   outline:
-    'bg-transparent text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-950 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-800',
+    'bg-transparent text-slate-700 border border-slate-300 hover:bg-slate-50 disabled:opacity-50 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-800',
   ghost:
-    'bg-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 dark:text-slate-400 dark:text-slate-500 dark:hover:bg-slate-800',
+    'bg-transparent text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800',
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

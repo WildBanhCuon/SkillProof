@@ -29,6 +29,11 @@ enum SessionType {
   APPLICATION
 }
 
+enum AssessmentPurpose {
+  PRACTICE
+  APPLICATION
+}
+
 enum SessionStatus {
   IN_PROGRESS
   SUBMITTED
@@ -132,7 +137,7 @@ model JobPosting {
   company              Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   listingAnalyses      ListingAnalysis[]
   skillRequirements    SkillRequirement[]
-  assessment           Assessment?
+  assessments          Assessment[]
   sessions             TestSession[]
   applications         Application[]
 
@@ -163,13 +168,17 @@ model SkillRequirement {
 }
 
 model Assessment {
-  id              String   @id @default(uuid())
-  jobPostingId    String   @unique
-  durationMinutes Int      @default(90)
-  totalPoints     Int      @default(100)
-  createdAt       DateTime @default(now())
-  jobPosting      JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  id              String            @id @default(uuid())
+  jobPostingId    String
+  purpose         AssessmentPurpose
+  durationMinutes Int               @default(90)
+  totalPoints     Int               @default(100)
+  createdAt       DateTime          @default(now())
+  jobPosting      JobPosting        @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
   questions       Question[]
+
+  @@unique([jobPostingId, purpose])
+  @@index([jobPostingId])
 }
 
 model Question {

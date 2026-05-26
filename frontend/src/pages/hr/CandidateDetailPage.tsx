@@ -154,7 +154,7 @@ export function CandidateDetailPage() {
         </div>
       )}
 
-      <Card className="mt-6 border-indigo-100 dark:border-indigo-900 bg-indigo-50 dark:bg-indigo-950/50/40 p-6">
+      <Card className="mt-6 border-indigo-100 bg-indigo-50 p-6 dark:border-indigo-900 dark:bg-indigo-950/50">
         <h2 className="font-semibold text-slate-900 dark:text-slate-100">Hiring decision</h2>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
           The candidate sees your decision on their applications page. Accept means you

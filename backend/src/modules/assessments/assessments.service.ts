@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AssessmentPurpose } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { GeminiService } from '../ai/gemini.service';
 
@@ -15,30 +16,89 @@ export class AssessmentsService {
       include: { skillRequirements: true },
     });
 
-    const existing = await this.prisma.assessment.findUnique({
-      where: { jobPostingId: jobId },
-    });
-    if (existing) {
-      await this.prisma.question.deleteMany({
-        where: { assessmentId: existing.id },
-      });
-      await this.prisma.assessment.delete({ where: { id: existing.id } });
-    }
+    await this.prisma.assessment.deleteMany({ where: { jobPostingId: jobId } });
 
-    const gen = await this.gemini.generateAssessment(
+    const skills = job.skillRequirements.map((s) => ({
+      skillName: s.skillName,
+      importance: s.importance.toLowerCase(),
+      testable: s.testable,
+    }));
+
+    const applicationGen = await this.gemini.generateAssessment(
       jobId,
       job.title,
       job.description,
-      job.skillRequirements.map((s) => ({
-        skillName: s.skillName,
-        importance: s.importance.toLowerCase(),
-        testable: s.testable,
-      })),
+      skills,
+      'application',
     );
 
-    const assessment = await this.prisma.assessment.create({
+    const application = await this.createAssessmentFromGen(
+      jobId,
+      AssessmentPurpose.APPLICATION,
+      applicationGen,
+    );
+
+    const practiceGen = await this.gemini.generateAssessment(
+      jobId,
+      job.title,
+      job.description,
+      skills,
+      'practice',
+      applicationGen.questions.map((q) => q.title),
+    );
+
+    const practice = await this.createAssessmentFromGen(
+      jobId,
+      AssessmentPurpose.PRACTICE,
+      practiceGen,
+    );
+
+    return { application, practice };
+  }
+
+  async ensurePracticeAssessment(jobId: string) {
+    const existing = await this.getForJob(jobId, AssessmentPurpose.PRACTICE);
+    if (existing) return existing;
+
+    const application = await this.getForJob(jobId, AssessmentPurpose.APPLICATION);
+    if (!application) return null;
+
+    const job = await this.prisma.jobPosting.findUniqueOrThrow({
+      where: { id: jobId },
+      include: { skillRequirements: true },
+    });
+
+    const skills = job.skillRequirements.map((s) => ({
+      skillName: s.skillName,
+      importance: s.importance.toLowerCase(),
+      testable: s.testable,
+    }));
+
+    const practiceGen = await this.gemini.generateAssessment(
+      jobId,
+      job.title,
+      job.description,
+      skills,
+      'practice',
+      application.questions.map((q) => q.title),
+    );
+
+    return this.createAssessmentFromGen(
+      jobId,
+      AssessmentPurpose.PRACTICE,
+      practiceGen,
+    );
+  }
+
+  private async createAssessmentFromGen(
+    jobId: string,
+    purpose: AssessmentPurpose,
+    gen: Awaited<ReturnType<GeminiService['generateAssessment']>>,
+  ) {
+    return this.prisma.assessment.create({
       data: {
         jobPostingId: jobId,
+        purpose,
         durationMinutes: gen.durationMinutes,
         totalPoints: gen.totalPoints,
         questions: {
@@ -57,23 +117,36 @@ export class AssessmentsService {
         questions: { orderBy: { orderIndex: 'asc' } },
       },
     });
-
-    return assessment;
   }
 
-  async getForJob(jobId: string) {
+  purposeForSessionType(
+    sessionType: 'practice' | 'application',
+  ): AssessmentPurpose {
+    return sessionType === 'practice'
+      ? AssessmentPurpose.PRACTICE
+      : AssessmentPurpose.APPLICATION;
+  }
+
+  async getForJob(jobId: string, purpose: AssessmentPurpose) {
     return this.prisma.assessment.findUnique({
-      where: { jobPostingId: jobId },
+      where: {
+        jobPostingId_purpose: { jobPostingId: jobId, purpose },
+      },
       include: {
         questions: { orderBy: { orderIndex: 'asc' } },
       },
     });
   }
 
-  toPublicAssessment(assessment: NonNullable<Awaited<ReturnType<typeof this.getForJob>>>) {
+  toPublicAssessment(
+    assessment: NonNullable<
+      Awaited<ReturnType<typeof this.getForJob>>
+    >,
+  ) {
     return {
       id: assessment.id,
       jobId: assessment.jobPostingId,
+      purpose: assessment.purpose.toLowerCase(),
       durationMinutes: assessment.durationMinutes,
       totalPoints: assessment.totalPoints,
       questionCount: assessment.questions.length,

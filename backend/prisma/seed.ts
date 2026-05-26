@@ -1,4 +1,5 @@
 import {
+  AssessmentPurpose,
   Dimension,
   JobStatus,
   PrismaClient,
@@ -13,6 +14,7 @@ const prisma = new PrismaClient();
 
 const DEMO_JOB_ID = '00000000-0000-0000-0000-000000000010';
 const DEMO_ASSESSMENT_ID = '00000000-0000-0000-0000-000000000011';
+const DEMO_PRACTICE_ASSESSMENT_ID = '00000000-0000-0000-0000-000000000015';
 const DEMO_SESSION_ID = '00000000-0000-0000-0000-000000000012';
 const DEMO_APPLICATION_ID = '00000000-0000-0000-0000-000000000013';
 const DEMO_RESULT_ID = '00000000-0000-0000-0000-000000000014';
@@ -67,6 +69,45 @@ const DEMO_QUESTIONS = [
   },
 ];
 
+const DEMO_PRACTICE_QUESTIONS = [
+  {
+    orderIndex: 0,
+    title: 'Component props',
+    instructions: 'Pass props correctly so the greeting displays.',
+    starterCode: 'function Greeting() { return null; }',
+    points: 25,
+    language: 'javascript',
+    rubric: { clarity: 5 },
+  },
+  {
+    orderIndex: 1,
+    title: 'List rendering',
+    instructions: 'Render a list of items from the given array.',
+    starterCode: 'function List() { return null; }',
+    points: 25,
+    language: 'javascript',
+    rubric: { lists: 5 },
+  },
+  {
+    orderIndex: 2,
+    title: 'Event handler',
+    instructions: 'Wire up the button click handler.',
+    starterCode: 'function Button() { return null; }',
+    points: 25,
+    language: 'javascript',
+    rubric: { events: 5 },
+  },
+  {
+    orderIndex: 3,
+    title: 'Conditional render',
+    instructions: 'Show loading or content based on the flag.',
+    starterCode: 'function Panel() { return null; }',
+    points: 25,
+    language: 'javascript',
+    rubric: { conditionals: 5 },
+  },
+];
+
 async function seedDemoJob(
   companyId: string,
   candidateId: string,
@@ -115,23 +156,43 @@ async function seedDemoJob(
           },
         ],
       },
-      assessment: {
-        create: {
-          id: DEMO_ASSESSMENT_ID,
-          durationMinutes: 90,
-          totalPoints: 100,
-          questions: {
-            create: DEMO_QUESTIONS.map((q) => ({
-              orderIndex: q.orderIndex,
-              title: q.title,
-              instructions: q.instructions,
-              starterCode: q.starterCode,
-              points: q.points,
-              language: q.language,
-              rubric: q.rubric,
-            })),
+      assessments: {
+        create: [
+          {
+            id: DEMO_ASSESSMENT_ID,
+            purpose: AssessmentPurpose.APPLICATION,
+            durationMinutes: 90,
+            totalPoints: 100,
+            questions: {
+              create: DEMO_QUESTIONS.map((q) => ({
+                orderIndex: q.orderIndex,
+                title: q.title,
+                instructions: q.instructions,
+                starterCode: q.starterCode,
+                points: q.points,
+                language: q.language,
+                rubric: q.rubric,
+              })),
+            },
           },
-        },
+          {
+            id: DEMO_PRACTICE_ASSESSMENT_ID,
+            purpose: AssessmentPurpose.PRACTICE,
+            durationMinutes: 90,
+            totalPoints: 100,
+            questions: {
+              create: DEMO_PRACTICE_QUESTIONS.map((q) => ({
+                orderIndex: q.orderIndex,
+                title: q.title,
+                instructions: q.instructions,
+                starterCode: q.starterCode,
+                points: q.points,
+                language: q.language,
+                rubric: q.rubric,
+              })),
+            },
+          },
+        ],
       },
     },
   });

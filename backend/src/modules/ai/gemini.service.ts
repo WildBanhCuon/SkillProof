@@ -280,9 +280,22 @@ Rules:
     title: string,
     description: string,
     skills: { skillName: string; importance: string; testable: boolean }[],
+    variant: 'practice' | 'application' = 'application',
+    applicationQuestionTitles: string[] = [],
   ): Promise<AssessmentGenResult> {
     const testableSkills = skills.filter((s) => s.testable);
+    const variantRules =
+      variant === 'practice'
+        ? `
+This is the PRACTICE version (candidates take it before applying). It must:
+- Cover the same testable skills and job stack as the official application test, but with DIFFERENT exercises, scenarios, and question titles.
+- NOT reuse or paraphrase these official application question titles: ${applicationQuestionTitles.length ? applicationQuestionTitles.map((t) => JSON.stringify(t)).join(', ') : '(none yet)'}
+- Use different starter code and instructions so practice answers cannot be copied into the real application test.`
+        : `
+This is the OFFICIAL APPLICATION version (used when the candidate applies). Candidates never see these exact questions during practice.`;
+
     const prompt = `Generate a technical assessment tailored to THIS job posting — not a generic frontend template.
+${variantRules}
 
 Job title: ${title}
 Description:
@@ -316,8 +329,8 @@ Rules:
 }`;
 
     return this.generateJson(
-      'assessment_gen',
-      jobId,
+      variant === 'practice' ? 'assessment_gen_practice' : 'assessment_gen',
+      `${jobId}:${variant}`,
       prompt,
       schemaHint,
       (raw) => assessmentGenSchema.parse(raw),

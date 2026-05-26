@@ -36,6 +36,10 @@ export function HrProfilePage() {
     user?.companyWebsiteUrl,
   ]);
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
@@ -58,6 +62,7 @@ export function HrProfilePage() {
       setError(formatApiError(err, 'Save profile'));
     } finally {
       setSaving(false);
+      scrollToTop();
     }
   };
 

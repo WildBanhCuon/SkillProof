@@ -8,6 +8,7 @@ import {
   EMPTY_PROFILE,
 } from '../../data/profileFields';
 import { DEFAULT_PHONE_COUNTRY_CODE } from '../../data/phoneCountryCodes';
+import { candidateProfilePatchBody } from '../../utils/candidateProfile';
 import { PhoneFields } from '../../components/candidate/PhoneFields';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -75,25 +76,17 @@ export function CandidateProfilePage() {
     setForm((f) => ({ ...f, [key]: value }));
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
     setSaving(true);
     try {
-      await api.patch('/candidate/profile', {
-        displayName: form.displayName.trim(),
-        bio: form.bio?.trim() || '',
-        phoneCountryCode: form.phone?.trim()
-          ? form.phoneCountryCode?.trim() || DEFAULT_PHONE_COUNTRY_CODE
-          : '',
-        phone: form.phone?.trim() || '',
-        linkedInUrl: form.linkedInUrl?.trim() || '',
-        portfolioUrl: form.portfolioUrl?.trim() || '',
-        githubUrl: form.githubUrl?.trim() || '',
-        websiteUrl: form.websiteUrl?.trim() || '',
-        resumeUrl: form.resumeUrl?.trim() || '',
-      });
+      await api.patch('/candidate/profile', candidateProfilePatchBody(form));
       await refreshUser();
       await queryClient.invalidateQueries({ queryKey: ['candidate', 'profile'] });
       await queryClient.invalidateQueries({ queryKey: ['job'] });
@@ -106,6 +99,7 @@ export function CandidateProfilePage() {
       setError(formatApiError(err, 'Save profile'));
     } finally {
       setSaving(false);
+      scrollToTop();
     }
   };
 
