@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { SessionStatus, SessionType } from '@prisma/client';
 import {
@@ -140,7 +141,18 @@ export class SessionsService {
       data: { status: 'GRADING', submittedAt: new Date() },
     });
 
-    await this.gradingQueue.add('grade-session', { sessionId });
+    try {
+      await this.gradingQueue.add('grade-session', { sessionId });
+    } catch (e) {
+      // Avoid leaving the session stuck in GRADING if Redis/Bull is unavailable.
+      await this.prisma.testSession.update({
+        where: { id: sessionId },
+        data: { status: 'IN_PROGRESS', submittedAt: null },
+      });
+      throw new ServiceUnavailableException(
+        'Grading queue is temporarily unavailable. Please try again in a moment.',
+      );
+    }
 
     return {
       sessionId,

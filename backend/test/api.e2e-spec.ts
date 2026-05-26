@@ -243,6 +243,13 @@ describe('SkillProof API (e2e)', () => {
     it('POST /v1/auth/login (candidate seed)', async () => {
       const tokens = await login(app, CANDIDATE_EMAIL, 'candidate');
       candidateToken = tokens.accessToken;
+
+      // Make the suite deterministic: the DB is not reset between runs.
+      // Clearing phone ensures "missingProfileFields" assertions are stable.
+      await request(app.getHttpServer())
+        .patch('/v1/candidate/profile')
+        .set(authHeader(candidateToken))
+        .send({ phoneCountryCode: '', phone: '' });
     });
 
     it('GET /v1/jobs — list published', async () => {
