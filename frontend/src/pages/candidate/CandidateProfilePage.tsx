@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
@@ -38,22 +38,38 @@ export function CandidateProfilePage() {
     queryFn: () => api.get<ProfileResponse>('/candidate/profile'),
   });
 
-  // Re-hydrate when profile is first loaded or after a successful save (updatedAt changes).
-  useEffect(() => {
-    if (!data?.profile) return;
-    setForm({
-      displayName: data.profile.displayName?.trim() || user?.fullName || '',
-      bio: data.profile.bio ?? '',
-      phoneCountryCode:
-        data.profile.phoneCountryCode ?? DEFAULT_PHONE_COUNTRY_CODE,
-      phone: data.profile.phone ?? '',
-      linkedInUrl: data.profile.linkedInUrl ?? '',
-      portfolioUrl: data.profile.portfolioUrl ?? '',
-      githubUrl: data.profile.githubUrl ?? '',
-      websiteUrl: data.profile.websiteUrl ?? '',
-      resumeUrl: data.profile.resumeUrl ?? '',
+  const profileSnapshot = useMemo(() => {
+    const p = data?.profile;
+    if (!p) return null;
+    return JSON.stringify({
+      updatedAt: data?.updatedAt ?? null,
+      displayName: p.displayName,
+      bio: p.bio,
+      phoneCountryCode: p.phoneCountryCode,
+      phone: p.phone,
+      linkedInUrl: p.linkedInUrl,
+      portfolioUrl: p.portfolioUrl,
+      githubUrl: p.githubUrl,
+      websiteUrl: p.websiteUrl,
+      resumeUrl: p.resumeUrl,
     });
-  }, [data?.updatedAt, data?.email, data?.profile, user?.fullName]);
+  }, [data?.profile, data?.updatedAt]);
+
+  useEffect(() => {
+    if (!data?.profile || !profileSnapshot) return;
+    const p = data.profile;
+    setForm({
+      displayName: p.displayName?.trim() || user?.fullName || '',
+      bio: p.bio ?? '',
+      phoneCountryCode: p.phoneCountryCode ?? DEFAULT_PHONE_COUNTRY_CODE,
+      phone: p.phone ?? '',
+      linkedInUrl: p.linkedInUrl ?? '',
+      portfolioUrl: p.portfolioUrl ?? '',
+      githubUrl: p.githubUrl ?? '',
+      websiteUrl: p.websiteUrl ?? '',
+      resumeUrl: p.resumeUrl ?? '',
+    });
+  }, [profileSnapshot, data?.profile, user?.fullName]);
 
   const set = (key: keyof CandidateProfileData, value: string) => {
     setForm((f) => ({ ...f, [key]: value }));
