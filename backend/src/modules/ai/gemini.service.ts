@@ -308,22 +308,28 @@ Testable skills (build questions ONLY from these — one question should map to 
 ${JSON.stringify(testableSkills, null, 2)}
 
 Rules:
-- Create exactly 4 coding-focused questions. Total 100 points. Duration 90 minutes.
-- Match the stack in the job (e.g. WordPress/Elementor/WooCommerce/CSS/PHP — NOT React/TypeScript/Vue unless the job title or description explicitly requires them).
-- Do NOT invent React, SPA, or jsonplaceholder API exercises for WordPress/CMS roles.
-- Prefer exercises the candidate can do in the Monaco editor: CSS, HTML snippets, JavaScript for DOM/fetch, PHP for WordPress hooks/templates when PHP is testable.
-- Set "language" to javascript, css, php, or python as appropriate (css for pure styling tasks).
-- Each question needs starter code, clear instructions, and a rubric object for AI grading (no automated test cases).`;
+- Create exactly 5 questions. Total 100 points. Duration 90 minutes.
+- Use a MIX of question types:
+  • "code" — hands-on exercises in the Monaco editor (CSS, HTML, JavaScript, PHP, Python). Use for implementation skills.
+  • "mcq" — multiple choice (4 options each) for platform knowledge, workflows, concepts, and tools (e.g. WordPress admin, Elementor, WooCommerce, Git, SEO) where typing code is not the best test.
+- Aim for roughly 2–3 code questions and 2–3 MCQ questions, mapped to testable skills. WordPress/CMS roles should lean on MCQ for CMS/plugin/theme concepts and use code only for PHP/CSS/HTML when truly needed.
+- Match the stack in the job (e.g. WordPress/Elementor/WooCommerce — NOT React/TypeScript/Vue unless the job explicitly requires them).
+- Do NOT invent React SPA or jsonplaceholder API exercises for WordPress/CMS roles.
+- For "code" questions: include starterCode, language (javascript|css|php|python), instructions, and a rubric object for AI grading.
+- For "mcq" questions: set questionType to "mcq", options as [{ "id": "a", "label": "..." }, ...] (ids a,b,c,d), correctOptionId matching one option id, starterCode as empty string, language "text", and a short rubric with an explanation of the correct answer.`;
 
     const schemaHint = `{
   "durationMinutes": 90,
   "totalPoints": 100,
   "questions": [{
+    "questionType": "code|mcq",
     "title": "string",
     "instructions": "string",
-    "starterCode": "string",
+    "starterCode": "string (empty for mcq)",
     "points": number,
-    "language": "javascript|css|php|python",
+    "language": "javascript|css|php|python|text",
+    "options": [{ "id": "a", "label": "string" }],
+    "correctOptionId": "string (mcq only)",
     "rubric": {}
   }]
 }`;
@@ -348,7 +354,13 @@ Rules:
         points: number;
         rubric: unknown;
         instructions: string;
+        questionType: 'code' | 'mcq';
       }[];
+      mcqAutoGrade?: {
+        earnedPoints: number;
+        maxPoints: number;
+        details: { questionId: string; title: string; correct: boolean; earned: number; max: number }[];
+      };
       answers: {
         questionId: string;
         code: string;
@@ -356,16 +368,29 @@ Rules:
       }[];
     },
   ): Promise<SessionGradeResult> {
-    const prompt = `Grade this technical assessment submission for the role below. Evaluate each answer against the question instructions and rubric. Consider code quality, correctness, and fit for THIS job — not a generic React developer bar.
+    const mcqBlock = context.mcqAutoGrade
+      ? `
+Multiple-choice questions (already auto-graded — do NOT re-score these):
+${context.mcqAutoGrade.details
+  .map(
+    (d) =>
+      `- ${d.title}: ${d.correct ? 'correct' : 'incorrect'} (${d.earned}/${d.max} pts)`,
+  )
+  .join('\n')}
+MCQ subtotal: ${context.mcqAutoGrade.earnedPoints}/${context.mcqAutoGrade.maxPoints} points.
+`
+      : '';
+
+    const prompt = `Grade this technical assessment submission for the role below. Evaluate each CODING answer against the question instructions and rubric. Consider code quality, correctness, and fit for THIS job — not a generic React developer bar.
 
 Job: ${context.jobTitle}
 Required skills: ${context.skills.join(', ')}
-
-${context.questions
+${mcqBlock}
+${context.questions.length === 0 ? 'There are no coding questions; base your qualitative feedback on the MCQ results above.' : context.questions
   .map((q) => {
     const answer = context.answers.find((a) => a.questionId === q.id);
     return `
-Question ${q.title} (${q.points} pts):
+Question ${q.title} (${q.points} pts, coding):
 Instructions: ${q.instructions}
 Rubric: ${JSON.stringify(q.rubric)}
 Submitted code:
@@ -374,7 +399,7 @@ ${answer?.notes ? `Candidate notes: ${answer.notes}` : ''}`;
   })
   .join('\n')}
 
-Provide overallScore 0-100, matchPercent vs job skills, recommendation (ready_now|trainable|at_risk), strengths[], improvements[], aiSummary, dimensionScores for technical, problem_solving, code_quality, communication.`;
+Provide overallScore 0-100 for the CODING portion only (MCQ points are added separately by the system), matchPercent vs job skills, recommendation (ready_now|trainable|at_risk), strengths[], improvements[], aiSummary, dimensionScores for technical, problem_solving, code_quality, communication.`;
 
     const schemaHint = sessionGradeSchema.toString();
 

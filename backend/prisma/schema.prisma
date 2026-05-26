@@ -34,6 +34,11 @@ enum AssessmentPurpose {
   APPLICATION
 }
 
+enum QuestionType {
+  CODE
+  MCQ
+}
+
 enum SessionStatus {
   IN_PROGRESS
   SUBMITTED
@@ -182,16 +187,18 @@ model Assessment {
 }
 
 model Question {
-  id           String   @id @default(uuid())
+  id           String       @id @default(uuid())
   assessmentId String
   orderIndex   Int
+  questionType QuestionType @default(CODE)
   title        String
-  instructions String   @db.Text
-  starterCode  String   @db.Text
+  instructions String       @db.Text
+  starterCode  String       @db.Text
   points       Int
   rubric       Json
-  language     String   @default("javascript")
-  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  language     String       @default("javascript")
+  mcqOptions   Json?
+  assessment   Assessment   @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
   answers      Answer[]
 
   @@index([assessmentId])

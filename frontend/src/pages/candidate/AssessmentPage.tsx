@@ -39,10 +39,29 @@ export function AssessmentPage() {
     if (!session) return;
     const initial: Record<string, string> = {};
     for (const question of session.questions) {
-      initial[question.id] = question.starterCode;
+      initial[question.id] =
+        question.questionType === 'mcq' ? '' : question.starterCode;
     }
     setCodes(initial);
   }, [session]);
+
+  const isMcq = q?.questionType === 'mcq';
+
+  const currentAnswered = q
+    ? isMcq
+      ? !!(codes[q.id]?.trim())
+      : !!(codes[q.id]?.trim() ?? q.starterCode)
+    : false;
+
+  const requireAnswer = () => {
+    if (!q || currentAnswered) return true;
+    setError(
+      isMcq
+        ? 'Select an answer before continuing.'
+        : 'Add your solution before continuing.',
+    );
+    return false;
+  };
 
   useEffect(() => {
     if (!session?.expiresAt) return;
@@ -99,6 +118,7 @@ export function AssessmentPage() {
 
   const submitAll = async () => {
     if (!sessionId) return;
+    if (!requireAnswer()) return;
     setSubmitting(true);
     setError('');
     try {
@@ -208,7 +228,10 @@ export function AssessmentPage() {
                       <Circle className="h-4 w-4 shrink-0 text-slate-300" />
                     )}
                     <span className="truncate">{question.title}</span>
-                    <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">
+                    <span className="ml-auto shrink-0 text-[10px] uppercase text-slate-400 dark:text-slate-500">
+                      {question.questionType === 'mcq' ? 'MCQ' : 'Code'}
+                    </span>
+                    <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">
                       {question.points}pt
                     </span>
                   </button>
@@ -238,7 +261,10 @@ export function AssessmentPage() {
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4">
                 <div>
                   <p className="text-xs font-semibold uppercase text-indigo-600 dark:text-indigo-400">
-                    Question {currentIdx + 1} — {q.title}
+                    Question {currentIdx + 1} — {q.title}{' '}
+                    <span className="text-slate-500 dark:text-slate-400">
+                      ({isMcq ? 'Multiple choice' : 'Coding'})
+                    </span>
                   </p>
                   <h2 className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">
                     {q.instructions.split('\n')[0]}
@@ -248,33 +274,73 @@ export function AssessmentPage() {
                   {q.points} pts
                 </span>
               </div>
-              <div className="grid gap-0 lg:grid-cols-2">
-                <div className="border-b border-slate-100 dark:border-slate-800 p-6 lg:border-b-0 lg:border-r">
+              {isMcq ? (
+                <div className="p-6">
                   <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
-                    Instructions
+                    Question
                   </p>
                   <div className="mt-3 whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300">
                     {q.instructions}
                   </div>
+                  <fieldset className="mt-6 space-y-3">
+                    {(q.options ?? []).map((opt) => {
+                      const selected = codes[q.id] === opt.id;
+                      return (
+                        <label
+                          key={opt.id}
+                          className={`flex cursor-pointer items-start gap-3 rounded-lg border px-4 py-3 transition-colors ${
+                            selected
+                              ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500 dark:border-indigo-500 dark:bg-indigo-950/50 dark:ring-indigo-500'
+                              : 'border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name={`mcq-${q.id}`}
+                            className="mt-1 h-4 w-4 border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                            checked={selected}
+                            onChange={() => {
+                              setCodes((prev) => ({ ...prev, [q.id]: opt.id }));
+                              setError('');
+                            }}
+                          />
+                          <span className="text-sm text-slate-800 dark:text-slate-200">
+                            {opt.label}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </fieldset>
                 </div>
-                <div className="min-h-[320px]">
-                  <Editor
-                    key={`${q.id}-${monacoLanguage(q.language)}`}
-                    height="320px"
-                    language={monacoLanguage(q.language)}
-                    value={codes[q.id] ?? q.starterCode}
-                    onChange={(v) =>
-                      setCodes((prev) => ({ ...prev, [q.id]: v ?? '' }))
-                    }
-                    theme="vs-dark"
-                    options={{
-                      minimap: { enabled: false },
-                      fontSize: 13,
-                      wordWrap: 'on',
-                    }}
-                  />
+              ) : (
+                <div className="grid gap-0 lg:grid-cols-2">
+                  <div className="border-b border-slate-100 p-6 dark:border-slate-800 lg:border-b-0 lg:border-r">
+                    <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                      Instructions
+                    </p>
+                    <div className="mt-3 whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300">
+                      {q.instructions}
+                    </div>
+                  </div>
+                  <div className="min-h-[320px]">
+                    <Editor
+                      key={`${q.id}-${monacoLanguage(q.language)}`}
+                      height="320px"
+                      language={monacoLanguage(q.language)}
+                      value={codes[q.id] ?? q.starterCode}
+                      onChange={(v) =>
+                        setCodes((prev) => ({ ...prev, [q.id]: v ?? '' }))
+                      }
+                      theme="vs-dark"
+                      options={{
+                        minimap: { enabled: false },
+                        fontSize: 13,
+                        wordWrap: 'on',
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800 px-6 py-4">
                 <Button
                   variant="outline"
@@ -291,7 +357,10 @@ export function AssessmentPage() {
                 )}
                 {currentIdx < questions.length - 1 ? (
                   <Button
-                    onClick={() => setCurrentIdx((i) => i + 1)}
+                    onClick={() => {
+                      if (!requireAnswer()) return;
+                      setCurrentIdx((i) => i + 1);
+                    }}
                   >
                     Next
                     <ArrowRight className="h-4 w-4" />

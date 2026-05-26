@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { AssessmentPurpose } from '@prisma/client';
+import { AssessmentPurpose, QuestionType } from '@prisma/client';
+import { formatQuestionForCandidate } from '../../common/question-public';
 import { PrismaService } from '../../prisma/prisma.service';
 import { GeminiService } from '../ai/gemini.service';
 
@@ -102,15 +103,25 @@ export class AssessmentsService {
         durationMinutes: gen.durationMinutes,
         totalPoints: gen.totalPoints,
         questions: {
-          create: gen.questions.map((q, idx) => ({
-            orderIndex: idx,
-            title: q.title,
-            instructions: q.instructions,
-            starterCode: q.starterCode,
-            points: q.points,
-            rubric: q.rubric as object,
-            language: q.language,
-          })),
+          create: gen.questions.map((q, idx) => {
+            const isMcq = q.questionType === 'mcq';
+            return {
+              orderIndex: idx,
+              questionType: isMcq ? QuestionType.MCQ : QuestionType.CODE,
+              title: q.title,
+              instructions: q.instructions,
+              starterCode: isMcq ? '' : (q.starterCode ?? ''),
+              points: q.points,
+              language: isMcq ? 'text' : (q.language ?? 'javascript'),
+              mcqOptions: isMcq ? q.options : undefined,
+              rubric: isMcq
+                ? ({
+                    ...(q.rubric ?? {}),
+                    correctOptionId: q.correctOptionId,
+                  } as object)
+                : ((q.rubric ?? {}) as object),
+            };
+          }),
         },
       },
       include: {
@@ -150,15 +161,7 @@ export class AssessmentsService {
       durationMinutes: assessment.durationMinutes,
       totalPoints: assessment.totalPoints,
       questionCount: assessment.questions.length,
-      questions: assessment.questions.map((q) => ({
-        id: q.id,
-        orderIndex: q.orderIndex,
-        title: q.title,
-        instructions: q.instructions,
-        starterCode: q.starterCode,
-        points: q.points,
-        language: q.language,
-      })),
+      questions: assessment.questions.map((q) => formatQuestionForCandidate(q)),
     };
   }
 }

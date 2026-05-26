@@ -36,14 +36,44 @@ export const teamProfileFromWebSchema = z.object({
 
 export type TeamProfileFromWebResult = z.infer<typeof teamProfileFromWebSchema>;
 
-export const questionGenSchema = z.object({
-  title: z.string(),
-  instructions: z.string(),
-  starterCode: z.string(),
-  points: z.number(),
-  language: z.string().default('javascript'),
-  rubric: z.record(z.unknown()),
+export const mcqOptionGenSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1),
 });
+
+export const questionGenSchema = z
+  .object({
+    questionType: z.enum(['code', 'mcq']).default('code'),
+    title: z.string(),
+    instructions: z.string(),
+    starterCode: z.string().optional().default(''),
+    points: z.number().positive(),
+    language: z.string().optional().default('javascript'),
+    options: z.array(mcqOptionGenSchema).optional(),
+    correctOptionId: z.string().optional(),
+    rubric: z.record(z.unknown()).optional().default({}),
+  })
+  .superRefine((q, ctx) => {
+    if (q.questionType === 'mcq') {
+      if (!q.options || q.options.length < 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'MCQ questions need at least 2 options',
+          path: ['options'],
+        });
+      }
+      if (
+        !q.correctOptionId ||
+        !q.options?.some((o) => o.id === q.correctOptionId)
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'MCQ questions need a valid correctOptionId',
+          path: ['correctOptionId'],
+        });
+      }
+    }
+  });
 
 export const assessmentGenSchema = z.object({
   durationMinutes: z.number(),

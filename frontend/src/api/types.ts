@@ -81,6 +81,11 @@ export interface JobPosting {
   };
 }
 
+export interface McqOption {
+  id: string;
+  label: string;
+}
+
 export interface SessionQuestion {
   id: string;
   orderIndex: number;
@@ -89,6 +94,8 @@ export interface SessionQuestion {
   starterCode: string;
   points: number;
   language: string;
+  questionType?: 'code' | 'mcq';
+  options?: McqOption[];
 }
 
 export interface TestSession {

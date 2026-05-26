@@ -11,6 +11,10 @@ import {
   parseRequiredProfileFields,
   profileValuesFromUser,
 } from '../../common/profile-fields';
+import {
+  formatQuestionForCandidate,
+  initialAnswerCode,
+} from '../../common/question-public';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AssessmentsService } from '../assessments/assessments.service';
 import { JwtPayload } from '../auth/auth.types';
@@ -125,7 +129,7 @@ export class SessionsService {
         answers: {
           create: assessment.questions.map((q) => ({
             questionId: q.id,
-            submittedCode: q.starterCode,
+            submittedCode: initialAnswerCode(q),
           })),
         },
       },
@@ -295,15 +299,8 @@ export class SessionsService {
       expiresAt: session.expiresAt,
       durationMinutes: assessment?.durationMinutes,
       totalPoints: assessment?.totalPoints,
-      questions: assessment?.questions.map((q) => ({
-        id: q.id,
-        orderIndex: q.orderIndex,
-        title: q.title,
-        instructions: q.instructions,
-        starterCode: q.starterCode,
-        points: q.points,
-        language: q.language,
-      })),
+      questions:
+        assessment?.questions.map((q) => formatQuestionForCandidate(q)) ?? [],
     };
   }
 
