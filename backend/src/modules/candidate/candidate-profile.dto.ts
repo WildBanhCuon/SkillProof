@@ -28,6 +28,7 @@ export class UpdateCandidateProfileDto {
   phoneCountryCode?: string;
 
   @IsOptional()
+  @ValidateIf((o) => o.phone != null && String(o.phone).trim() !== '')
   @IsString()
   @MaxLength(30)
   @Matches(/^[\d\s().-]+$/, {

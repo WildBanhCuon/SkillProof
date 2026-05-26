@@ -23,7 +23,7 @@ interface ProfileResponse {
 }
 
 export function CandidateProfilePage() {
-  const { refreshUser } = useAuth();
+  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const onboarding = searchParams.get('onboarding') === '1';
@@ -38,22 +38,22 @@ export function CandidateProfilePage() {
     queryFn: () => api.get<ProfileResponse>('/candidate/profile'),
   });
 
+  // Re-hydrate when profile is first loaded or after a successful save (updatedAt changes).
   useEffect(() => {
-    if (data?.profile) {
-      setForm({
-        displayName: data.profile.displayName ?? '',
-        bio: data.profile.bio ?? '',
-        phoneCountryCode:
-          data.profile.phoneCountryCode ?? DEFAULT_PHONE_COUNTRY_CODE,
-        phone: data.profile.phone ?? '',
-        linkedInUrl: data.profile.linkedInUrl ?? '',
-        portfolioUrl: data.profile.portfolioUrl ?? '',
-        githubUrl: data.profile.githubUrl ?? '',
-        websiteUrl: data.profile.websiteUrl ?? '',
-        resumeUrl: data.profile.resumeUrl ?? '',
-      });
-    }
-  }, [data]);
+    if (!data?.profile) return;
+    setForm({
+      displayName: data.profile.displayName?.trim() || user?.fullName || '',
+      bio: data.profile.bio ?? '',
+      phoneCountryCode:
+        data.profile.phoneCountryCode ?? DEFAULT_PHONE_COUNTRY_CODE,
+      phone: data.profile.phone ?? '',
+      linkedInUrl: data.profile.linkedInUrl ?? '',
+      portfolioUrl: data.profile.portfolioUrl ?? '',
+      githubUrl: data.profile.githubUrl ?? '',
+      websiteUrl: data.profile.websiteUrl ?? '',
+      resumeUrl: data.profile.resumeUrl ?? '',
+    });
+  }, [data?.updatedAt, data?.email, data?.profile, user?.fullName]);
 
   const set = (key: keyof CandidateProfileData, value: string) => {
     setForm((f) => ({ ...f, [key]: value }));

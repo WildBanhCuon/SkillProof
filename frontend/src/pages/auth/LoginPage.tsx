@@ -22,7 +22,7 @@ export function LoginPage() {
     setLoading(true);
     try {
       await login(email, password, role);
-      navigate(role === 'hr' ? '/hr/jobs' : '/jobs');
+      navigate(role === 'hr' ? '/hr/jobs' : '/my-applications');
     } catch (err) {
       setError(formatAuthError(err, 'Sign in failed'));
     } finally {

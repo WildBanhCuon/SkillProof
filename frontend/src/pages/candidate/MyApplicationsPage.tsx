@@ -67,9 +67,14 @@ export function MyApplicationsPage() {
             Track job applications and practice tests you have started.
           </p>
         </div>
-        <Link to="/jobs">
-          <Button variant="outline">Browse jobs</Button>
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/profile">
+            <Button variant="outline">Edit profile</Button>
+          </Link>
+          <Link to="/jobs">
+            <Button variant="outline">Browse jobs</Button>
+          </Link>
+        </div>
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
