@@ -1,6 +1,11 @@
 import { ConfigService } from '@nestjs/config';
 
-/** Bull/ioredis settings that fail fast when Redis is unreachable (avoids hanging HTTP requests). */
+/**
+ * Bull/ioredis options for Render and local Docker Redis.
+ * `maxRetriesPerRequest: null` is required by Bull (avoids MaxRetriesPerRequestError).
+ * Do not set `enableOfflineQueue: false` — Bull's worker issues commands at startup
+ * before the socket is ready and will crash the process if the offline queue is off.
+ */
 export function createBullRedisOptions(
   config: ConfigService,
 ): Record<string, unknown> {
@@ -18,10 +23,5 @@ export function createBullRedisOptions(
     connectTimeout: 10_000,
     maxRetriesPerRequest: null,
     enableReadyCheck: false,
-    enableOfflineQueue: false,
-    retryStrategy: (times: number) => {
-      if (times > 3) return null;
-      return Math.min(times * 500, 2000);
-    },
   };
 }
