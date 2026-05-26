@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '../../api/client';
 import { profileFieldLabel } from '../../data/profileFields';
@@ -31,14 +31,24 @@ export function JobDetailPage() {
       ),
   });
 
-  const hasApplied =
-    !!id &&
-    (myApplications?.items ?? []).some(
-      (a) =>
-        a.sessionType === 'application' &&
-        a.jobId === id &&
-        a.applicationStatus !== 'expired',
+  const appliedApplication = useMemo(() => {
+    if (!id) return null;
+    return (
+      (myApplications?.items ?? [])
+        .filter(
+          (a) =>
+            a.sessionType === 'application' &&
+            a.jobId === id &&
+            a.applicationStatus !== 'expired',
+        )
+        .sort(
+          (a, b) =>
+            new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime(),
+        )[0] ?? null
     );
+  }, [id, myApplications?.items]);
+
+  const hasApplied = !!appliedApplication;
 
   const startSession = async (mode: 'practice' | 'application') => {
     if (!id) return;
@@ -152,7 +162,21 @@ export function JobDetailPage() {
               : 'Apply — take assessment'}
         </Button>
       </div>
-      <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
+      {hasApplied && appliedApplication && (
+        <Card className="mt-4 border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-900 dark:bg-indigo-950/40">
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            You have already applied to this role.
+          </p>
+          <Link
+            to={`/my-applications/${appliedApplication.sessionId}`}
+            className="mt-3 inline-flex text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+          >
+            View in My applications →
+          </Link>
+        </Card>
+      )}
+
+      <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400">
         Practice results are private. Apply submits your score to the employer.
       </p>
     </div>
