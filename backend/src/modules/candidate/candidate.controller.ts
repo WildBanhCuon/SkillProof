@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { UpdateCandidateProfileDto } from './candidate-profile.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -24,6 +32,19 @@ export class CandidateController {
     @Body() dto: UpdateCandidateProfileDto,
   ) {
     return this.candidate.updateProfile(user, dto);
+  }
+
+  @Get('notifications')
+  listNotifications(@CurrentUser() user: JwtPayload) {
+    return this.candidate.listNotifications(user);
+  }
+
+  @Post('notifications/read')
+  markNotificationsRead(
+    @CurrentUser() user: JwtPayload,
+    @Body() body: { applicationId?: string },
+  ) {
+    return this.candidate.markNotificationsRead(user, body.applicationId);
   }
 
   @Get('applications')

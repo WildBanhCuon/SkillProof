@@ -1,8 +1,14 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ApplicationHrStatus } from '@prisma/client';
 import { profileForApi, profileValuesFromUser } from '../../common/profile-fields';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtPayload } from '../auth/auth.types';
 import { deriveCandidateApplicationStatus } from './candidate-application-status';
+import {
+  isHrDecisionStatus,
+  isUnreadHrDecision,
+  notificationMessage,
+} from './candidate-notifications';
 import { UpdateCandidateProfileDto } from './candidate-profile.dto';
 
 @Injectable()
@@ -80,6 +86,96 @@ export class CandidateService {
     return this.getProfile(user);
   }
 
+  async listNotifications(user: JwtPayload) {
+    if (user.role !== 'candidate') {
+      throw new UnauthorizedException();
+    }
+
+    const applications = await this.prisma.application.findMany({
+      where: {
+        candidateUserId: user.sub,
+        hrStatus: {
+          in: [ApplicationHrStatus.INTERVIEW, ApplicationHrStatus.DECLINED],
+        },
+        hrDecidedAt: { not: null },
+      },
+      include: {
+        jobPosting: { include: { company: true } },
+      },
+      orderBy: { hrDecidedAt: 'desc' },
+      take: 30,
+    });
+
+    const items = applications.map((app) => ({
+      applicationId: app.id,
+      sessionId: app.testSessionId,
+      jobId: app.jobPostingId,
+      jobTitle: app.jobPosting.title,
+      companyName: app.jobPosting.company.name,
+      hrStatus: app.hrStatus.toLowerCase(),
+      hrDecidedAt: app.hrDecidedAt,
+      read: !isUnreadHrDecision(app),
+      message: notificationMessage(
+        app.hrStatus,
+        app.jobPosting.title,
+        app.jobPosting.company.name,
+      ),
+    }));
+
+    return {
+      unreadCount: items.filter((item) => !item.read).length,
+      items,
+    };
+  }
+
+  async markNotificationsRead(
+    user: JwtPayload,
+    applicationId?: string,
+  ) {
+    if (user.role !== 'candidate') {
+      throw new UnauthorizedException();
+    }
+
+    const apps = await this.prisma.application.findMany({
+      where: {
+        candidateUserId: user.sub,
+        ...(applicationId ? { id: applicationId } : {}),
+        hrStatus: {
+          in: [ApplicationHrStatus.INTERVIEW, ApplicationHrStatus.DECLINED],
+        },
+        hrDecidedAt: { not: null },
+      },
+    });
+
+    const toMark = apps.filter((app) => isUnreadHrDecision(app));
+    if (!toMark.length) {
+      return { marked: 0 };
+    }
+
+    const now = new Date();
+    await this.prisma.$transaction(
+      toMark.map((app) =>
+        this.prisma.application.update({
+          where: { id: app.id },
+          data: { hrDecisionSeenAt: now },
+        }),
+      ),
+    );
+
+    return { marked: toMark.length };
+  }
+
+  private async markApplicationDecisionSeen(applicationId: string) {
+    const app = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+    });
+    if (!app || !isUnreadHrDecision(app)) return;
+    await this.prisma.application.update({
+      where: { id: applicationId },
+      data: { hrDecisionSeenAt: new Date() },
+    });
+  }
+
   async listApplications(user: JwtPayload) {
     if (user.role !== 'candidate') {
       throw new UnauthorizedException();
@@ -140,6 +236,14 @@ export class CandidateService {
       },
     });
     if (!s) throw new NotFoundException('Application not found');
+
+    if (
+      s.application &&
+      isHrDecisionStatus(s.application.hrStatus) &&
+      isUnreadHrDecision(s.application)
+    ) {
+      await this.markApplicationDecisionSeen(s.application.id);
+    }
 
     const applicationStatus = deriveCandidateApplicationStatus(
       s.sessionType,

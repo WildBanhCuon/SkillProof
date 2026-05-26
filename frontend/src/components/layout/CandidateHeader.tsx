@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { Logo } from '../ui/Logo';
 import { Button } from '../ui/Button';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { CandidateNotificationBell } from '../candidate/CandidateNotificationBell';
 
 const nav = [
   { to: '/jobs', label: 'Browse jobs' },
@@ -68,13 +69,7 @@ export function CandidateHeader() {
                 {user?.fullName}
               </Link>
               <ThemeToggle />
-              <Link
-                to="/profile"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/60 dark:text-indigo-300 dark:hover:bg-indigo-900"
-                title="Edit profile"
-              >
-                {initials ?? 'ME'}
-              </Link>
+              <CandidateNotificationBell initials={initials} />
               <Button variant="ghost" size="sm" onClick={() => logout()} aria-label="Log out">
                 <LogOut className="h-4 w-4" />
               </Button>

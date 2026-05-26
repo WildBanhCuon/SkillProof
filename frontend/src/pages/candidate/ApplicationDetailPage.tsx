@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { api } from '../../api/client';
 import type { CandidateApplicationDetail } from '../../api/types';
@@ -16,6 +17,7 @@ import {
 
 export function ApplicationDetailPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ['candidate', 'application', sessionId],
@@ -25,6 +27,15 @@ export function ApplicationDetailPage() {
       ),
     enabled: !!sessionId,
   });
+
+  useEffect(() => {
+    if (
+      data?.applicationStatus === 'interview_invited' ||
+      data?.applicationStatus === 'declined'
+    ) {
+      queryClient.invalidateQueries({ queryKey: ['candidate', 'notifications'] });
+    }
+  }, [data?.applicationStatus, queryClient]);
 
   if (isLoading || !data) {
     return (

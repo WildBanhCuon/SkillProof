@@ -129,6 +129,23 @@ export interface CandidateApplicationItem {
   hasResult: boolean;
 }
 
+export interface CandidateNotificationItem {
+  applicationId: string;
+  sessionId: string;
+  jobId: string;
+  jobTitle: string;
+  companyName: string;
+  hrStatus: 'interview' | 'declined' | string;
+  hrDecidedAt: string | null;
+  read: boolean;
+  message: string;
+}
+
+export interface CandidateNotificationsResponse {
+  unreadCount: number;
+  items: CandidateNotificationItem[];
+}
+
 export interface CandidateApplicationDetail extends CandidateApplicationItem {
   appliedAt: string | null;
   strengths: string[] | null;
