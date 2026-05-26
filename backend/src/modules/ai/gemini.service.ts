@@ -299,7 +299,7 @@ Rules:
 - Match the stack in the job (e.g. WordPress/Elementor/WooCommerce/CSS/PHP — NOT React/TypeScript/Vue unless the job title or description explicitly requires them).
 - Do NOT invent React, SPA, or jsonplaceholder API exercises for WordPress/CMS roles.
 - Prefer exercises the candidate can do in the Monaco editor: CSS, HTML snippets, JavaScript for DOM/fetch, PHP for WordPress hooks/templates when PHP is testable.
-- Set "language" to javascript, css, or php as appropriate (css for pure styling tasks).
+- Set "language" to javascript, css, php, or python as appropriate (css for pure styling tasks).
 - Each question needs starter code, clear instructions, and a rubric object for AI grading (no automated test cases).`;
 
     const schemaHint = `{
@@ -310,7 +310,7 @@ Rules:
     "instructions": "string",
     "starterCode": "string",
     "points": number,
-    "language": "javascript|css|php",
+    "language": "javascript|css|php|python",
     "rubric": {}
   }]
 }`;
