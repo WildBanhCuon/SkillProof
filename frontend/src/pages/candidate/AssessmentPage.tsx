@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../api/client';
 import { formatApiError } from '../../utils/errors';
+import { monacoLanguage } from '../../utils/monacoLanguage';
 import type { TestSession } from '../../api/types';
 import { Logo } from '../../components/ui/Logo';
 import { Button } from '../../components/ui/Button';
@@ -258,16 +259,9 @@ export function AssessmentPage() {
                 </div>
                 <div className="min-h-[320px]">
                   <Editor
+                    key={`${q.id}-${monacoLanguage(q.language)}`}
                     height="320px"
-                    language={
-                      q.language === 'typescript'
-                        ? 'typescript'
-                        : q.language === 'css'
-                          ? 'css'
-                          : q.language === 'php'
-                            ? 'php'
-                            : 'javascript'
-                    }
+                    language={monacoLanguage(q.language)}
                     value={codes[q.id] ?? q.starterCode}
                     onChange={(v) =>
                       setCodes((prev) => ({ ...prev, [q.id]: v ?? '' }))
