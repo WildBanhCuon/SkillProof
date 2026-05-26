@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { api } from '../../api/client';
-import type { JobPosting } from '../../api/types';
+import type { CandidateApplicationItem, JobPosting } from '../../api/types';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -52,6 +52,21 @@ export function JobsBrowsePage() {
   const jobs = data?.items ?? [];
   const companies = data?.companies ?? [];
   const hasFilters = !!search || !!company || sort !== 'newest';
+
+  const { data: myApplications } = useQuery({
+    queryKey: ['candidate', 'applications'],
+    queryFn: () => api.get<{ items: CandidateApplicationItem[] }>('/candidate/applications'),
+  });
+
+  const appliedJobIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const a of myApplications?.items ?? []) {
+      if (a.sessionType === 'application' && a.applicationStatus !== 'expired') {
+        set.add(a.jobId);
+      }
+    }
+    return set;
+  }, [myApplications]);
 
   const clearFilters = () => {
     setSearchInput('');
@@ -128,7 +143,10 @@ export function JobsBrowsePage() {
         {jobs.map((job) => (
           <Link key={job.id} to={`/jobs/${job.id}`}>
             <Card className="h-full p-6 transition-shadow hover:shadow-md">
-              <Badge variant="published">Open</Badge>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="published">Open</Badge>
+                {appliedJobIds.has(job.id) && <Badge variant="info">Applied</Badge>}
+              </div>
               <h2 className="mt-3 text-lg font-semibold text-slate-900 dark:text-slate-100">
                 {job.title}
               </h2>

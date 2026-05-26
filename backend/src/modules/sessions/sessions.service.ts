@@ -31,6 +31,9 @@ export class SessionsService {
     jobId: string,
     mode: 'practice' | 'application',
   ) {
+    const sessionType =
+      mode === 'practice' ? SessionType.PRACTICE : SessionType.APPLICATION;
+
     const job = await this.prisma.jobPosting.findUnique({
       where: { id: jobId, status: 'PUBLISHED' },
     });
@@ -62,16 +65,40 @@ export class SessionsService {
       throw new BadRequestException('Job has no assessment');
     }
 
+    if (mode === 'application') {
+      // Candidate can only submit one application per offer.
+      // We treat any non-expired application session as "already applied".
+      const existing = await this.prisma.testSession.findFirst({
+        where: {
+          candidateUserId: user.sub,
+          jobPostingId: jobId,
+          sessionType: SessionType.APPLICATION,
+          status: {
+            in: ['IN_PROGRESS', 'SUBMITTED', 'GRADING', 'GRADED'],
+          },
+        },
+        orderBy: { startedAt: 'desc' },
+      });
+
+      if (existing) {
+        if (existing.status === 'IN_PROGRESS') {
+          return this.formatSession(existing.id, user.sub);
+        }
+        throw new BadRequestException(
+          'Already applied to this offer. Check “My applications” for your submission.',
+        );
+      }
+    }
+
     const active = await this.prisma.testSession.findFirst({
       where: {
         candidateUserId: user.sub,
         jobPostingId: jobId,
+        sessionType,
         status: 'IN_PROGRESS',
       },
     });
-    if (active) {
-      return this.formatSession(active.id, user.sub);
-    }
+    if (active) return this.formatSession(active.id, user.sub);
 
     const expiresAt = new Date();
     expiresAt.setMinutes(

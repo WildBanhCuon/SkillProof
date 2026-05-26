@@ -5,7 +5,7 @@ import { profileFieldLabel } from '../../data/profileFields';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../api/client';
 import { formatApiError } from '../../utils/errors';
-import type { JobPosting, TestSession } from '../../api/types';
+import type { CandidateApplicationItem, JobPosting, TestSession } from '../../api/types';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Alert } from '../../components/ui/Alert';
@@ -23,10 +23,34 @@ export function JobDetailPage() {
     enabled: !!id,
   });
 
+  const { data: myApplications } = useQuery({
+    queryKey: ['candidate', 'applications'],
+    queryFn: () =>
+      api.get<{ items: CandidateApplicationItem[] }>(
+        '/candidate/applications',
+      ),
+  });
+
+  const hasApplied =
+    !!id &&
+    (myApplications?.items ?? []).some(
+      (a) =>
+        a.sessionType === 'application' &&
+        a.jobId === id &&
+        a.applicationStatus !== 'expired',
+    );
+
   const startSession = async (mode: 'practice' | 'application') => {
     if (!id) return;
     setError('');
     setLoading(mode);
+
+    if (mode === 'application' && hasApplied) {
+      setError('You already applied to this offer. Check “My applications”.');
+      setLoading('');
+      return;
+    }
+
     try {
       const session = await api.post<TestSession>(`/jobs/${id}/sessions`, {
         mode,
@@ -118,10 +142,14 @@ export function JobDetailPage() {
         </Button>
         <Button
           className="flex-1"
-          disabled={!!loading}
+          disabled={!!loading || hasApplied}
           onClick={() => startSession('application')}
         >
-          {loading === 'application' ? 'Starting…' : 'Apply — take assessment'}
+          {hasApplied
+            ? 'Already applied'
+            : loading === 'application'
+              ? 'Starting…'
+              : 'Apply — take assessment'}
         </Button>
       </div>
       <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
