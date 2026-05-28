@@ -132,12 +132,13 @@ export function LandingPage() {
         <div className="mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:items-center lg:py-24">
           <div>
             <span className="inline-flex rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
-              AI-assisted junior hiring
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+              <span className="text-xs font-semibold">AI-assisted junior hiring</span>
             </span>
             <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl lg:text-[3.25rem] lg:leading-tight">
               Too many applicants.
               <br />
-              Not enough proof.
+              <span className="text-indigo-600 dark:text-indigo-400">Not enough proof.</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-600 dark:text-slate-300">
               SkillProof helps hiring teams turn messy junior applications into{' '}
@@ -149,11 +150,13 @@ export function LandingPage() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/register">
-                <Button size="lg">Get started</Button>
+                <Button size="lg">
+                  Get started
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
               </Link>
               <Button size="lg" variant="outline" onClick={() => scrollToId('how-it-works')}>
                 See how it works
-                <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
             <ul className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-x-6">
