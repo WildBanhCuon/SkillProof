@@ -9,7 +9,7 @@ export function AuthLayout() {
       <div className="absolute right-4 top-4">
         <ThemeToggle />
       </div>
-      <Logo className="mb-8" />
+      <Logo className="mb-8" size="lg" />
       <Card className="w-full max-w-md p-8">
         <Outlet />
       </Card>

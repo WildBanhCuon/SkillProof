@@ -14,6 +14,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { LandingNav } from '../../components/landing/LandingNav';
+import { Logo } from '../../components/ui/Logo';
 import { HeroDashboardMockup } from '../../components/landing/HeroDashboardMockup';
 import { ProductPreviewCards } from '../../components/landing/ProductPreviewCards';
 import { LandingFaq } from '../../components/landing/LandingFaq';
@@ -477,7 +478,7 @@ export function LandingPage() {
       <footer className="bg-slate-900 px-4 py-12 text-slate-300 sm:px-6">
         <div className="mx-auto grid max-w-6xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="text-lg font-semibold text-white">SkillProof</p>
+            <Logo to="/" size="lg" inverted className="pointer-events-auto" />
             <p className="mt-2 text-sm text-slate-400">Verified junior tech hiring.</p>
           </div>
           <div>
