@@ -78,7 +78,7 @@ export function HeroDashboardMockup() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className="text-3xl font-bold leading-none text-slate-900 dark:text-slate-100">
+                    <span className="text-2xl font-bold leading-none text-slate-900 dark:text-slate-100">
                       92
                     </span>
                     <span className="text-lg font-semibold text-slate-400">/100</span>
