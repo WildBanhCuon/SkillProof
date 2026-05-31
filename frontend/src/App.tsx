@@ -4,9 +4,11 @@ import { ProtectedRoute } from './auth/ProtectedRoute';
 import { HrLayout } from './components/layout/HrLayout';
 import { CandidateLayout } from './components/layout/CandidateLayout';
 import { LandingPage } from './pages/landing/LandingPage';
+import { PricingPage } from './pages/landing/PricingPage';
 import { AuthLayout } from './pages/auth/AuthLayout';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
+import { HrRegisterPage } from './pages/auth/HrRegisterPage';
 import { JobsListPage } from './pages/hr/JobsListPage';
 import { JobEditorPage } from './pages/hr/JobEditorPage';
 import { JobWizardPage } from './pages/hr/JobWizardPage';
@@ -37,6 +39,8 @@ export default function App() {
       <AuthProvider>
         <Routes>
           <Route path="/" element={<HomeRedirect />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/register/company" element={<HrRegisterPage />} />
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />

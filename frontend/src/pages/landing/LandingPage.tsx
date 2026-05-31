@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -18,8 +19,10 @@ import { Logo } from '../../components/ui/Logo';
 import { HeroDashboardMockup } from '../../components/landing/HeroDashboardMockup';
 import { ProductPreviewCards } from '../../components/landing/ProductPreviewCards';
 import { LandingFaq } from '../../components/landing/LandingFaq';
+import { PricingTierCards } from '../../components/pricing/PricingTierCards';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
+import type { BillingPeriod } from '../../data/pricingPlans';
 
 const TRUST_ITEMS = ['No fake match % scores', 'Inspectable rubrics', 'Any junior tech role'];
 
@@ -124,6 +127,17 @@ function scrollToId(id: string) {
 }
 
 export function LandingPage() {
+  const [billing, setBilling] = useState<BillingPeriod>('monthly');
+
+  useEffect(() => {
+    const id = window.location.hash.replace('#', '');
+    if (id) {
+      requestAnimationFrame(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950">
       <LandingNav />
@@ -150,7 +164,7 @@ export function LandingPage() {
               instead of CV keywords.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/register">
+              <Link to="/register/company">
                 <Button size="lg">
                   Get started
                   <ArrowRight className="h-4 w-4" />
@@ -361,7 +375,7 @@ export function LandingPage() {
                 <li>Lower mis-hires and first-year turnover</li>
                 <li>Build an audit-friendly decision trail for DE&I and internal review</li>
               </ul>
-              <Link to="/register" className="mt-6 inline-block">
+              <Link to="/register/company" className="mt-6 inline-block">
                 <Button>Get started</Button>
               </Link>
               <blockquote className="mt-6 border-l-2 border-indigo-300 pl-4 text-sm italic text-slate-600 dark:border-indigo-700 dark:text-slate-400">
@@ -437,6 +451,47 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing preview */}
+      <section id="pricing" className="scroll-mt-20 bg-white py-20 dark:bg-slate-950">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+              Plans that scale with your hiring
+            </h2>
+            <p className="mt-3 text-lg text-slate-600 dark:text-slate-400">
+              Active job slots and graded candidates per month. Unlimited seats for your team.
+            </p>
+            <div className="mt-6 inline-flex rounded-lg border border-slate-200 p-1 dark:border-slate-700">
+              {(['monthly', 'annual'] as const).map((b) => (
+                <button
+                  key={b}
+                  type="button"
+                  onClick={() => setBilling(b)}
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+                    billing === b
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  {b === 'monthly' ? 'Monthly' : 'Annual (−20%)'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="mt-10">
+            <PricingTierCards billing={billing} />
+          </div>
+          <p className="mt-8 text-center">
+            <Link
+              to="/pricing"
+              className="text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+            >
+              Compare plans in detail →
+            </Link>
+          </p>
+        </div>
+      </section>
+
       {/* FAQ */}
       <section className="bg-slate-50 py-20 dark:bg-slate-900/40">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -459,7 +514,7 @@ export function LandingPage() {
             Take a vague junior job ad to a verified shortlist in one workflow.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link to="/register">
+            <Link to="/register/company">
               <Button size="lg">Get started</Button>
             </Link>
             <Link to="/login">
@@ -469,7 +524,11 @@ export function LandingPage() {
             </Link>
           </div>
           <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-            Free to explore in demo · No credit card
+            <Link to="/pricing" className="text-indigo-600 hover:underline dark:text-indigo-400">
+              View pricing
+            </Link>
+            {' · '}
+            Demo checkout — no real charges
           </p>
         </div>
       </section>
@@ -510,6 +569,11 @@ export function LandingPage() {
                 >
                   For candidates
                 </button>
+              </li>
+              <li>
+                <Link to="/pricing" className="hover:text-white">
+                  Pricing
+                </Link>
               </li>
             </ul>
           </div>

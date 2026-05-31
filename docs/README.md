@@ -7,6 +7,7 @@
 | [architecture/](./architecture/) | [Backend architecture](./architecture/backend-architecture.md) |
 | [design/](./design/) | UI spec / Lovable prompt |
 | [api/](./api/) | OpenAPI draft + [implemented routes](../../backend/README.md) |
+| [pricing/](./pricing/) | [Pricing strategy](./pricing/pricing-strategy.md) (API COGS, tiers — WIP) |
 
 ## Quick links
 

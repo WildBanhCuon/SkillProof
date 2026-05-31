@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { Logo } from '../ui/Logo';
 import { Button } from '../ui/Button';
 import { isHrCandidatesNavActive, isHrJobsNavActive } from '../../utils/hrNav';
+import { getCompanySubscription, getPlanLabel } from '../../utils/companySubscription';
 import { ThemeToggle } from '../ui/ThemeToggle';
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -21,6 +22,8 @@ export function HrNav() {
     await logout();
     navigate('/');
   };
+
+  const subscription = getCompanySubscription(user?.companyId);
 
   const initials = user?.fullName
     ?.split(' ')
@@ -52,6 +55,15 @@ export function HrNav() {
           </NavLink>
         </nav>
         <div className="flex items-center gap-3">
+          {subscription && (
+            <Link
+              to="/hr/profile"
+              className="hidden rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300 lg:inline-block"
+              title="Subscription (demo)"
+            >
+              {getPlanLabel(subscription)}
+            </Link>
+          )}
           <div className="hidden text-right sm:block">
             <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
               {user?.fullName}

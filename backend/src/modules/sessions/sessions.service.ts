@@ -13,6 +13,10 @@ import {
   profileValuesFromUser,
 } from '../../common/profile-fields';
 import {
+  assertNotesLength,
+  normalizeSubmittedAnswer,
+} from '../../common/assessment-answer-limits';
+import {
   formatQuestionForCandidate,
   initialAnswerCode,
 } from '../../common/question-public';
@@ -160,6 +164,23 @@ export class SessionsService {
       throw new BadRequestException('Session expired');
     }
 
+    const answerRow = await this.prisma.answer.findUnique({
+      where: {
+        sessionId_questionId: { sessionId, questionId },
+      },
+      include: { question: true },
+    });
+    if (!answerRow) {
+      throw new NotFoundException('Question not found in this session');
+    }
+
+    const safeCode = normalizeSubmittedAnswer(
+      answerRow.question.questionType,
+      code,
+      answerRow.question.mcqOptions,
+    );
+    const safeNotes = assertNotesLength(notes);
+
     return this.prisma.answer.upsert({
       where: {
         sessionId_questionId: { sessionId, questionId },
@@ -167,10 +188,10 @@ export class SessionsService {
       create: {
         sessionId,
         questionId,
-        submittedCode: code,
-        notes,
+        submittedCode: safeCode,
+        notes: safeNotes,
       },
-      update: { submittedCode: code, notes },
+      update: { submittedCode: safeCode, notes: safeNotes },
     });
   }
 

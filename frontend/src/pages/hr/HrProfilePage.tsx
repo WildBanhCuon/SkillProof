@@ -9,6 +9,7 @@ import { Alert } from '../../components/ui/Alert';
 import { formatApiError } from '../../utils/errors';
 import { GenerateTeamProfileButton } from '../../components/hr/GenerateTeamProfileButton';
 import { DeleteAccountSection } from '../../components/account/DeleteAccountSection';
+import { SubscriptionPlanCard } from '../../components/hr/SubscriptionPlanCard';
 
 export function HrProfilePage() {
   const { user, refreshUser } = useAuth();
@@ -87,6 +88,8 @@ export function HrProfilePage() {
           ? 'A few details about you and your company — then you can create job postings.'
           : 'This description is reused when you create job postings with Guided setup.'}
       </p>
+
+      <SubscriptionPlanCard />
 
       {onboarding && (
         <div className="mt-4">

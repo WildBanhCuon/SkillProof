@@ -12,6 +12,11 @@ import {
 import { api } from '../../api/client';
 import { formatApiError } from '../../utils/errors';
 import { monacoLanguage } from '../../utils/monacoLanguage';
+import {
+  clampCodeAnswer,
+  isNearCodeAnswerLimit,
+  MAX_CODE_ANSWER_LENGTH,
+} from '../../utils/assessmentLimits';
 import type { TestSession } from '../../api/types';
 import { Logo } from '../../components/ui/Logo';
 import { Button } from '../../components/ui/Button';
@@ -66,7 +71,7 @@ export function AssessmentPage() {
       if (question.questionType === 'mcq') {
         return value?.trim() ?? '';
       }
-      return value ?? question.starterCode;
+      return clampCodeAnswer(value ?? question.starterCode);
     },
     [codes],
   );
@@ -97,7 +102,9 @@ export function AssessmentPage() {
       const saved = question.savedAnswer?.trim();
       initial[question.id] =
         saved ||
-        (question.questionType === 'mcq' ? '' : question.starterCode);
+        (question.questionType === 'mcq'
+          ? ''
+          : clampCodeAnswer(question.starterCode));
     }
     setCodes(initial);
   }, [session]);
@@ -399,7 +406,10 @@ export function AssessmentPage() {
                       language={monacoLanguage(q.language)}
                       value={codes[q.id] ?? q.starterCode}
                       onChange={(v) =>
-                        setCodes((prev) => ({ ...prev, [q.id]: v ?? '' }))
+                        setCodes((prev) => ({
+                          ...prev,
+                          [q.id]: clampCodeAnswer(v ?? ''),
+                        }))
                       }
                       theme="vs-dark"
                       options={{
@@ -408,6 +418,12 @@ export function AssessmentPage() {
                         wordWrap: 'on',
                       }}
                     />
+                    {isNearCodeAnswerLimit(codes[q.id] ?? q.starterCode) && (
+                      <p className="border-t border-slate-100 px-4 py-2 text-xs text-amber-700 dark:border-slate-800 dark:text-amber-300">
+                        {(codes[q.id] ?? q.starterCode).length.toLocaleString()} /{' '}
+                        {MAX_CODE_ANSWER_LENGTH.toLocaleString()} characters
+                      </p>
+                    )}
                   </div>
                 </div>
               )}

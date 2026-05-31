@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { Logo } from '../ui/Logo';
@@ -7,21 +7,27 @@ import { Button } from '../ui/Button';
 import { ThemeToggle } from '../ui/ThemeToggle';
 
 const NAV_LINKS = [
-  { href: '#how-it-works', label: 'How it works' },
-  { href: '#features', label: 'Features' },
-  { href: '#for-candidates', label: 'For candidates' },
-  { href: '#why-skillproof', label: 'Why SkillProof' },
+  { id: 'how-it-works', label: 'How it works' },
+  { id: 'features', label: 'Features' },
+  { id: 'for-candidates', label: 'For candidates' },
+  { id: 'why-skillproof', label: 'Why SkillProof' },
 ];
 
-export function LandingNav() {
+export function LandingNav({ standalone = false }: { standalone?: boolean }) {
   const [open, setOpen] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
-  const scrollTo = (href: string) => {
+  const onLanding = !standalone && pathname === '/';
+
+  const navToSection = (id: string) => {
     setOpen(false);
-    const id = href.replace('#', '');
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    if (onLanding) {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate(`/#${id}`);
+    }
   };
 
   return (
@@ -33,11 +39,17 @@ export function LandingNav() {
         <Logo to="/" />
 
         <nav className="hidden items-center gap-6 md:flex" aria-label="Main">
+          <Link
+            to="/pricing"
+            className="text-sm font-medium text-slate-600 transition-colors hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400"
+          >
+            Pricing
+          </Link>
           {NAV_LINKS.map((l) => (
             <button
-              key={l.href}
+              key={l.id}
               type="button"
-              onClick={() => scrollTo(l.href)}
+              onClick={() => navToSection(l.id)}
               className="text-sm font-medium text-slate-600 transition-colors hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400"
             >
               {l.label}
@@ -56,7 +68,7 @@ export function LandingNav() {
               <Link to="/login">
                 <Button variant="outline">Log in</Button>
               </Link>
-              <Link to="/register">
+              <Link to="/register/company">
                 <Button>Get started</Button>
               </Link>
             </>
@@ -79,11 +91,18 @@ export function LandingNav() {
       {open && (
         <div className="border-t border-slate-200 bg-white px-4 py-4 dark:border-slate-700 dark:bg-slate-900 md:hidden">
           <nav className="flex flex-col gap-3" aria-label="Mobile">
+            <Link
+              to="/pricing"
+              className="text-left text-sm font-medium text-slate-700 dark:text-slate-200"
+              onClick={() => setOpen(false)}
+            >
+              Pricing
+            </Link>
             {NAV_LINKS.map((l) => (
               <button
-                key={l.href}
+                key={l.id}
                 type="button"
-                onClick={() => scrollTo(l.href)}
+                onClick={() => navToSection(l.id)}
                 className="text-left text-sm font-medium text-slate-700 dark:text-slate-200"
               >
                 {l.label}
@@ -102,7 +121,7 @@ export function LandingNav() {
                     Log in
                   </Button>
                 </Link>
-                <Link to="/register" onClick={() => setOpen(false)}>
+                <Link to="/register/company" onClick={() => setOpen(false)}>
                   <Button className="w-full">Get started</Button>
                 </Link>
               </>

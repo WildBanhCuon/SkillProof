@@ -8,7 +8,7 @@ import { Input } from '../../components/ui/Input';
 import { Alert } from '../../components/ui/Alert';
 
 export function RegisterPage() {
-  const { registerHr, registerCandidate } = useAuth();
+  const { registerCandidate } = useAuth();
   const navigate = useNavigate();
   const [role, setRole] = useState<UserRole>('hr');
   const [error, setError] = useState('');
@@ -22,12 +22,11 @@ export function RegisterPage() {
     setLoading(true);
     try {
       if (role === 'hr') {
-        await registerHr({ email, password });
-        navigate('/hr/profile?onboarding=1');
-      } else {
-        await registerCandidate({ email, password });
-        navigate('/profile?onboarding=1');
+        navigate('/register/company');
+        return;
       }
+      await registerCandidate({ email, password });
+      navigate('/profile?onboarding=1');
     } catch (err) {
       setError(formatAuthError(err, 'Registration failed'));
     } finally {
@@ -59,34 +58,54 @@ export function RegisterPage() {
         ))}
       </div>
 
+      {role === 'hr' && (
+        <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
+          Company accounts choose a plan and complete checkout first.{' '}
+          <Link
+            to="/register/company"
+            className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+          >
+            Continue to company signup →
+          </Link>
+        </p>
+      )}
+
       {error && (
         <div className="mt-4">
           <Alert onDismiss={() => setError('')}>{error}</Alert>
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
-        <Input
-          label="Email"
-          type="email"
-          required
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <Input
-          label="Password"
-          type="password"
-          required
-          minLength={8}
-          autoComplete="new-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Creating…' : 'Create account'}
-        </Button>
-      </form>
+      {role === 'candidate' ? (
+        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+          <Input
+            label="Email"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Input
+            label="Password"
+            type="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Creating…' : 'Create account'}
+          </Button>
+        </form>
+      ) : (
+        <div className="mt-6">
+          <Link to="/register/company">
+            <Button className="w-full">Choose a plan & sign up</Button>
+          </Link>
+        </div>
+      )}
 
       <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-300">
         Already have an account?{' '}
