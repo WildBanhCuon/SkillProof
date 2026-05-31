@@ -8,3 +8,7 @@ export function clampCodeAnswer(value: string): string {
 export function isNearCodeAnswerLimit(value: string): boolean {
   return value.length >= MAX_CODE_ANSWER_LENGTH * 0.9;
 }
+
+export function isAtCodeAnswerLimit(value: string): boolean {
+  return value.length >= MAX_CODE_ANSWER_LENGTH;
+}

@@ -85,20 +85,14 @@ export function HrRegisterPage() {
     e.preventDefault();
     setError('');
     const digits = cardNumber.replace(/\D/g, '');
-    if (digits.length < 16) {
-      setError('Enter a 16-digit card number (demo: 4242 4242 4242 4242).');
-      return;
-    }
-    if (!cardName.trim() || !cardExpiry.trim() || cardCvc.length < 3) {
-      setError('Complete all payment fields.');
-      return;
-    }
+    const paymentLast4 =
+      digits.length >= 4 ? digits.slice(-4) : '4242';
     setProcessingPayment(true);
-    await new Promise((r) => setTimeout(r, 1600));
+    await new Promise((r) => setTimeout(r, 800));
     setPendingCheckout({
       planId,
       billing,
-      paymentLast4: digits.slice(-4),
+      paymentLast4,
       paidAt: new Date().toISOString(),
     });
     setProcessingPayment(false);
@@ -258,15 +252,13 @@ export function HrRegisterPage() {
                 Payment details
               </div>
               <Input
-                label="Name on card"
-                required
+                label="Name on card (optional)"
                 value={cardName}
                 onChange={(e) => setCardName(e.target.value)}
                 placeholder="Alex Martin"
               />
               <Input
-                label="Card number"
-                required
+                label="Card number (optional)"
                 inputMode="numeric"
                 autoComplete="cc-number"
                 value={cardNumber}
@@ -275,16 +267,14 @@ export function HrRegisterPage() {
               />
               <div className="grid grid-cols-2 gap-4">
                 <Input
-                  label="Expiry"
-                  required
+                  label="Expiry (optional)"
                   placeholder="12/28"
                   value={cardExpiry}
                   onChange={(e) => setCardExpiry(e.target.value)}
                   autoComplete="cc-exp"
                 />
                 <Input
-                  label="CVC"
-                  required
+                  label="CVC (optional)"
                   inputMode="numeric"
                   maxLength={4}
                   placeholder="123"
@@ -294,7 +284,8 @@ export function HrRegisterPage() {
                 />
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Tip for demo: use card <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">4242 4242 4242 4242</code>
+                Demo: leave fields empty and click <strong>Pay &amp; continue</strong>, or optionally
+                use <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">4242 4242 4242 4242</code>
               </p>
               <div className="flex gap-3 pt-2">
                 <Button type="button" variant="outline" onClick={() => setStep(0)}>

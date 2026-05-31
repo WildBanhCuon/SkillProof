@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Editor from '@monaco-editor/react';
+import { CodeAnswerEditor } from '../../components/candidate/CodeAnswerEditor';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -11,12 +11,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../api/client';
 import { formatApiError } from '../../utils/errors';
-import { monacoLanguage } from '../../utils/monacoLanguage';
-import {
-  clampCodeAnswer,
-  isNearCodeAnswerLimit,
-  MAX_CODE_ANSWER_LENGTH,
-} from '../../utils/assessmentLimits';
+import { clampCodeAnswer } from '../../utils/assessmentLimits';
 import type { TestSession } from '../../api/types';
 import { Logo } from '../../components/ui/Logo';
 import { Button } from '../../components/ui/Button';
@@ -399,32 +394,17 @@ export function AssessmentPage() {
                       {q.instructions}
                     </div>
                   </div>
-                  <div className="min-h-[320px]">
-                    <Editor
-                      key={`${q.id}-${monacoLanguage(q.language)}`}
-                      height="320px"
-                      language={monacoLanguage(q.language)}
-                      value={codes[q.id] ?? q.starterCode}
-                      onChange={(v) =>
-                        setCodes((prev) => ({
-                          ...prev,
-                          [q.id]: clampCodeAnswer(v ?? ''),
-                        }))
-                      }
-                      theme="vs-dark"
-                      options={{
-                        minimap: { enabled: false },
-                        fontSize: 13,
-                        wordWrap: 'on',
-                      }}
-                    />
-                    {isNearCodeAnswerLimit(codes[q.id] ?? q.starterCode) && (
-                      <p className="border-t border-slate-100 px-4 py-2 text-xs text-amber-700 dark:border-slate-800 dark:text-amber-300">
-                        {(codes[q.id] ?? q.starterCode).length.toLocaleString()} /{' '}
-                        {MAX_CODE_ANSWER_LENGTH.toLocaleString()} characters
-                      </p>
-                    )}
-                  </div>
+                  <CodeAnswerEditor
+                    questionId={q.id}
+                    language={q.language}
+                    value={codes[q.id] ?? q.starterCode}
+                    onChange={(next) =>
+                      setCodes((prev) => ({
+                        ...prev,
+                        [q.id]: next,
+                      }))
+                    }
+                  />
                 </div>
               )}
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800 px-6 py-4">
