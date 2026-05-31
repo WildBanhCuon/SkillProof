@@ -32,6 +32,15 @@ export class SessionsController {
     return this.sessions.startSession(user, jobId, dto.mode);
   }
 
+  @Get('sessions/:sessionId')
+  @Roles('candidate')
+  getSession(
+    @CurrentUser() user: JwtPayload,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return this.sessions.getSession(user, sessionId);
+  }
+
   @Patch('sessions/:sessionId/answers/:questionId')
   @Roles('candidate')
   saveAnswer(

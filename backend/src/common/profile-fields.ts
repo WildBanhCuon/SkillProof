@@ -30,6 +30,20 @@ export function parseRequiredProfileFields(raw: unknown): ProfileFieldKey[] {
   );
 }
 
+/** HR cannot disable these — merged on every save and apply check. */
+export const ALWAYS_REQUIRED_PROFILE_FIELDS: ProfileFieldKey[] = ['displayName'];
+
+export function normalizeRequiredProfileFields(
+  fields: readonly string[] | undefined | null,
+): ProfileFieldKey[] {
+  const parsed = parseRequiredProfileFields(fields);
+  const set = new Set<ProfileFieldKey>([
+    ...ALWAYS_REQUIRED_PROFILE_FIELDS,
+    ...parsed,
+  ]);
+  return PROFILE_FIELD_KEYS.filter((k) => set.has(k));
+}
+
 export function profileValuesFromUser(
   displayName: string,
   profile: {

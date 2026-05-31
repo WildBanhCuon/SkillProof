@@ -315,8 +315,8 @@ Rules:
 - Aim for roughly 2–3 code questions and 2–3 MCQ questions, mapped to testable skills. WordPress/CMS roles should lean on MCQ for CMS/plugin/theme concepts and use code only for PHP/CSS/HTML when truly needed.
 - Match the stack in the job (e.g. WordPress/Elementor/WooCommerce — NOT React/TypeScript/Vue unless the job explicitly requires them).
 - Do NOT invent React SPA or jsonplaceholder API exercises for WordPress/CMS roles.
-- For "code" questions: include starterCode, language (javascript|css|php|python), instructions, and a rubric object for AI grading.
-- For "mcq" questions: set questionType to "mcq", options as [{ "id": "a", "label": "..." }, ...] (ids a,b,c,d), correctOptionId matching one option id, starterCode as empty string, language "text", and a short rubric with an explanation of the correct answer.`;
+- For "code" questions: include starterCode, language (javascript|css|php|python), instructions, and a rubric object for AI grading. Do NOT include options or correctOptionId (omit those keys entirely).
+- For "mcq" questions: set questionType to "mcq", options as [{ "id": "a", "label": "..." }, ...] (ids a,b,c,d), correctOptionId MUST be one of those option ids (never null), starterCode as empty string, language "text", and a short rubric with an explanation of the correct answer.`;
 
     const schemaHint = `{
   "durationMinutes": 90,
@@ -328,8 +328,8 @@ Rules:
     "starterCode": "string (empty for mcq)",
     "points": number,
     "language": "javascript|css|php|python|text",
-    "options": [{ "id": "a", "label": "string" }],
-    "correctOptionId": "string (mcq only)",
+    "options": [{ "id": "a", "label": "string" }] (mcq only — omit for code),
+    "correctOptionId": "a" (mcq only — required string, never null; omit for code),
     "rubric": {}
   }]
 }`;

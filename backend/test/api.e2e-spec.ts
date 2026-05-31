@@ -217,7 +217,11 @@ describe('SkillProof API (e2e)', () => {
           requiredProfileFields: ['phone', 'resumeUrl'],
         })
         .expect(200);
-      expect(res.body.requiredProfileFields).toEqual(['phone', 'resumeUrl']);
+      expect(res.body.requiredProfileFields).toEqual([
+        'displayName',
+        'phone',
+        'resumeUrl',
+      ]);
     });
 
     it('POST /v1/jobs/:id/publish', async () => {

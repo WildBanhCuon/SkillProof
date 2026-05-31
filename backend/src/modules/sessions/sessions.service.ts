@@ -8,6 +8,7 @@ import {
 import { AssessmentPurpose, SessionStatus, SessionType } from '@prisma/client';
 import {
   missingRequiredProfileFields,
+  normalizeRequiredProfileFields,
   parseRequiredProfileFields,
   profileValuesFromUser,
 } from '../../common/profile-fields';
@@ -55,7 +56,9 @@ export class SessionsService {
         include: { profile: true },
       });
       if (!candidate) throw new ForbiddenException();
-      const required = parseRequiredProfileFields(job.requiredProfileFields);
+      const required = normalizeRequiredProfileFields(
+        parseRequiredProfileFields(job.requiredProfileFields),
+      );
       const values = profileValuesFromUser(
         candidate.displayName,
         candidate.profile,
@@ -229,7 +232,13 @@ export class SessionsService {
   }
 
   async getResult(user: JwtPayload, sessionId: string) {
-    const session = await this.ensureCandidateSession(sessionId, user.sub);
+    const session = await this.prisma.testSession.findUnique({
+      where: { id: sessionId },
+      include: { jobPosting: { include: { company: true } } },
+    });
+    if (!session || session.candidateUserId !== user.sub) {
+      throw new ForbiddenException();
+    }
     if (
       session.status !== 'GRADED' &&
       session.status !== 'SUBMITTED' &&
@@ -238,8 +247,14 @@ export class SessionsService {
       throw new BadRequestException('Session not submitted');
     }
 
+    const jobMeta = {
+      jobId: session.jobPostingId,
+      jobTitle: session.jobPosting.title,
+      companyName: session.jobPosting.company.name,
+    };
+
     if (session.status === 'GRADING') {
-      return { sessionId, status: 'grading' };
+      return { sessionId, status: 'grading' as const, ...jobMeta };
     }
 
     const result = await this.prisma.testResult.findUnique({
@@ -247,12 +262,13 @@ export class SessionsService {
       include: { dimensionScores: true },
     });
     if (!result) {
-      return { sessionId, status: 'grading' };
+      return { sessionId, status: 'grading' as const, ...jobMeta };
     }
 
     return {
       sessionId,
-      status: 'evaluated',
+      status: 'evaluated' as const,
+      ...jobMeta,
       overallScore: result.overallScore,
       matchPercent: result.matchPercent,
       recommendation: result.recommendation.toLowerCase(),
@@ -300,8 +316,18 @@ export class SessionsService {
       durationMinutes: assessment?.durationMinutes,
       totalPoints: assessment?.totalPoints,
       questions:
-        assessment?.questions.map((q) => formatQuestionForCandidate(q)) ?? [],
+        assessment?.questions.map((q) => {
+          const saved = session.answers.find((a) => a.questionId === q.id);
+          return {
+            ...formatQuestionForCandidate(q),
+            savedAnswer: saved?.submittedCode ?? null,
+          };
+        }) ?? [],
     };
+  }
+
+  async getSession(user: JwtPayload, sessionId: string) {
+    return this.formatSession(sessionId, user.sub);
   }
 
   private async ensureCandidateSession(sessionId: string, candidateId: string) {

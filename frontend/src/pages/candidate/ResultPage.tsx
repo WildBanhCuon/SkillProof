@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Briefcase, Loader2 } from 'lucide-react';
 import { formatApiError } from '../../utils/errors';
 import type { SessionResult } from '../../api/types';
 import { pollSessionResult } from '../../utils/poll';
@@ -70,7 +70,27 @@ export function ResultPage() {
 
         {result && result.status === 'evaluated' && (
           <>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Your results</h1>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                  Your results
+                </h1>
+                {result.jobTitle && (
+                  <p className="mt-1 text-slate-600 dark:text-slate-300">
+                    {result.jobTitle}
+                    {result.companyName ? ` · ${result.companyName}` : ''}
+                  </p>
+                )}
+              </div>
+              {result.jobId && (
+                <Link to={`/jobs/${result.jobId}`}>
+                  <Button variant="outline" size="sm">
+                    <Briefcase className="h-4 w-4" />
+                    View job listing
+                  </Button>
+                </Link>
+              )}
+            </div>
             {isPractice ? (
               <p className="mt-2 text-sm text-amber-700">
                 Practice mode — these results are not shared with employers.

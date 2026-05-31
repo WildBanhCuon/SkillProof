@@ -41,18 +41,87 @@ export const mcqOptionGenSchema = z.object({
   label: z.string().min(1),
 });
 
-export const questionGenSchema = z
-  .object({
-    questionType: z.enum(['code', 'mcq']).default('code'),
-    title: z.string(),
-    instructions: z.string(),
-    starterCode: z.string().optional().default(''),
-    points: z.number().positive(),
-    language: z.string().optional().default('javascript'),
-    options: z.array(mcqOptionGenSchema).optional(),
-    correctOptionId: z.string().optional(),
-    rubric: z.record(z.unknown()).optional().default({}),
-  })
+/** Gemini often emits null for omitted fields — coerce before validation. */
+const optionalString = z.preprocess(
+  (v) => (v === null || v === '' ? undefined : v),
+  z.string().optional(),
+);
+
+const questionGenObjectSchema = z.object({
+  questionType: z.enum(['code', 'mcq']).default('code'),
+  title: z.string(),
+  instructions: z.string(),
+  starterCode: z.preprocess(
+    (v) => (v === null || v === undefined ? '' : v),
+    z.string().default(''),
+  ),
+  points: z.number().positive(),
+  language: z.preprocess(
+    (v) => (v === null || v === undefined ? undefined : v),
+    z.string().optional().default('javascript'),
+  ),
+  options: z.preprocess(
+    (v) => (v === null ? undefined : v),
+    z.array(mcqOptionGenSchema).optional(),
+  ),
+  correctOptionId: optionalString,
+  rubric: z.preprocess(
+    (v) => (v === null || v === undefined ? {} : v),
+    z.record(z.unknown()).default({}),
+  ),
+});
+
+type QuestionGenInput = z.infer<typeof questionGenObjectSchema>;
+
+function normalizeGeneratedQuestion(q: QuestionGenInput): QuestionGenInput {
+  if (q.questionType === 'code') {
+    return {
+      ...q,
+      starterCode: q.starterCode ?? '',
+      language: q.language ?? 'javascript',
+      options: undefined,
+      correctOptionId: undefined,
+    };
+  }
+
+  const rubric = { ...(q.rubric ?? {}) } as Record<string, unknown>;
+  const options = (q.options ?? []).map((o, i) => ({
+    id: o.id?.trim() || String.fromCharCode(97 + i),
+    label: o.label,
+  }));
+
+  let correctOptionId = q.correctOptionId;
+  if (!correctOptionId) {
+    const fromRubric =
+      rubric.correctOptionId ?? rubric.correctAnswer ?? rubric.answer;
+    if (typeof fromRubric === 'string' && fromRubric.length > 0) {
+      correctOptionId = fromRubric;
+    }
+  }
+  if (
+    correctOptionId &&
+    options.length > 0 &&
+    !options.some((o) => o.id === correctOptionId)
+  ) {
+    correctOptionId = undefined;
+  }
+  if (!correctOptionId && options.length > 0) {
+    correctOptionId = options[0].id;
+  }
+
+  return {
+    ...q,
+    questionType: 'mcq',
+    starterCode: '',
+    language: 'text',
+    options,
+    correctOptionId,
+    rubric: { ...rubric, correctOptionId },
+  };
+}
+
+export const questionGenSchema = questionGenObjectSchema
+  .transform(normalizeGeneratedQuestion)
   .superRefine((q, ctx) => {
     if (q.questionType === 'mcq') {
       if (!q.options || q.options.length < 2) {

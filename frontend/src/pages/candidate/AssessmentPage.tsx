@@ -23,8 +23,12 @@ export function AssessmentPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const session = (location.state as { session?: TestSession })?.session;
+  const sessionFromNav = (location.state as { session?: TestSession })?.session;
 
+  const [session, setSession] = useState<TestSession | null>(sessionFromNav ?? null);
+  const [loadingSession, setLoadingSession] = useState(
+    !sessionFromNav && !!sessionId,
+  );
   const [currentIdx, setCurrentIdx] = useState(0);
   const [codes, setCodes] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
@@ -36,11 +40,64 @@ export function AssessmentPage() {
   const q = questions[currentIdx];
 
   useEffect(() => {
+    if (session || !sessionId) return;
+    let cancelled = false;
+    (async () => {
+      setLoadingSession(true);
+      try {
+        const data = await api.get<TestSession>(`/sessions/${sessionId}`);
+        if (!cancelled) setSession(data);
+      } catch (e) {
+        if (!cancelled) {
+          setError(formatApiError(e, 'Load assessment session'));
+        }
+      } finally {
+        if (!cancelled) setLoadingSession(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session, sessionId]);
+
+  const answerPayload = useCallback(
+    (question: (typeof questions)[number]) => {
+      const value = codes[question.id];
+      if (question.questionType === 'mcq') {
+        return value?.trim() ?? '';
+      }
+      return value ?? question.starterCode;
+    },
+    [codes],
+  );
+
+  const persistAnswer = useCallback(
+    async (questionId: string, submittedCode: string) => {
+      if (!sessionId) return;
+      await api.patch(`/sessions/${sessionId}/answers/${questionId}`, {
+        submittedCode,
+      });
+    },
+    [sessionId],
+  );
+
+  const persistAllAnswers = useCallback(async () => {
+    if (!sessionId || questions.length === 0) return;
+    await Promise.all(
+      questions.map((question) =>
+        persistAnswer(question.id, answerPayload(question)),
+      ),
+    );
+  }, [sessionId, questions, persistAnswer, answerPayload]);
+
+  useEffect(() => {
     if (!session) return;
     const initial: Record<string, string> = {};
     for (const question of session.questions) {
+      const saved = question.savedAnswer?.trim();
       initial[question.id] =
-        question.questionType === 'mcq' ? '' : question.starterCode;
+        saved ||
+        (question.questionType === 'mcq' ? '' : question.starterCode);
     }
     setCodes(initial);
   }, [session]);
@@ -83,29 +140,14 @@ export function AssessmentPage() {
     return () => clearInterval(id);
   }, [session?.expiresAt]);
 
-  const saveAnswer = useCallback(async () => {
-    if (!sessionId || !q) return;
-    setSaving(true);
-    try {
-      await api.patch(`/sessions/${sessionId}/answers/${q.id}`, {
-        submittedCode: codes[q.id] ?? q.starterCode,
-      });
-    } catch (e) {
-      setError(formatApiError(e, 'Autosave answer'));
-    } finally {
-      setSaving(false);
-    }
-  }, [sessionId, q, codes]);
-
   useEffect(() => {
-    if (!sessionId || !q) return;
+    if (!sessionId || !q || q.questionType === 'mcq') return;
+    const questionId = q.id;
     const t = setTimeout(() => {
       void (async () => {
         setSaving(true);
         try {
-          await api.patch(`/sessions/${sessionId}/answers/${q.id}`, {
-            submittedCode: codes[q.id] ?? q.starterCode,
-          });
+          await persistAnswer(questionId, answerPayload(q));
         } catch {
           /* ignore autosave errors */
         } finally {
@@ -114,7 +156,21 @@ export function AssessmentPage() {
       })();
     }, 1200);
     return () => clearTimeout(t);
-  }, [codes, q?.id, sessionId]);
+  }, [codes, q, sessionId, persistAnswer, answerPayload]);
+
+  const goToQuestion = async (nextIdx: number) => {
+    if (!q) return;
+    setSaving(true);
+    setError('');
+    try {
+      await persistAnswer(q.id, answerPayload(q));
+      setCurrentIdx(nextIdx);
+    } catch (e) {
+      setError(formatApiError(e, 'Save answer'));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const submitAll = async () => {
     if (!sessionId) return;
@@ -122,7 +178,7 @@ export function AssessmentPage() {
     setSubmitting(true);
     setError('');
     try {
-      await saveAnswer();
+      await persistAllAnswers();
       await api.post(`/sessions/${sessionId}/submit`);
       navigate(`/sessions/${sessionId}/result`, {
         state: { sessionType: session?.sessionType },
@@ -138,6 +194,15 @@ export function AssessmentPage() {
     if (!questions.length) return 0;
     return Math.round(((currentIdx + 1) / questions.length) * 100);
   }, [currentIdx, questions.length]);
+
+  if (loadingSession) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-slate-950 p-6">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600 dark:text-indigo-400" />
+        <p className="text-slate-600 dark:text-slate-300">Loading assessment…</p>
+      </div>
+    );
+  }
 
   if (!session || !sessionId) {
     return (
@@ -215,7 +280,8 @@ export function AssessmentPage() {
                 <li key={question.id}>
                   <button
                     type="button"
-                    onClick={() => setCurrentIdx(i)}
+                    onClick={() => void goToQuestion(i)}
+                    disabled={saving}
                     className={`flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm ${
                       i === currentIdx
                         ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800'
@@ -244,7 +310,8 @@ export function AssessmentPage() {
               <button
                 key={i}
                 type="button"
-                onClick={() => setCurrentIdx(i)}
+                onClick={() => void goToQuestion(i)}
+                disabled={saving}
                 className={`shrink-0 rounded-full px-3 py-1 text-xs ${
                   i === currentIdx ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-900 ring-1 ring-slate-200'
                 }`}
@@ -302,6 +369,9 @@ export function AssessmentPage() {
                             onChange={() => {
                               setCodes((prev) => ({ ...prev, [q.id]: opt.id }));
                               setError('');
+                              void persistAnswer(q.id, opt.id).catch((e) => {
+                                setError(formatApiError(e, 'Save answer'));
+                              });
                             }}
                           />
                           <span className="text-sm text-slate-800 dark:text-slate-200">
@@ -344,8 +414,8 @@ export function AssessmentPage() {
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800 px-6 py-4">
                 <Button
                   variant="outline"
-                  disabled={currentIdx === 0}
-                  onClick={() => setCurrentIdx((i) => i - 1)}
+                  disabled={currentIdx === 0 || saving}
+                  onClick={() => void goToQuestion(currentIdx - 1)}
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Previous
@@ -359,8 +429,9 @@ export function AssessmentPage() {
                   <Button
                     onClick={() => {
                       if (!requireAnswer()) return;
-                      setCurrentIdx((i) => i + 1);
+                      void goToQuestion(currentIdx + 1);
                     }}
+                    disabled={saving}
                   >
                     Next
                     <ArrowRight className="h-4 w-4" />

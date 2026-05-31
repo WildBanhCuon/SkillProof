@@ -96,6 +96,7 @@ export interface SessionQuestion {
   language: string;
   questionType?: 'code' | 'mcq';
   options?: McqOption[];
+  savedAnswer?: string | null;
 }
 
 export interface TestSession {
@@ -193,6 +194,9 @@ export interface JobStats {
 export interface SessionResult {
   sessionId: string;
   status: 'grading' | 'evaluated';
+  jobId?: string;
+  jobTitle?: string;
+  companyName?: string;
   overallScore?: number;
   matchPercent?: number;
   recommendation?: string;

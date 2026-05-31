@@ -31,6 +31,31 @@ export const PROFILE_FIELD_OPTIONS: {
   },
 ];
 
+/** Shown as locked-on in the HR editor (not stored in requiredProfileFields). */
+export const ALWAYS_REQUIRED_PROFILE_DISPLAY = [
+  {
+    key: 'displayName' as const,
+    label: 'Full name',
+    hint: 'Always required for every application',
+  },
+  {
+    key: 'email' as const,
+    label: 'Email address',
+    hint: 'From the candidate account — always required',
+  },
+];
+
+export const OPTIONAL_PROFILE_FIELD_OPTIONS = PROFILE_FIELD_OPTIONS.filter(
+  (o) => o.key !== 'displayName',
+);
+
+export function normalizeRequiredProfileFields(
+  fields: ProfileFieldKey[] | undefined | null,
+): ProfileFieldKey[] {
+  const set = new Set<ProfileFieldKey>(['displayName', ...(fields ?? [])]);
+  return PROFILE_FIELD_OPTIONS.map((o) => o.key).filter((k) => set.has(k));
+}
+
 export function profileFieldLabel(key: string): string {
   return (
     PROFILE_FIELD_OPTIONS.find((o) => o.key === key)?.label ?? key

@@ -2,7 +2,6 @@ import type {
   CandidateProfileData,
   ProfileFieldKey,
 } from '../data/profileFields';
-import { DEFAULT_PHONE_COUNTRY_CODE } from '../data/phoneCountryCodes';
 
 export function isPhoneComplete(
   form: Pick<CandidateProfileData, 'phoneCountryCode' | 'phone'>,
@@ -26,7 +25,7 @@ export function candidateProfilePatchBody(form: CandidateProfileData) {
     displayName: form.displayName.trim(),
     bio: form.bio?.trim() || '',
     phoneCountryCode: form.phone?.trim()
-      ? form.phoneCountryCode?.trim() || DEFAULT_PHONE_COUNTRY_CODE
+      ? form.phoneCountryCode?.trim() || ''
       : '',
     phone: form.phone?.trim() || '',
     linkedInUrl: form.linkedInUrl?.trim() || '',

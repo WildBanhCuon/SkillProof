@@ -7,14 +7,20 @@ import {
 import {
   ApplicationHrStatus,
   JobStatus,
+  QuestionType,
   Recommendation,
 } from '@prisma/client';
 import {
+  normalizeRequiredProfileFields,
   parseRequiredProfileFields,
   profileForApi,
   profileValuesFromUser,
 } from '../../common/profile-fields';
 import { hrStatusToApi } from '../candidate/candidate-application-status';
+import {
+  getMcqCorrectOptionId,
+  parseMcqOptions,
+} from '../../common/question-public';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtPayload } from '../auth/auth.types';
 
@@ -274,8 +280,8 @@ export class ResultsService {
       applicationId: app.id,
       hrStatus: hrStatusToApi(app.hrStatus),
       hrDecidedAt: app.hrDecidedAt,
-      requiredProfileFields: parseRequiredProfileFields(
-        job?.requiredProfileFields,
+      requiredProfileFields: normalizeRequiredProfileFields(
+        parseRequiredProfileFields(job?.requiredProfileFields),
       ),
       candidate: {
         id: app.candidateUser.id,
@@ -294,16 +300,37 @@ export class ResultsService {
       },
       answers: [...app.testSession.answers]
         .sort((a, b) => a.question.orderIndex - b.question.orderIndex)
-        .map((a) => ({
-          questionId: a.questionId,
-          orderIndex: a.question.orderIndex,
-          title: a.question.title,
-          instructions: a.question.instructions,
-          points: a.question.points,
-          language: a.question.language,
-          submittedCode: a.submittedCode,
-          notes: a.notes,
-        })),
+        .map((a) => {
+          const isMcq = a.question.questionType === QuestionType.MCQ;
+          const mcqOptions = isMcq
+            ? parseMcqOptions(a.question.mcqOptions)
+            : undefined;
+          const correctOptionId = isMcq
+            ? getMcqCorrectOptionId(a.question.rubric)
+            : null;
+          const selectedOptionId = isMcq
+            ? (a.submittedCode?.trim() ?? '')
+            : null;
+
+          return {
+            questionId: a.questionId,
+            orderIndex: a.question.orderIndex,
+            title: a.question.title,
+            instructions: a.question.instructions,
+            points: a.question.points,
+            language: a.question.language,
+            questionType: isMcq ? ('mcq' as const) : ('code' as const),
+            submittedCode: a.submittedCode,
+            notes: a.notes,
+            mcqOptions,
+            selectedOptionId,
+            correctOptionId,
+            isCorrect:
+              isMcq && correctOptionId
+                ? selectedOptionId === correctOptionId
+                : null,
+          };
+        }),
       auditLogs: auditLogs.map((l) => ({
         pipeline: l.pipeline,
         model: l.model,

@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Check, Sparkles, Wand2 } from 'lucide-react';
 import { api } from '../../api/client';
 import type { JobPosting, ListingIssue, ProfileFieldKey } from '../../api/types';
+import { normalizeRequiredProfileFields } from '../../data/profileFields';
 import { ProfileRequirementsEditor } from '../../components/hr/ProfileRequirementsEditor';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -42,7 +43,7 @@ export function JobEditorPage() {
   const [suggestionsApplied, setSuggestionsApplied] = useState(false);
   const [requiredProfileFields, setRequiredProfileFields] = useState<
     ProfileFieldKey[]
-  >([]);
+  >(['displayName']);
 
   const { data: job } = useQuery({
     queryKey: ['job', jobId],
@@ -61,7 +62,9 @@ export function JobEditorPage() {
         if (analysis?.issues) setIssues(analysis.issues as ListingIssue[]);
       }
       setSuggestionsApplied(!!job.suggestionsAppliedAt);
-      setRequiredProfileFields(job.requiredProfileFields ?? []);
+      setRequiredProfileFields(
+        normalizeRequiredProfileFields(job.requiredProfileFields ?? []),
+      );
     }
   }, [job]);
 
@@ -321,13 +324,15 @@ export function JobEditorPage() {
               Candidate profile requirements
             </span>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
-              Choose which information candidates must provide on their profile before
-              they can apply to this role. You will see their answers in results.
+              Choose extra information candidates must provide before they apply.
+              Full name and email are always required.
             </p>
             <div className="mt-4">
               <ProfileRequirementsEditor
                 value={requiredProfileFields}
-                onChange={setRequiredProfileFields}
+                onChange={(next) =>
+                  setRequiredProfileFields(normalizeRequiredProfileFields(next))
+                }
                 disabled={!isEditable}
               />
             </div>

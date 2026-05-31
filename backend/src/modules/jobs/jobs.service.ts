@@ -16,6 +16,7 @@ import { AssessmentsService } from '../assessments/assessments.service';
 import { JwtPayload } from '../auth/auth.types';
 import {
   missingRequiredProfileFields,
+  normalizeRequiredProfileFields,
   parseRequiredProfileFields,
   profileValuesFromUser,
   ProfileFieldKey,
@@ -57,7 +58,9 @@ export class JobsService {
         companyId: user.companyId!,
         title: dto.title,
         description: dto.description,
-        requiredProfileFields: dto.requiredProfileFields ?? [],
+        requiredProfileFields: normalizeRequiredProfileFields(
+          dto.requiredProfileFields ?? [],
+        ),
         status: 'DRAFT',
       },
       include: { skillRequirements: true, assessments: true },
@@ -172,7 +175,9 @@ export class JobsService {
         candidate!.displayName,
         candidate!.profile,
       );
-      const required = formatted.requiredProfileFields as ProfileFieldKey[];
+      const required = normalizeRequiredProfileFields(
+        formatted.requiredProfileFields as ProfileFieldKey[],
+      );
       return {
         ...formatted,
         missingProfileFields: missingRequiredProfileFields(required, values),
@@ -189,7 +194,11 @@ export class JobsService {
         title: dto.title,
         description: dto.description,
         ...(dto.requiredProfileFields !== undefined
-          ? { requiredProfileFields: dto.requiredProfileFields }
+          ? {
+              requiredProfileFields: normalizeRequiredProfileFields(
+                dto.requiredProfileFields,
+              ),
+            }
           : {}),
         status: dto.description ? 'DRAFT' : undefined,
       },
@@ -416,8 +425,8 @@ export class JobsService {
     return {
       ...rest,
       assessment: applicationAssessment,
-      requiredProfileFields: parseRequiredProfileFields(
-        job.requiredProfileFields,
+      requiredProfileFields: normalizeRequiredProfileFields(
+        parseRequiredProfileFields(job.requiredProfileFields),
       ),
     };
   }

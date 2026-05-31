@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Briefcase, Loader2 } from 'lucide-react';
 import { api } from '../../api/client';
 import type { CandidateApplicationDetail } from '../../api/types';
 import { Card } from '../../components/ui/Card';
@@ -77,6 +77,12 @@ export function ApplicationDetailPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link to={`/jobs/${data.jobId}`}>
+            <Button variant="outline">
+              <Briefcase className="h-4 w-4" />
+              View job listing
+            </Button>
+          </Link>
           {canContinue && (
             <Link to={`/sessions/${data.sessionId}`}>
               <Button>Continue test</Button>

@@ -7,7 +7,6 @@ import {
   CandidateProfileData,
   EMPTY_PROFILE,
 } from '../../data/profileFields';
-import { DEFAULT_PHONE_COUNTRY_CODE } from '../../data/phoneCountryCodes';
 import { candidateProfilePatchBody } from '../../utils/candidateProfile';
 import { PhoneFields } from '../../components/candidate/PhoneFields';
 import { Button } from '../../components/ui/Button';
@@ -62,7 +61,7 @@ export function CandidateProfilePage() {
     setForm({
       displayName: p.displayName?.trim() || user?.fullName || '',
       bio: p.bio ?? '',
-      phoneCountryCode: p.phoneCountryCode ?? DEFAULT_PHONE_COUNTRY_CODE,
+      phoneCountryCode: p.phoneCountryCode ?? '',
       phone: p.phone ?? '',
       linkedInUrl: p.linkedInUrl ?? '',
       portfolioUrl: p.portfolioUrl ?? '',
@@ -167,7 +166,7 @@ export function CandidateProfilePage() {
             />
           </div>
           <PhoneFields
-            countryCode={form.phoneCountryCode ?? DEFAULT_PHONE_COUNTRY_CODE}
+            countryCode={form.phoneCountryCode ?? ''}
             phone={form.phone ?? ''}
             onCountryCodeChange={(code) => set('phoneCountryCode', code)}
             onPhoneChange={(value) => set('phone', value)}

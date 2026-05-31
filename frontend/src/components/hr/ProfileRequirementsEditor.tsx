@@ -1,5 +1,9 @@
 import type { ProfileFieldKey } from '../../data/profileFields';
-import { PROFILE_FIELD_OPTIONS } from '../../data/profileFields';
+import {
+  ALWAYS_REQUIRED_PROFILE_DISPLAY,
+  normalizeRequiredProfileFields,
+  OPTIONAL_PROFILE_FIELD_OPTIONS,
+} from '../../data/profileFields';
 
 export function ProfileRequirementsEditor({
   value,
@@ -12,16 +16,38 @@ export function ProfileRequirementsEditor({
 }) {
   const toggle = (key: ProfileFieldKey) => {
     if (disabled) return;
-    if (value.includes(key)) {
-      onChange(value.filter((k) => k !== key));
-    } else {
-      onChange([...value, key]);
-    }
+    const next = value.includes(key)
+      ? value.filter((k) => k !== key)
+      : [...value, key];
+    onChange(normalizeRequiredProfileFields(next));
   };
 
   return (
     <div className="space-y-2">
-      {PROFILE_FIELD_OPTIONS.map((opt) => (
+      {ALWAYS_REQUIRED_PROFILE_DISPLAY.map((opt) => (
+        <label
+          key={opt.key}
+          className="flex cursor-default items-start gap-3 rounded-lg border border-indigo-200 bg-indigo-50/80 px-4 py-3 dark:border-indigo-800 dark:bg-indigo-950/40"
+        >
+          <input
+            type="checkbox"
+            className="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 dark:border-slate-600 dark:text-indigo-400"
+            checked
+            disabled
+            readOnly
+          />
+          <span className="min-w-0 flex-1">
+            <span className="font-medium text-indigo-950 dark:text-indigo-100">
+              {opt.label}
+            </span>
+            <span className="mt-0.5 block text-sm text-indigo-700/80 dark:text-indigo-200/80">
+              {opt.hint}
+            </span>
+          </span>
+        </label>
+      ))}
+
+      {OPTIONAL_PROFILE_FIELD_OPTIONS.map((opt) => (
         <label
           key={opt.key}
           className={`flex cursor-pointer items-start gap-3 rounded-lg border px-4 py-3 transition-colors ${

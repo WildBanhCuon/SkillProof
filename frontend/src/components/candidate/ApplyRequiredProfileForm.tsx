@@ -8,7 +8,6 @@ import {
   profileFieldLabel,
   type ProfileFieldKey,
 } from '../../data/profileFields';
-import { DEFAULT_PHONE_COUNTRY_CODE } from '../../data/phoneCountryCodes';
 import {
   candidateProfilePatchBody,
   missingRequiredProfileFields,
@@ -42,6 +41,7 @@ export function ApplyRequiredProfileForm({
   const { user, refreshUser } = useAuth();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<CandidateProfileData>(EMPTY_PROFILE);
+  const [accountEmail, setAccountEmail] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -53,11 +53,12 @@ export function ApplyRequiredProfileForm({
       try {
         const data = await api.get<ProfileResponse>('/candidate/profile');
         if (cancelled) return;
+        setAccountEmail(data.email);
         const p = data.profile;
         setForm({
           displayName: p.displayName?.trim() || user?.fullName || '',
           bio: p.bio ?? '',
-          phoneCountryCode: p.phoneCountryCode ?? DEFAULT_PHONE_COUNTRY_CODE,
+          phoneCountryCode: p.phoneCountryCode ?? '',
           phone: p.phone ?? '',
           linkedInUrl: p.linkedInUrl ?? '',
           portfolioUrl: p.portfolioUrl ?? '',
@@ -150,7 +151,7 @@ export function ApplyRequiredProfileForm({
           <div key={key}>
             {label}
             <PhoneFields
-              countryCode={form.phoneCountryCode ?? DEFAULT_PHONE_COUNTRY_CODE}
+              countryCode={form.phoneCountryCode ?? ''}
               phone={form.phone ?? ''}
               onCountryCodeChange={(code) => set('phoneCountryCode', code)}
               onPhoneChange={(value) => set('phone', value)}
@@ -249,6 +250,15 @@ export function ApplyRequiredProfileForm({
         </p>
       ) : (
         <form onSubmit={onSubmit} className="mt-4 space-y-4">
+          <div>
+            <span className="mb-1 flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Email address
+              </span>
+              <Badge variant="success">Required</Badge>
+            </span>
+            <Input value={accountEmail || user?.email || ''} readOnly disabled />
+          </div>
           {requiredFields.map((key) => renderField(key))}
           <div className="flex flex-wrap gap-3 pt-2">
             <Button

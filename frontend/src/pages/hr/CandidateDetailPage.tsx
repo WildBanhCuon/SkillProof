@@ -17,6 +17,7 @@ import {
 import { formatApiError } from '../../utils/errors';
 import { rememberLastResultsJob } from '../../utils/hrNav';
 import { CandidateProfileCard } from '../../components/candidate/CandidateProfileCard';
+import { McqAnswerReview } from '../../components/hr/McqAnswerReview';
 import type { CandidateProfileData } from '../../api/types';
 import { MarkdownContent } from '../../components/ui/MarkdownContent';
 
@@ -47,8 +48,13 @@ interface DetailResponse {
     instructions: string;
     points: number;
     language: string;
+    questionType: 'code' | 'mcq';
     submittedCode: string;
     notes: string | null;
+    mcqOptions?: { id: string; label: string }[];
+    selectedOptionId?: string | null;
+    correctOptionId?: string | null;
+    isCorrect?: boolean | null;
   }[];
   auditLogs: { pipeline: string; model: string; createdAt: string }[];
 }
@@ -274,9 +280,10 @@ export function CandidateDetailPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
                   Question {idx + 1}
                   <span className="text-slate-400 dark:text-slate-500"> · {a.points} pts</span>
-                  {a.language && (
-                    <span className="text-slate-400 dark:text-slate-500"> · {a.language}</span>
-                  )}
+                  <span className="text-slate-400 dark:text-slate-500">
+                    {' '}
+                    · {a.questionType === 'mcq' ? 'Multiple choice' : a.language}
+                  </span>
                 </p>
                 <h3 className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{a.title}</h3>
               </div>
@@ -292,9 +299,18 @@ export function CandidateDetailPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 dark:text-slate-500">
                   Candidate answer
                 </p>
-                <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-slate-900 p-4 text-xs text-slate-100">
-                  {a.submittedCode || '(empty)'}
-                </pre>
+                {a.questionType === 'mcq' ? (
+                  <McqAnswerReview
+                    options={a.mcqOptions ?? []}
+                    selectedOptionId={a.selectedOptionId ?? a.submittedCode?.trim() ?? null}
+                    correctOptionId={a.correctOptionId ?? null}
+                    isCorrect={a.isCorrect ?? null}
+                  />
+                ) : (
+                  <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-slate-900 p-4 text-xs text-slate-100">
+                    {a.submittedCode || '(empty)'}
+                  </pre>
+                )}
                 {a.notes?.trim() && (
                   <div className="mt-3 rounded-lg border border-amber-100 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40/60 p-3">
                     <p className="text-xs font-semibold uppercase text-amber-800 dark:text-amber-200">
