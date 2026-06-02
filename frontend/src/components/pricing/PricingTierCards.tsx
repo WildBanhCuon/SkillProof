@@ -16,7 +16,8 @@ interface PricingTierCardsProps {
   onSelectPlan?: (planId: PlanId) => void;
   /** Show CTA buttons (pricing page). If false, selection is click-only (checkout). */
   showCta?: boolean;
-  compact?: boolean;
+  /** Four plans in one row (company checkout). */
+  fourInRow?: boolean;
 }
 
 export function PricingTierCards({
@@ -24,20 +25,22 @@ export function PricingTierCards({
   selectedPlanId,
   onSelectPlan,
   showCta = true,
-  compact = false,
+  fourInRow = false,
 }: PricingTierCardsProps) {
-  return (
-    <div
-      className={`grid gap-6 ${compact ? 'sm:grid-cols-2' : 'lg:grid-cols-4 md:grid-cols-2'}`}
-    >
-      {PRICING_PLANS.map((plan) => {
+  const gridClass = fourInRow
+    ? 'min-w-[56rem] grid-cols-4 gap-3 sm:min-w-0 sm:gap-4'
+    : 'gap-6 md:grid-cols-2 lg:grid-cols-4';
+
+  const cards = PRICING_PLANS.map((plan) => {
         const selected = selectedPlanId === plan.id;
         const highlighted = plan.highlighted;
 
         return (
           <Card
             key={plan.id}
-            className={`relative flex flex-col p-6 transition-shadow ${
+            className={`relative flex flex-col transition-shadow ${
+              fourInRow ? 'p-4 sm:p-5' : 'p-6'
+            } ${
               selected
                 ? 'ring-2 ring-indigo-600 dark:ring-indigo-400'
                 : highlighted
@@ -72,7 +75,11 @@ export function PricingTierCards({
               </p>
             </div>
             <div className="mt-4">
-              <p className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+              <p
+                className={`font-bold tracking-tight text-slate-900 dark:text-slate-100 ${
+                  fourInRow ? 'text-2xl sm:text-3xl' : 'text-3xl'
+                }`}
+              >
                 {formatPlanPrice(plan, billing)}
               </p>
               <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -80,7 +87,9 @@ export function PricingTierCards({
               </p>
             </div>
             <ul
-              className={`mt-5 flex-1 space-y-2 text-sm text-slate-600 dark:text-slate-300 ${compact ? 'space-y-1.5' : ''}`}
+              className={`mt-5 flex-1 space-y-2 text-sm text-slate-600 dark:text-slate-300 ${
+                fourInRow ? 'space-y-1.5 text-xs sm:text-sm' : ''
+              }`}
             >
               {plan.features.map((f) => (
                 <li key={f} className="flex gap-2">
@@ -114,7 +123,15 @@ export function PricingTierCards({
             )}
           </Card>
         );
-      })}
-    </div>
-  );
+  });
+
+  if (fourInRow) {
+    return (
+      <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:overflow-visible sm:px-0">
+        <div className={`grid ${gridClass}`}>{cards}</div>
+      </div>
+    );
+  }
+
+  return <div className={`grid ${gridClass}`}>{cards}</div>;
 }

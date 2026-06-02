@@ -194,7 +194,7 @@ export function HrRegisterPage() {
         )}
 
         {step === 0 && (
-          <div className="mt-8">
+          <div className="mx-auto mt-8 max-w-7xl">
             <div className="mb-6 flex justify-center">
               <div className="inline-flex rounded-lg border border-slate-200 p-1 dark:border-slate-700">
                 {(['monthly', 'annual'] as const).map((b) => (
@@ -218,7 +218,7 @@ export function HrRegisterPage() {
               selectedPlanId={planId}
               onSelectPlan={setPlanId}
               showCta={false}
-              compact
+              fourInRow
             />
             <div className="mt-8 flex justify-center">
               <Button size="lg" onClick={goToPayment}>
