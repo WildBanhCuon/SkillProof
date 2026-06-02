@@ -4,7 +4,7 @@
 
 | Location | Contents |
 |----------|----------|
-| [sessions/](./sessions/) | Session 1 & 2 slide PDFs |
-| Root of `course/` | Main project assignment PDF |
+| [sessions/](./sessions/) | Session PDFs, **[final report](./sessions/Final_Report_SkillProof.md)**, **[pitch speaker notes](./sessions/SkillProof_Pitch_Speaker_Notes.md)** |
+| Root of `course/` | Main project assignment PDF *(if provided)* |
 
 Product docs: [docs/](../docs/)

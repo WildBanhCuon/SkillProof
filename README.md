@@ -4,7 +4,7 @@ Too many junior applicants, not enough proof. SkillProof helps companies turn me
 
 SkillProof is a B2B SaaS concept for junior tech hiring. It helps HR and talent teams improve vague junior job ads, generate role-calibrated assessments, evaluate applicants against an explicit rubric, and produce a ranked shortlist backed by evidence instead of CV keywords.
 
-The MVP focuses on one role: **Junior Frontend Developer**.
+The app supports **any junior tech role** (WordPress, frontend, etc.); AI adapts listings, skills, and assessments to each posting. The database seed ships one **demo** frontend job for local testing.
 
 ## Problem
 
@@ -108,29 +108,62 @@ The planned architecture separates HR and candidate frontends from a shared Skil
 - **Core modules**: authentication, jobs and listings, assessments and sessions, results and ranking, and AI orchestration.
 - **AI orchestration**: Gemini-backed workflows for job ad analysis, assessment generation, evaluation, recommendations, and feedback.
 - **Infrastructure**: PostgreSQL for application data, Redis for sessions and job queues, object storage for code snapshots and logs.
-- **External services**: Google Gemini API and a code sandbox runner such as Judge0, Piston, or a Docker worker.
+- **External services**: Google Gemini API for listing AI, assessment generation, and grading.
 
 See [backend architecture](docs/architecture/backend-architecture.md) for system diagrams (Mermaid).
 
-The REST API contract is in [`docs/api/openapi.yaml`](docs/api/openapi.yaml), including route examples for authentication, jobs, AI orchestration, assessments, applications, candidate sessions, results, and sandbox runs.
+The REST API contract is in [`docs/api/openapi.yaml`](docs/api/openapi.yaml), including route examples for authentication, jobs, AI orchestration, assessments, applications, candidate sessions, and results.
 
-The backend implementation starts in [`backend/`](backend/), currently initialized as a NestJS API with the authentication and tenancy layer from PRD §8.1.
+## Run backend
+
+```bash
+cd backend
+cp .env.example .env   # set GEMINI_API_KEY, JWT_SECRET
+docker compose up -d
+npm install
+npx prisma migrate deploy
+npm run prisma:seed
+npm run start:dev
+```
+
+API: `http://localhost:3000/v1` — full route list in [backend/README.md](backend/README.md).
+
+## Run frontend
+
+```bash
+cd frontend
+npm install
+cp .env.example .env
+npm run dev
+```
+
+App: http://localhost:5173 (proxies `/v1` to the API in dev). See [frontend/README.md](frontend/README.md).
+
+**Full stack:** start Docker + backend (`npm run start:dev`), then `npm run dev` in `frontend/`.
+
+Demo logins after `npm run prisma:seed` in `backend/`:
+
+| Role | Email | Password |
+|------|-------|----------|
+| HR | marion@acme.test | Password123! |
+| Candidate | sofiane@test.com | Password123! |
+
+The seed includes a **published demo job** (Junior Frontend Developer) with one graded application — open HR results at `/hr/jobs` → **View results** on that row.
 
 ## Project structure
 
 ```
 project/
 ├── README.md                 # This file
-├── docker-compose.yaml       # Local API, PostgreSQL, Redis stack
-├── Makefile                  # Development command aliases
-├── backend/                  # NestJS API
+├── backend/                  # NestJS API (Prisma, Gemini)
+├── frontend/                 # React + Vite SPA (HR + candidate flows)
 ├── docs/
 │   ├── README.md             # Documentation index
 │   ├── brief/                # Problem & personas
 │   ├── product/              # PRD
 │   ├── architecture/         # Backend design
 │   ├── design/               # UI / mockup prompts
-│   └── api/                  # OpenAPI spec
+│   └── api/                  # OpenAPI draft + PRD route notes
 ├── mockups/                  # UI screenshots (Figma / Lovable)
 └── course/
     ├── sessions/             # Class slides (sessions 1–2)
@@ -139,9 +172,9 @@ project/
 
 ## MVP Scope
 
-The 4-week prototype demonstrates the complete B2B value chain for a single role:
+The 4-week prototype demonstrates the complete B2B value chain end-to-end:
 
-1. Improve a junior frontend job ad.
+1. Improve a junior tech job ad.
 2. Generate a validated assessment.
 3. Collect candidate submissions.
 4. Evaluate answers against a rubric.
@@ -163,6 +196,20 @@ SkillProof is designed to improve measurable hiring outcomes:
 - 30% improvement in interview-to-hire conversion.
 - Lower mis-hire rate measured 3-6 months after hiring.
 - Faster time-to-fill for junior tech roles.
+
+## Live deployment (Render)
+
+| Service | URL |
+|---------|-----|
+| **Web app** | [https://skillproof-z3j9.onrender.com/](https://skillproof-z3j9.onrender.com/) |
+| **API** | [https://skillproof-api-mxjo.onrender.com/v1](https://skillproof-api-mxjo.onrender.com/v1) |
+| **Health check** | [https://skillproof-api-mxjo.onrender.com/v1/health](https://skillproof-api-mxjo.onrender.com/v1/health) |
+
+Deployed from the `deploy` branch.
+
+**Frontend API URL:** set `VITE_API_URL` to `https://skillproof-api-mxjo.onrender.com/v1` with **no trailing slash** (or redeploy after the latest frontend fix, which strips trailing slashes automatically).
+
+Demo accounts (after seed — see [backend/README.md](backend/README.md#seed-without-render-shell)): `marion@acme.test` / `sofiane@test.com` — password `Password123!`. You can also **register new accounts** without seeding.
 
 ## Links
 

@@ -1,0 +1,535 @@
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
+import { createE2eApp } from './setup-e2e-app';
+
+const HR_EMAIL = 'marion@acme.test';
+const CANDIDATE_EMAIL = 'sofiane@test.com';
+const PASSWORD = 'Password123!';
+
+function authHeader(token: string) {
+  return { Authorization: `Bearer ${token}` };
+}
+
+async function waitForEvaluated(
+  app: INestApplication,
+  sessionId: string,
+  token: string,
+  maxMs = 20000,
+) {
+  const deadline = Date.now() + maxMs;
+  while (Date.now() < deadline) {
+    const res = await request(app.getHttpServer())
+      .get(`/v1/sessions/${sessionId}/result`)
+      .set(authHeader(token));
+    if (res.status === 200 && res.body.status === 'evaluated') {
+      return res;
+    }
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  throw new Error(`Timed out waiting for session ${sessionId} to be graded`);
+}
+
+async function login(
+  app: INestApplication,
+  email: string,
+  role: 'hr' | 'candidate',
+) {
+  const res = await request(app.getHttpServer())
+    .post('/v1/auth/login')
+    .send({ email, password: PASSWORD, role })
+    .expect(201);
+  return res.body as {
+    accessToken: string;
+    refreshToken: string;
+  };
+}
+
+describe('SkillProof API (e2e)', () => {
+  let app: INestApplication;
+  let hrToken: string;
+  let hrRefresh: string;
+  let candidateToken: string;
+  let jobId: string;
+  let sessionId: string;
+  let questionId: string;
+  let applicationId: string;
+
+  beforeAll(async () => {
+    app = await createE2eApp();
+  }, 60000);
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  describe('Health', () => {
+    it('GET /v1/health', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/v1/health')
+        .expect(200);
+      expect(res.body.service).toBe('skillproof-api');
+      expect(res.body.checks.database).toBe('ok');
+    });
+  });
+
+  describe('Auth', () => {
+    const unique = Date.now();
+
+    it('POST /v1/auth/hr/register', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/v1/auth/hr/register')
+        .send({
+          email: `hr.e2e.${unique}@test.com`,
+          password: PASSWORD,
+        })
+        .expect(201);
+      expect(res.body.accessToken).toBeDefined();
+      expect(res.body.refreshToken).toBeDefined();
+    });
+
+    it('POST /v1/auth/candidate/register', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/v1/auth/candidate/register')
+        .send({
+          email: `candidate.e2e.${unique}@test.com`,
+          password: PASSWORD,
+        })
+        .expect(201);
+      expect(res.body.accessToken).toBeDefined();
+    });
+
+    it('POST /v1/auth/login (HR seed)', async () => {
+      const tokens = await login(app, HR_EMAIL, 'hr');
+      hrToken = tokens.accessToken;
+      hrRefresh = tokens.refreshToken;
+      expect(hrToken).toBeTruthy();
+    });
+
+    it('POST /v1/auth/generate-team-profile-from-website', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/v1/auth/generate-team-profile-from-website')
+        .send({
+          companyName: 'Acme Web',
+          websiteUrl: 'https://example.com',
+        })
+        .expect(201);
+      expect(res.body.teamProfile).toBeDefined();
+      expect(res.body.teamProfile.length).toBeGreaterThan(10);
+      expect(res.body.sources).toBeDefined();
+    });
+
+    it('GET /v1/auth/me (HR)', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/v1/auth/me')
+        .set(authHeader(hrToken))
+        .expect(200);
+      expect(res.body.email).toBe(HR_EMAIL);
+      expect(res.body.role).toBe('hr');
+    });
+
+    it('POST /v1/auth/refresh', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/v1/auth/refresh')
+        .send({ refreshToken: hrRefresh })
+        .expect(201);
+      expect(res.body.accessToken).toBeDefined();
+      hrToken = res.body.accessToken;
+      if (res.body.refreshToken) hrRefresh = res.body.refreshToken;
+    });
+  });
+
+  describe('HR — Jobs lifecycle', () => {
+    const jobBody = {
+      title: 'Junior Frontend Developer',
+      description:
+        'Junior frontend role.\n\nRequirements:\n- 3+ years React\n- Kubernetes required',
+    };
+
+    it('POST /v1/jobs — create draft', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/v1/jobs')
+        .set(authHeader(hrToken))
+        .send(jobBody)
+        .expect(201);
+      jobId = res.body.id;
+      expect(res.body.status).toBe('DRAFT');
+    });
+
+    it('GET /v1/jobs — list (HR)', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/v1/jobs')
+        .set(authHeader(hrToken))
+        .expect(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.some((j: { id: string }) => j.id === jobId)).toBe(true);
+    });
+
+    it('GET /v1/jobs/:id', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/v1/jobs/${jobId}`)
+        .set(authHeader(hrToken))
+        .expect(200);
+      expect(res.body.id).toBe(jobId);
+    });
+
+    it('PATCH /v1/jobs/:id', async () => {
+      const res = await request(app.getHttpServer())
+        .patch(`/v1/jobs/${jobId}`)
+        .set(authHeader(hrToken))
+        .send({
+          title: jobBody.title,
+          description: 'Updated junior frontend draft for e2e tests.',
+        })
+        .expect(200);
+      expect(res.body.description).toContain('e2e');
+    });
+
+    it('POST /v1/jobs/:id/check-listing', async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/v1/jobs/${jobId}/check-listing`)
+        .set(authHeader(hrToken))
+        .expect(201);
+      expect(res.body.status).toBe('ANALYZED');
+      expect(res.body.skillRequirements?.length).toBeGreaterThan(0);
+    });
+
+    it('POST /v1/jobs/:id/accept-suggestions', async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/v1/jobs/${jobId}/accept-suggestions`)
+        .set(authHeader(hrToken))
+        .expect(201);
+      expect(res.body.improvedDescription).toBeDefined();
+    });
+
+    it('POST /v1/jobs/:id/apply-suggestions', async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/v1/jobs/${jobId}/apply-suggestions`)
+        .set(authHeader(hrToken))
+        .expect(201);
+      expect(res.body.description).toContain('Junior Frontend');
+    });
+
+    it('PATCH /v1/jobs/:id — required profile fields', async () => {
+      const res = await request(app.getHttpServer())
+        .patch(`/v1/jobs/${jobId}`)
+        .set(authHeader(hrToken))
+        .send({
+          requiredProfileFields: ['phone', 'resumeUrl'],
+        })
+        .expect(200);
+      expect(res.body.requiredProfileFields).toEqual([
+        'displayName',
+        'phone',
+        'resumeUrl',
+      ]);
+    });
+
+    it('POST /v1/jobs/:id/publish', async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/v1/jobs/${jobId}/publish`)
+        .set(authHeader(hrToken))
+        .expect(201);
+      expect(res.body.status).toBe('PUBLISHED');
+      expect(res.body.assessment).toBeDefined();
+    });
+
+    it('GET /v1/jobs/:id/assessment', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/v1/jobs/${jobId}/assessment`)
+        .set(authHeader(hrToken))
+        .expect(200);
+      expect(res.body.questions?.length).toBe(4);
+      questionId = res.body.questions[0].id;
+    });
+  });
+
+  describe('Candidate — Jobs & sessions', () => {
+    it('POST /v1/auth/login (candidate seed)', async () => {
+      const tokens = await login(app, CANDIDATE_EMAIL, 'candidate');
+      candidateToken = tokens.accessToken;
+
+      // Make the suite deterministic: the DB is not reset between runs.
+      // Clearing phone ensures "missingProfileFields" assertions are stable.
+      await request(app.getHttpServer())
+        .patch('/v1/candidate/profile')
+        .set(authHeader(candidateToken))
+        .send({ phoneCountryCode: '', phone: '' });
+    });
+
+    it('GET /v1/jobs — list published', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/v1/jobs')
+        .set(authHeader(candidateToken))
+        .expect(200);
+      expect(Array.isArray(res.body.items)).toBe(true);
+      expect(res.body.items.some((j: { id: string }) => j.id === jobId)).toBe(
+        true,
+      );
+      expect(Array.isArray(res.body.companies)).toBe(true);
+    });
+
+    it('GET /v1/jobs — search and sort', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/v1/jobs')
+        .query({ search: 'Junior', sort: 'title_asc' })
+        .set(authHeader(candidateToken))
+        .expect(200);
+      expect(res.body.total).toBeGreaterThanOrEqual(1);
+      expect(res.body.items.some((j: { id: string }) => j.id === jobId)).toBe(
+        true,
+      );
+      const titles = res.body.items.map((j: { title: string }) => j.title);
+      expect([...titles].sort()).toEqual(titles);
+    });
+
+    it('GET /v1/jobs/:id — published job', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/v1/jobs/${jobId}`)
+        .set(authHeader(candidateToken))
+        .expect(200);
+      expect(res.body.requiredProfileFields).toContain('phone');
+      expect(res.body.missingProfileFields).toContain('phone');
+    });
+
+    it('GET /v1/candidate/profile', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/v1/candidate/profile')
+        .set(authHeader(candidateToken))
+        .expect(200);
+      expect(res.body.email).toBe(CANDIDATE_EMAIL);
+      expect(res.body.profile.displayName).toBeDefined();
+    });
+
+    it('POST /v1/jobs/:id/sessions — application blocked without profile', async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/v1/jobs/${jobId}/sessions`)
+        .set(authHeader(candidateToken))
+        .send({ mode: 'application' });
+      expect(res.status).toBe(400);
+      const missing =
+        res.body.missingProfileFields ??
+        res.body.message?.missingProfileFields;
+      expect(missing).toContain('phone');
+    });
+
+    it('PATCH /v1/candidate/profile', async () => {
+      const res = await request(app.getHttpServer())
+        .patch('/v1/candidate/profile')
+        .set(authHeader(candidateToken))
+        .send({
+          phoneCountryCode: '+32',
+          phone: '470 00 00 00',
+          resumeUrl: 'https://example.com/cv.pdf',
+        })
+        .expect(200);
+      expect(res.body.profile.phoneCountryCode).toBe('+32');
+      expect(res.body.profile.phone).toBe('470 00 00 00');
+      expect(res.body.profile.phoneFormatted).toBe('+32 470 00 00 00');
+      expect(res.body.profile.resumeUrl).toBe('https://example.com/cv.pdf');
+    });
+
+    it('POST /v1/jobs/:id/sessions — application', async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/v1/jobs/${jobId}/sessions`)
+        .set(authHeader(candidateToken))
+        .send({ mode: 'application' })
+        .expect(201);
+      sessionId = res.body.id;
+      questionId = res.body.questions[0].id;
+      expect(res.body.sessionType).toBe('application');
+    });
+
+    it('PATCH /v1/sessions/:id/answers/:questionId', async () => {
+      await request(app.getHttpServer())
+        .patch(`/v1/sessions/${sessionId}/answers/${questionId}`)
+        .set(authHeader(candidateToken))
+        .send({
+          submittedCode:
+            'function App() { return React.createElement("div", null, "ok"); }',
+          notes: 'e2e test answer',
+        })
+        .expect(200);
+    });
+
+    it('POST /v1/sessions/:id/submit', async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/v1/sessions/${sessionId}/submit`)
+        .set(authHeader(candidateToken))
+        .expect(202);
+      expect(res.body.status).toBe('queued');
+    });
+
+    it('GET /v1/sessions/:id/result — evaluated', async () => {
+      const res = await waitForEvaluated(
+        app,
+        sessionId,
+        candidateToken,
+      );
+      expect(res.body.overallScore).toBeGreaterThan(0);
+    });
+
+    it('GET /v1/candidate/applications', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/v1/candidate/applications')
+        .set(authHeader(candidateToken))
+        .expect(200);
+      expect(Array.isArray(res.body.items)).toBe(true);
+      const appRow = res.body.items.find(
+        (i: { sessionId: string }) => i.sessionId === sessionId,
+      );
+      expect(appRow).toBeDefined();
+      expect(appRow.sessionType).toBe('application');
+      expect(appRow.applicationStatus).toBeDefined();
+      expect(appRow.hasResult).toBe(true);
+    });
+
+    it('GET /v1/candidate/applications/:sessionId', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/v1/candidate/applications/${sessionId}`)
+        .set(authHeader(candidateToken))
+        .expect(200);
+      expect(res.body.jobTitle).toBeDefined();
+      expect(res.body.applicationStatus).toBeDefined();
+    });
+  });
+
+  describe('HR — Results', () => {
+    it('GET /v1/hr/candidates — grouped by job', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/v1/hr/candidates')
+        .set(authHeader(hrToken))
+        .expect(200);
+      expect(Array.isArray(res.body.jobs)).toBe(true);
+      expect(res.body.totalCandidates).toBeGreaterThanOrEqual(1);
+      const group = res.body.jobs.find(
+        (j: { jobId: string }) => j.jobId === jobId,
+      );
+      expect(group).toBeDefined();
+      expect(group.candidates.length).toBeGreaterThan(0);
+    });
+
+    it('GET /v1/jobs/:id/stats', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/v1/jobs/${jobId}/stats`)
+        .set(authHeader(hrToken))
+        .expect(200);
+      expect(res.body).toBeDefined();
+    });
+
+    it('PATCH /v1/jobs/:id/candidates/:applicationId/decision', async () => {
+      const list = await request(app.getHttpServer())
+        .get(`/v1/jobs/${jobId}/candidates`)
+        .set(authHeader(hrToken))
+        .expect(200);
+      const appId = list.body.candidates[0]?.applicationId;
+      expect(appId).toBeDefined();
+
+      await request(app.getHttpServer())
+        .patch(`/v1/jobs/${jobId}/candidates/${appId}/decision`)
+        .set(authHeader(hrToken))
+        .send({ decision: 'interview' })
+        .expect(200);
+
+      const candApps = await request(app.getHttpServer())
+        .get('/v1/candidate/applications')
+        .set(authHeader(candidateToken))
+        .expect(200);
+      const row = candApps.body.items.find(
+        (i: { sessionId: string }) => i.sessionId === sessionId,
+      );
+      expect(row.applicationStatus).toBe('interview_invited');
+      expect(row.hrStatus).toBe('interview');
+    });
+
+    it('GET /v1/jobs/:id/candidates', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/v1/jobs/${jobId}/candidates`)
+        .query({ sort: 'score' })
+        .set(authHeader(hrToken))
+        .expect(200);
+      expect(res.body.candidates?.length).toBeGreaterThan(0);
+      applicationId = res.body.candidates[0].applicationId;
+    });
+
+    it('GET /v1/jobs/:id/candidates/:applicationId', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/v1/jobs/${jobId}/candidates/${applicationId}`)
+        .set(authHeader(hrToken))
+        .expect(200);
+      expect(res.body.applicationId).toBe(applicationId);
+      expect(res.body.candidate.profile).toBeDefined();
+      expect(res.body.candidate.profile.phoneFormatted).toBe('+32 470 00 00 00');
+      expect(res.body.requiredProfileFields).toContain('phone');
+      expect(res.body.answers.length).toBeGreaterThan(0);
+      expect(res.body.answers[0].instructions).toBeDefined();
+      expect(res.body.answers[0].instructions.length).toBeGreaterThan(10);
+      expect(res.body.answers[0].title).toBeDefined();
+    });
+
+    it('POST /v1/jobs/:id/archive', async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/v1/jobs/${jobId}/archive`)
+        .set(authHeader(hrToken))
+        .expect(201);
+      expect(res.body.status).toBe('CLOSED');
+    });
+  });
+
+  describe('Auth — delete account', () => {
+    it('POST /v1/auth/delete-account removes the user', async () => {
+      const unique = Date.now();
+      const email = `delete.e2e.${unique}@test.com`;
+      const reg = await request(app.getHttpServer())
+        .post('/v1/auth/candidate/register')
+        .send({ email, password: PASSWORD })
+        .expect(201);
+      const token = reg.body.accessToken as string;
+
+      await request(app.getHttpServer())
+        .post('/v1/auth/delete-account')
+        .set(authHeader(token))
+        .send({ password: PASSWORD })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .get('/v1/auth/me')
+        .set(authHeader(token))
+        .expect(401);
+    });
+
+    it('rejects delete-account with wrong password', async () => {
+      await request(app.getHttpServer())
+        .post('/v1/auth/delete-account')
+        .set(authHeader(candidateToken))
+        .send({ password: 'not-the-real-password' })
+        .expect(401);
+    });
+  });
+
+  describe('Auth — logout', () => {
+    it('POST /v1/auth/logout', async () => {
+      await request(app.getHttpServer())
+        .post('/v1/auth/logout')
+        .set(authHeader(hrToken))
+        .send({ refreshToken: hrRefresh })
+        .expect(201);
+    });
+  });
+
+  describe('Authorization', () => {
+    it('rejects candidate creating a job', async () => {
+      await request(app.getHttpServer())
+        .post('/v1/jobs')
+        .set(authHeader(candidateToken))
+        .send({
+          title: 'Blocked',
+          description: 'Should fail',
+        })
+        .expect(403);
+    });
+
+    it('rejects unauthenticated /v1/auth/me', async () => {
+      await request(app.getHttpServer()).get('/v1/auth/me').expect(401);
+    });
+  });
+});

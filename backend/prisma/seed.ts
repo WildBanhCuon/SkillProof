@@ -1,0 +1,323 @@
+import {
+  AssessmentPurpose,
+  Dimension,
+  JobStatus,
+  PrismaClient,
+  Recommendation,
+  SessionStatus,
+  SessionType,
+  SkillImportance,
+} from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+
+const prisma = new PrismaClient();
+
+const DEMO_JOB_ID = '00000000-0000-0000-0000-000000000010';
+const DEMO_ASSESSMENT_ID = '00000000-0000-0000-0000-000000000011';
+const DEMO_PRACTICE_ASSESSMENT_ID = '00000000-0000-0000-0000-000000000015';
+const DEMO_SESSION_ID = '00000000-0000-0000-0000-000000000012';
+const DEMO_APPLICATION_ID = '00000000-0000-0000-0000-000000000013';
+const DEMO_RESULT_ID = '00000000-0000-0000-0000-000000000014';
+
+/** Demo seed only — product supports any role; assessments are generated from each job posting. */
+const DEMO_DESCRIPTION = `We are hiring a Junior Frontend Developer to join our product team.
+
+Responsibilities:
+- Build features in React and TypeScript
+- Collaborate with designers and backend engineers
+
+Requirements:
+- React, TypeScript, HTML, CSS, Git
+- Strong communication skills`;
+
+const DEMO_QUESTIONS = [
+  {
+    orderIndex: 0,
+    title: 'React state',
+    instructions: 'Fix the component so it displays the counter.',
+    starterCode: 'function App() { return null; }',
+    points: 25,
+    language: 'javascript',
+    rubric: { clarity: 5 },
+  },
+  {
+    orderIndex: 1,
+    title: 'API fetch',
+    instructions: 'Fetch users from the API and return an array.',
+    starterCode: 'async function load() {}',
+    points: 25,
+    language: 'javascript',
+    rubric: { error_handling: 5 },
+  },
+  {
+    orderIndex: 2,
+    title: 'TypeScript types',
+    instructions: 'Add proper types to the function.',
+    starterCode: 'const x = 1;',
+    points: 25,
+    language: 'javascript',
+    rubric: { types: 5 },
+  },
+  {
+    orderIndex: 3,
+    title: 'Debug UI',
+    instructions: 'Find and fix the bug in the component.',
+    starterCode: 'console.log("hi");',
+    points: 25,
+    language: 'javascript',
+    rubric: { debugging: 5 },
+  },
+];
+
+const DEMO_PRACTICE_QUESTIONS = [
+  {
+    orderIndex: 0,
+    title: 'Component props',
+    instructions: 'Pass props correctly so the greeting displays.',
+    starterCode: 'function Greeting() { return null; }',
+    points: 25,
+    language: 'javascript',
+    rubric: { clarity: 5 },
+  },
+  {
+    orderIndex: 1,
+    title: 'List rendering',
+    instructions: 'Render a list of items from the given array.',
+    starterCode: 'function List() { return null; }',
+    points: 25,
+    language: 'javascript',
+    rubric: { lists: 5 },
+  },
+  {
+    orderIndex: 2,
+    title: 'Event handler',
+    instructions: 'Wire up the button click handler.',
+    starterCode: 'function Button() { return null; }',
+    points: 25,
+    language: 'javascript',
+    rubric: { events: 5 },
+  },
+  {
+    orderIndex: 3,
+    title: 'Conditional render',
+    instructions: 'Show loading or content based on the flag.',
+    starterCode: 'function Panel() { return null; }',
+    points: 25,
+    language: 'javascript',
+    rubric: { conditionals: 5 },
+  },
+];
+
+async function seedDemoJob(
+  companyId: string,
+  candidateId: string,
+) {
+  const expiresAt = new Date(Date.now() + 90 * 60 * 1000);
+
+  await prisma.jobPosting.upsert({
+    where: { id: DEMO_JOB_ID },
+    update: {
+      status: JobStatus.PUBLISHED,
+      publishedAt: new Date(),
+      description: DEMO_DESCRIPTION,
+    },
+    create: {
+      id: DEMO_JOB_ID,
+      companyId,
+      title: 'Junior Frontend Developer',
+      description: DEMO_DESCRIPTION,
+      status: JobStatus.PUBLISHED,
+      publishedAt: new Date(),
+      listingAnalyses: {
+        create: {
+          issues: [
+            {
+              type: 'seniority_mismatch',
+              severity: 'high',
+              message: 'Junior role asks for 3+ years',
+              excerpt: '3+ years',
+            },
+          ],
+        },
+      },
+      skillRequirements: {
+        create: [
+          {
+            skillName: 'React',
+            importance: SkillImportance.MUST_HAVE,
+            expectedLevel: 'junior',
+            testable: true,
+          },
+          {
+            skillName: 'TypeScript',
+            importance: SkillImportance.MUST_HAVE,
+            expectedLevel: 'junior',
+            testable: true,
+          },
+        ],
+      },
+      assessments: {
+        create: [
+          {
+            id: DEMO_ASSESSMENT_ID,
+            purpose: AssessmentPurpose.APPLICATION,
+            durationMinutes: 90,
+            totalPoints: 100,
+            questions: {
+              create: DEMO_QUESTIONS.map((q) => ({
+                orderIndex: q.orderIndex,
+                title: q.title,
+                instructions: q.instructions,
+                starterCode: q.starterCode,
+                points: q.points,
+                language: q.language,
+                rubric: q.rubric,
+              })),
+            },
+          },
+          {
+            id: DEMO_PRACTICE_ASSESSMENT_ID,
+            purpose: AssessmentPurpose.PRACTICE,
+            durationMinutes: 90,
+            totalPoints: 100,
+            questions: {
+              create: DEMO_PRACTICE_QUESTIONS.map((q) => ({
+                orderIndex: q.orderIndex,
+                title: q.title,
+                instructions: q.instructions,
+                starterCode: q.starterCode,
+                points: q.points,
+                language: q.language,
+                rubric: q.rubric,
+              })),
+            },
+          },
+        ],
+      },
+    },
+  });
+
+  const existingSession = await prisma.testSession.findUnique({
+    where: { id: DEMO_SESSION_ID },
+  });
+
+  if (!existingSession) {
+    const questions = await prisma.question.findMany({
+      where: { assessmentId: DEMO_ASSESSMENT_ID },
+      orderBy: { orderIndex: 'asc' },
+    });
+
+    await prisma.testSession.create({
+      data: {
+        id: DEMO_SESSION_ID,
+        jobPostingId: DEMO_JOB_ID,
+        candidateUserId: candidateId,
+        sessionType: SessionType.APPLICATION,
+        status: SessionStatus.GRADED,
+        expiresAt,
+        submittedAt: new Date(),
+        answers: {
+          create: questions.map((q) => ({
+            questionId: q.id,
+            submittedCode: q.starterCode,
+          })),
+        },
+        application: {
+          create: {
+            id: DEMO_APPLICATION_ID,
+            jobPostingId: DEMO_JOB_ID,
+            candidateUserId: candidateId,
+          },
+        },
+        testResult: {
+          create: {
+            id: DEMO_RESULT_ID,
+            visibleToCompany: true,
+            overallScore: 78,
+            matchPercent: 82,
+            recommendation: Recommendation.TRAINABLE,
+            strengths: ['Solid React basics', 'Clear code structure'],
+            improvements: ['Add loading states', 'Improve error handling'],
+            aiSummary:
+              'Good junior candidate with room to grow on async patterns.',
+            dimensionScores: {
+              create: [
+                { dimension: Dimension.TECHNICAL, score0_100: 75 },
+                { dimension: Dimension.PROBLEM_SOLVING, score0_100: 80 },
+                { dimension: Dimension.CODE_QUALITY, score0_100: 72 },
+                { dimension: Dimension.COMMUNICATION, score0_100: 85 },
+              ],
+            },
+          },
+        },
+      },
+    });
+  }
+}
+
+async function main() {
+  const passwordHash = await bcrypt.hash('Password123!', 10);
+
+  const acmeTeamProfile =
+    'Acme Corp is a 40-person B2B SaaS company building workforce tools. Product squads include design, frontend, and backend engineers shipping weekly releases.';
+
+  const company = await prisma.company.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000001' },
+    update: { teamProfile: acmeTeamProfile },
+    create: {
+      id: '00000000-0000-0000-0000-000000000001',
+      name: 'Acme Corp',
+      teamProfile: acmeTeamProfile,
+      hrUsers: {
+        create: {
+          email: 'marion@acme.test',
+          passwordHash,
+          fullName: 'Marie D.',
+          role: 'ADMIN',
+        },
+      },
+    },
+    include: { hrUsers: true },
+  });
+
+  const candidate = await prisma.candidateUser.upsert({
+    where: { email: 'sofiane@test.com' },
+    update: {},
+    create: {
+      email: 'sofiane@test.com',
+      passwordHash,
+      displayName: 'Sofiane K.',
+    },
+  });
+
+  await prisma.candidateProfile.upsert({
+    where: { candidateUserId: candidate.id },
+    update: {
+      bio: 'Junior developer passionate about React and clean UI.',
+      phoneCountryCode: null,
+      phone: null,
+      resumeUrl: null,
+      linkedInUrl: 'https://linkedin.com/in/sofiane-demo',
+      githubUrl: 'https://github.com/sofiane-demo',
+    },
+    create: {
+      candidateUserId: candidate.id,
+      bio: 'Junior developer passionate about React and clean UI.',
+      linkedInUrl: 'https://linkedin.com/in/sofiane-demo',
+      githubUrl: 'https://github.com/sofiane-demo',
+    },
+  });
+
+  await seedDemoJob(company.id, candidate.id);
+
+  console.log('Seed complete:');
+  console.log('  HR: marion@acme.test / Password123!');
+  console.log('  Candidate: sofiane@test.com / Password123!');
+  console.log('  Company:', company.name);
+  console.log('  Demo job (published): Junior Frontend Developer');
+  console.log('  HR results: /hr/jobs/' + DEMO_JOB_ID + '/results');
+}
+
+main()
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());

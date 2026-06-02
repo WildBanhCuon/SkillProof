@@ -1,0 +1,292 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum HrRole {
+  ADMIN
+  MEMBER
+}
+
+enum JobStatus {
+  DRAFT
+  ANALYZED
+  PUBLISHED
+  CLOSED
+}
+
+enum SkillImportance {
+  MUST_HAVE
+  NICE_TO_HAVE
+}
+
+enum SessionType {
+  PRACTICE
+  APPLICATION
+}
+
+enum AssessmentPurpose {
+  PRACTICE
+  APPLICATION
+}
+
+enum QuestionType {
+  CODE
+  MCQ
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  SUBMITTED
+  EXPIRED
+  GRADING
+  GRADED
+}
+
+enum Recommendation {
+  READY_NOW
+  TRAINABLE
+  AT_RISK
+}
+
+enum ApplicationHrStatus {
+  PENDING
+  INTERVIEW
+  DECLINED
+}
+
+enum Dimension {
+  TECHNICAL
+  PROBLEM_SOLVING
+  CODE_QUALITY
+  COMMUNICATION
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  name        String
+  websiteUrl  String?
+  teamProfile String?  @db.Text
+  createdAt   DateTime @default(now())
+  hrUsers   HrUser[]
+  jobs      JobPosting[]
+}
+
+model HrUser {
+  id           String   @id @default(uuid())
+  companyId    String
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  role         HrRole   @default(MEMBER)
+  createdAt    DateTime @default(now())
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  refreshTokens RefreshToken[]
+
+  @@index([companyId])
+}
+
+model CandidateUser {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String
+  createdAt    DateTime @default(now())
+  profile      CandidateProfile?
+  sessions     TestSession[]
+  applications Application[]
+  refreshTokens RefreshToken[]
+}
+
+model CandidateProfile {
+  id              String        @id @default(uuid())
+  candidateUserId String        @unique
+  bio               String?       @db.Text
+  phoneCountryCode  String?
+  phone             String?
+  linkedInUrl     String?
+  portfolioUrl    String?
+  githubUrl       String?
+  websiteUrl      String?
+  resumeUrl       String?
+  updatedAt       DateTime      @updatedAt
+  candidateUser   CandidateUser @relation(fields: [candidateUserId], references: [id], onDelete: Cascade)
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+  hrUserId      String?
+  candidateUserId String?
+  hrUser          HrUser?         @relation(fields: [hrUserId], references: [id], onDelete: Cascade)
+  candidateUser   CandidateUser?  @relation(fields: [candidateUserId], references: [id], onDelete: Cascade)
+}
+
+model JobPosting {
+  id                     String   @id @default(uuid())
+  companyId              String
+  title                  String
+  description            String   @db.Text
+  requiredProfileFields  Json     @default("[]")
+  suggestedDescription   String?   @db.Text
+  suggestionsAppliedAt   DateTime?
+  status                 JobStatus @default(DRAFT)
+  publishedAt          DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  company              Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  listingAnalyses      ListingAnalysis[]
+  skillRequirements    SkillRequirement[]
+  assessments          Assessment[]
+  sessions             TestSession[]
+  applications         Application[]
+
+  @@index([companyId])
+  @@index([status])
+}
+
+model ListingAnalysis {
+  id           String   @id @default(uuid())
+  jobPostingId String
+  issues       Json
+  createdAt    DateTime @default(now())
+  jobPosting   JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+
+  @@index([jobPostingId])
+}
+
+model SkillRequirement {
+  id             String          @id @default(uuid())
+  jobPostingId   String
+  skillName      String
+  importance     SkillImportance
+  expectedLevel  String
+  testable       Boolean
+  jobPosting     JobPosting      @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+
+  @@index([jobPostingId])
+}
+
+model Assessment {
+  id              String            @id @default(uuid())
+  jobPostingId    String
+  purpose         AssessmentPurpose
+  durationMinutes Int               @default(90)
+  totalPoints     Int               @default(100)
+  createdAt       DateTime          @default(now())
+  jobPosting      JobPosting        @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  questions       Question[]
+
+  @@unique([jobPostingId, purpose])
+  @@index([jobPostingId])
+}
+
+model Question {
+  id           String       @id @default(uuid())
+  assessmentId String
+  orderIndex   Int
+  questionType QuestionType @default(CODE)
+  title        String
+  instructions String       @db.Text
+  starterCode  String       @db.Text
+  points       Int
+  rubric       Json
+  language     String       @default("javascript")
+  mcqOptions   Json?
+  assessment   Assessment   @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  answers      Answer[]
+
+  @@index([assessmentId])
+}
+
+model TestSession {
+  id              String        @id @default(uuid())
+  jobPostingId    String
+  candidateUserId String
+  sessionType     SessionType
+  status          SessionStatus @default(IN_PROGRESS)
+  startedAt       DateTime      @default(now())
+  expiresAt       DateTime
+  submittedAt     DateTime?
+  jobPosting      JobPosting    @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  candidateUser   CandidateUser @relation(fields: [candidateUserId], references: [id], onDelete: Cascade)
+  answers         Answer[]
+  testResult      TestResult?
+  application     Application?
+
+  @@index([jobPostingId])
+  @@index([candidateUserId])
+}
+
+model Answer {
+  id             String   @id @default(uuid())
+  sessionId      String
+  questionId     String
+  submittedCode  String   @db.Text @default("")
+  notes          String?  @db.Text
+  session        TestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question       Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, questionId])
+  @@index([sessionId])
+}
+
+model Application {
+  id              String               @id @default(uuid())
+  jobPostingId    String
+  candidateUserId String
+  testSessionId   String               @unique
+  hrStatus           ApplicationHrStatus  @default(PENDING)
+  hrDecidedAt        DateTime?
+  hrDecisionSeenAt   DateTime?
+  appliedAt          DateTime             @default(now())
+  jobPosting      JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  candidateUser   CandidateUser @relation(fields: [candidateUserId], references: [id], onDelete: Cascade)
+  testSession     TestSession @relation(fields: [testSessionId], references: [id], onDelete: Cascade)
+
+  @@unique([jobPostingId, candidateUserId])
+  @@index([jobPostingId])
+}
+
+model TestResult {
+  id                String         @id @default(uuid())
+  sessionId         String         @unique
+  visibleToCompany  Boolean
+  overallScore      Int
+  matchPercent      Int
+  recommendation    Recommendation
+  strengths         Json
+  improvements      Json
+  aiSummary         String         @db.Text
+  createdAt         DateTime       @default(now())
+  session           TestSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  dimensionScores   DimensionScore[]
+}
+
+model DimensionScore {
+  id           String     @id @default(uuid())
+  testResultId String
+  dimension    Dimension
+  score0_100   Int
+  testResult   TestResult @relation(fields: [testResultId], references: [id], onDelete: Cascade)
+
+  @@unique([testResultId, dimension])
+}
+
+model AiAuditLog {
+  id           String   @id @default(uuid())
+  pipeline     String
+  referenceId  String?
+  model        String
+  requestMeta  Json?
+  responseJson Json?
+  createdAt    DateTime @default(now())
+
+  @@index([pipeline])
+  @@index([referenceId])
+}

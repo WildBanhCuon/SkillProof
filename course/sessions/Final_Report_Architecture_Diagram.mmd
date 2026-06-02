@@ -1,0 +1,23 @@
+%% SkillProof high-level architecture (export to PNG/SVG for the report §4.2)
+flowchart TB
+    subgraph Clients["Clients"]
+        HR["HR Web App<br/>React · TypeScript"]
+        CAND["Candidate App<br/>React · TypeScript"]
+    end
+
+    subgraph API["SkillProof REST API · NestJS"]
+        REST["REST /v1 · JWT"]
+    end
+
+    subgraph Data["Infrastructure"]
+        PG[("PostgreSQL")]
+        REDIS[("Redis<br/>grading queue")]
+    end
+
+    GEMINI["Google Gemini API"]
+
+    HR --> REST
+    CAND --> REST
+    REST --> PG
+    REST --> REDIS
+    REST --> GEMINI
