@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
 import { api } from '../../api/client';
@@ -18,6 +18,9 @@ import {
 } from '../../data/jobWizard';
 import { formatApiError } from '../../utils/errors';
 import { useAuth } from '../../auth/AuthContext';
+import { DEMO_JOB_WIZARD } from '../../data/demoPrefill';
+import { useDemoPresentMode } from '../../context/DemoPresentModeContext';
+import { useDemoPrefill } from '../../hooks/useDemoPrefill';
 
 function OptionCard({
   selected,
@@ -67,13 +70,22 @@ export function JobWizardPage() {
   const [answers, setAnswers] = useState<JobWizardAnswers>(INITIAL_WIZARD_ANSWERS);
   const [error, setError] = useState('');
   const [generating, setGenerating] = useState(false);
+  const { enabled: demoPrefillOn } = useDemoPresentMode();
+
+  const applyWizardPrefill = useCallback(() => {
+    teamPrefilled.current = true;
+    setAnswers({ ...DEMO_JOB_WIZARD });
+  }, []);
+
+  useDemoPrefill(applyWizardPrefill, [applyWizardPrefill]);
 
   useEffect(() => {
+    if (demoPrefillOn) return;
     const profile = user?.companyTeamProfile?.trim();
     if (!profile || teamPrefilled.current) return;
     teamPrefilled.current = true;
     setAnswers((a) => ({ ...a, teamContext: profile }));
-  }, [user?.companyTeamProfile]);
+  }, [user?.companyTeamProfile, demoPrefillOn]);
 
   const update = <K extends keyof JobWizardAnswers>(
     key: K,
@@ -176,6 +188,12 @@ export function JobWizardPage() {
       <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
         Step {step + 1} of {WIZARD_STEPS.length} — {current.title}
       </p>
+
+      {demoPrefillOn && (
+        <p className="mt-4 rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-200">
+          Demo prefill active — wizard answers are filled. Toggle via the bottom-left corner dot.
+        </p>
+      )}
 
       {error && (
         <div className="mt-4">

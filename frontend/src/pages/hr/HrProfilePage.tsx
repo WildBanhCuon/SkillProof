@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import { api } from '../../api/client';
@@ -10,12 +10,16 @@ import { formatApiError } from '../../utils/errors';
 import { GenerateTeamProfileButton } from '../../components/hr/GenerateTeamProfileButton';
 import { DeleteAccountSection } from '../../components/account/DeleteAccountSection';
 import { SubscriptionPlanCard } from '../../components/hr/SubscriptionPlanCard';
+import { DEMO_HR_PROFILE } from '../../data/demoPrefill';
+import { useDemoPresentMode } from '../../context/DemoPresentModeContext';
+import { useDemoPrefill } from '../../hooks/useDemoPrefill';
 
 export function HrProfilePage() {
   const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const onboarding = searchParams.get('onboarding') === '1';
+  const { enabled: demoPrefillOn } = useDemoPresentMode();
 
   const [fullName, setFullName] = useState('');
   const [companyName, setCompanyName] = useState('');
@@ -25,12 +29,22 @@ export function HrProfilePage() {
   const [success, setSuccess] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const applyHrProfilePrefill = useCallback(() => {
+    setFullName(DEMO_HR_PROFILE.fullName);
+    setCompanyName(DEMO_HR_PROFILE.companyName);
+    setWebsiteUrl(DEMO_HR_PROFILE.websiteUrl);
+  }, []);
+
+  useDemoPrefill(applyHrProfilePrefill, [applyHrProfilePrefill]);
+
   useEffect(() => {
+    if (demoPrefillOn) return;
     setFullName(user?.fullName ?? '');
     setCompanyName(user?.companyName ?? '');
     setTeamProfile(user?.companyTeamProfile ?? '');
     setWebsiteUrl(user?.companyWebsiteUrl ?? '');
   }, [
+    demoPrefillOn,
     user?.fullName,
     user?.companyName,
     user?.companyTeamProfile,

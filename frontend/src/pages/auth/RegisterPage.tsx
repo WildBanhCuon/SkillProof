@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useCallback, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatAuthError } from '../../utils/errors';
 import { useAuth } from '../../auth/AuthContext';
@@ -6,6 +6,8 @@ import type { UserRole } from '../../api/types';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Alert } from '../../components/ui/Alert';
+import { buildDemoCandidateRegistration } from '../../data/demoPrefill';
+import { useDemoPrefill } from '../../hooks/useDemoPrefill';
 
 export function RegisterPage() {
   const { registerCandidate } = useAuth();
@@ -15,6 +17,15 @@ export function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  const applyCandidatePrefill = useCallback(() => {
+    const demo = buildDemoCandidateRegistration();
+    setEmail(demo.email);
+    setPassword(demo.password);
+    setRole('candidate');
+  }, []);
+
+  useDemoPrefill(applyCandidatePrefill, [applyCandidatePrefill]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();

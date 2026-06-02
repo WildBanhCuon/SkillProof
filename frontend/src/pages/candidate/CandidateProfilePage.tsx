@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api/client';
@@ -15,6 +15,9 @@ import { Input } from '../../components/ui/Input';
 import { Alert } from '../../components/ui/Alert';
 import { formatApiError } from '../../utils/errors';
 import { DeleteAccountSection } from '../../components/account/DeleteAccountSection';
+import { DEMO_CANDIDATE_PROFILE } from '../../data/demoPrefill';
+import { useDemoPresentMode } from '../../context/DemoPresentModeContext';
+import { useDemoPrefill } from '../../hooks/useDemoPrefill';
 
 interface ProfileResponse {
   email: string;
@@ -27,6 +30,7 @@ export function CandidateProfilePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const onboarding = searchParams.get('onboarding') === '1';
+  const { enabled: demoPrefillOn } = useDemoPresentMode();
   const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY_PROFILE);
   const [error, setError] = useState('');
@@ -55,7 +59,19 @@ export function CandidateProfilePage() {
     });
   }, [data?.profile, data?.updatedAt]);
 
+  const applyCandidateProfilePrefill = useCallback(() => {
+    setForm((f) => ({
+      ...f,
+      displayName: DEMO_CANDIDATE_PROFILE.displayName,
+      linkedInUrl: DEMO_CANDIDATE_PROFILE.linkedInUrl,
+      githubUrl: DEMO_CANDIDATE_PROFILE.githubUrl,
+    }));
+  }, []);
+
+  useDemoPrefill(applyCandidateProfilePrefill, [applyCandidateProfilePrefill]);
+
   useEffect(() => {
+    if (demoPrefillOn) return;
     if (!data?.profile || !profileSnapshot) return;
     const p = data.profile;
     setForm({
@@ -69,7 +85,7 @@ export function CandidateProfilePage() {
       websiteUrl: p.websiteUrl ?? '',
       resumeUrl: p.resumeUrl ?? '',
     });
-  }, [profileSnapshot, data?.profile, user?.fullName]);
+  }, [demoPrefillOn, profileSnapshot, data?.profile, user?.fullName]);
 
   const set = (key: keyof CandidateProfileData, value: string) => {
     setForm((f) => ({ ...f, [key]: value }));

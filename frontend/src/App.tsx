@@ -1,5 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
+import { DemoPresentModeProvider } from './context/DemoPresentModeContext';
+import { DemoModeToggle } from './components/demo/DemoModeToggle';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 import { HrLayout } from './components/layout/HrLayout';
 import { CandidateLayout } from './components/layout/CandidateLayout';
@@ -36,8 +38,10 @@ function HomeRedirect() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
+      <DemoPresentModeProvider>
+        <AuthProvider>
+          <DemoModeToggle />
+          <Routes>
           <Route path="/" element={<HomeRedirect />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/register/company" element={<HrRegisterPage />} />
@@ -131,8 +135,9 @@ export default function App() {
           />
 
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AuthProvider>
+          </Routes>
+        </AuthProvider>
+      </DemoPresentModeProvider>
     </BrowserRouter>
   );
 }

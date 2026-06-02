@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { CreditCard, Loader2 } from 'lucide-react';
 import { api } from '../../api/client';
@@ -25,6 +25,8 @@ import {
   setPendingCheckout,
 } from '../../utils/companySubscription';
 import { formatAuthError } from '../../utils/errors';
+import { buildDemoCompanyRegistration } from '../../data/demoPrefill';
+import { useDemoPrefill } from '../../hooks/useDemoPrefill';
 
 const STEPS = ['Choose plan', 'Payment', 'Account'] as const;
 type Step = 0 | 1 | 2;
@@ -68,6 +70,19 @@ export function HrRegisterPage() {
   const [loading, setLoading] = useState(false);
 
   const plan = useMemo(() => getPlanById(planId), [planId]);
+  const applyCompanyPrefill = useCallback(() => {
+    const demo = buildDemoCompanyRegistration();
+    setPlanId(demo.planId);
+    setBilling(demo.billing);
+    setCardName(demo.cardName);
+    setCardNumber(demo.cardNumber);
+    setCardExpiry(demo.cardExpiry);
+    setCardCvc(demo.cardCvc);
+    setEmail(demo.email);
+    setPassword(demo.password);
+  }, []);
+
+  useDemoPrefill(applyCompanyPrefill, [applyCompanyPrefill, step]);
 
   useEffect(() => {
     if (isAuthenticated && user?.role === 'hr') {
