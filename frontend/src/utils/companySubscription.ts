@@ -1,5 +1,9 @@
 import type { BillingPeriod, PlanId } from '../data/pricingPlans';
-import { getPlanById } from '../data/pricingPlans';
+import {
+  computeTrialEndsAt,
+  getPlanById,
+  isSubscriptionOnTrial,
+} from '../data/pricingPlans';
 
 const PENDING_KEY = 'skillproof_checkout_pending';
 const SUBSCRIPTION_PREFIX = 'skillproof_subscription_';
@@ -9,6 +13,8 @@ export interface CheckoutPending {
   billing: BillingPeriod;
   paymentLast4: string;
   paidAt: string;
+  /** ISO date — end of the free trial (inclusive billing starts after). */
+  trialEndsAt: string;
 }
 
 export interface CompanySubscription extends CheckoutPending {
@@ -20,8 +26,14 @@ function subscriptionKey(companyId: string) {
   return `${SUBSCRIPTION_PREFIX}${companyId}`;
 }
 
-export function setPendingCheckout(data: CheckoutPending) {
-  sessionStorage.setItem(PENDING_KEY, JSON.stringify(data));
+export function setPendingCheckout(data: Omit<CheckoutPending, 'trialEndsAt'> & {
+  trialEndsAt?: string;
+}) {
+  const checkout: CheckoutPending = {
+    ...data,
+    trialEndsAt: data.trialEndsAt ?? computeTrialEndsAt(data.paidAt),
+  };
+  sessionStorage.setItem(PENDING_KEY, JSON.stringify(checkout));
 }
 
 export function getPendingCheckout(): CheckoutPending | null {
@@ -60,5 +72,15 @@ export function getPlanLabel(sub: CompanySubscription): string {
   const plan = getPlanById(sub.planId);
   const name = plan?.name ?? sub.planId;
   const billing = sub.billing === 'annual' ? 'Annual' : 'Monthly';
-  return `${name} · ${billing}`;
+  const trial = isSubscriptionOnTrial(sub.trialEndsAt) ? ' · Free trial' : '';
+  return `${name} · ${billing}${trial}`;
+}
+
+export function formatTrialEndsAt(trialEndsAt: string | undefined): string {
+  if (!trialEndsAt) return '';
+  return new Date(trialEndsAt).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
 }

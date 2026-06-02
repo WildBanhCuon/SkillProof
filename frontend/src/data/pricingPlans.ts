@@ -2,6 +2,9 @@ export type PlanId = 'starter' | 'growth' | 'scale' | 'pro';
 
 export type BillingPeriod = 'monthly' | 'annual';
 
+/** Every company plan includes a free trial before the listed price applies. */
+export const FREE_TRIAL_MONTHS = 1;
+
 export interface PricingPlan {
   id: PlanId;
   name: string;
@@ -29,6 +32,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     overageJobs: '€25 / extra active job',
     overageCandidates: '€1.00 / extra graded candidate',
     features: [
+      '1 month free trial',
       '2 active job slots',
       '100 graded candidates / month',
       'Unlimited recruiter seats',
@@ -48,6 +52,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     overageCandidates: '€0.75 / extra graded candidate',
     highlighted: true,
     features: [
+      '1 month free trial',
       '5 active job slots',
       '300 graded candidates / month',
       'Unlimited recruiter seats',
@@ -66,6 +71,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     overageJobs: '€15 / extra active job',
     overageCandidates: '€0.50 / extra graded candidate',
     features: [
+      '1 month free trial',
       '10 active job slots',
       '800 graded candidates / month',
       'Unlimited recruiter seats',
@@ -84,6 +90,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     overageJobs: 'Custom volume pricing',
     overageCandidates: 'Custom volume pricing',
     features: [
+      '1 month free trial',
       '20 active job slots',
       '2,000 graded candidates / month',
       'Unlimited recruiter seats',
@@ -110,4 +117,37 @@ export function planPriceSubline(plan: PricingPlan, billing: BillingPeriod): str
     return `per year · ~€${perMonth}/mo (20% off)`;
   }
   return 'per month';
+}
+
+export function freeTrialLabel(): string {
+  return FREE_TRIAL_MONTHS === 1
+    ? '1 month free'
+    : `${FREE_TRIAL_MONTHS} months free`;
+}
+
+export function freeTrialHeadline(): string {
+  return FREE_TRIAL_MONTHS === 1
+    ? '1-month free trial on every plan'
+    : `${FREE_TRIAL_MONTHS}-month free trial on every plan`;
+}
+
+/** Shown under the list price on plan cards. */
+export function planPriceSublineWithTrial(
+  plan: PricingPlan,
+  billing: BillingPeriod,
+): string {
+  const after = formatPlanPrice(plan, billing);
+  const cadence = billing === 'annual' ? 'per year' : 'per month';
+  return `${freeTrialLabel()}, then ${after} ${cadence}`;
+}
+
+export function computeTrialEndsAt(fromDate: Date | string = new Date()): string {
+  const d = new Date(fromDate);
+  d.setMonth(d.getMonth() + FREE_TRIAL_MONTHS);
+  return d.toISOString();
+}
+
+export function isSubscriptionOnTrial(trialEndsAt: string | undefined): boolean {
+  if (!trialEndsAt) return false;
+  return new Date(trialEndsAt).getTime() > Date.now();
 }

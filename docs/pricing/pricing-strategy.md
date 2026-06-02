@@ -20,7 +20,8 @@ Related: [course/sessions/Session3_Workshop_Checklist.md](../../course/sessions/
 | **Competitor gap** | ATS assessment features often need expensive tier upgrades; assessment tools use annual lock-ins and punitive per-candidate fees at volume. |
 | **COGS** | AI ~$0.22/mo at 10 jobs × 30 graded candidates; infra ~€10–20/customer/mo baseline. Margins **80%+** at tier quotas. |
 | **Model** | Capacity-based monthly tiers (active jobs + graded candidates); **unlimited recruiter seats** recommended. |
-| **Tiers (proposal)** | Starter €149 · Growth €299 · Scale €549 · Pro €899. |
+| **Free trial** | **1 month free** on every plan (card on file at signup; billing starts after trial). |
+| **Tiers (proposal)** | Starter €149 · Growth €299 · Scale €549 · Pro €899 (after trial). |
 | **PEPM floor ($19–26)** | **Rejected** for this product — misaligned with point-solution TA tools. |
 | **Old annual tiers ($3k–25k)** | **Revised** — too high for standalone SMB wedge; target ~€1.5k–10k/year via monthly tiers. |
 | **Paid pilots** | **Validated** — €500–1,500 / 2–4 weeks. |
@@ -40,6 +41,21 @@ Related: [course/sessions/Session3_Workshop_Checklist.md](../../course/sessions/
 | **Recommendation** | Gate on **active job slots + graded candidates**, not seats. |
 | **Recommendation** | Overage fees for **tier segmentation**, not COGS recovery. |
 | **Recommendation** | Market **role-specific assessments + rubric-based AI grading** vs generic ATS resume screeners (re-add live code sandbox only if buyers require it). |
+| **Recommendation** | Offer a **1-month free trial** on all tiers to reduce adoption friction vs annual-only assessment vendors. |
+
+---
+
+## Free trial (go-to-market)
+
+| Item | Policy |
+|------|--------|
+| **Length** | 1 calendar month from signup |
+| **Eligibility** | All subscription tiers (Starter through Pro) |
+| **Checkout** | Payment method collected at signup; **€0 due today**; first charge after trial ends |
+| **Annual billing** | Same 1-month trial, then annual prepay at listed tier price |
+| **Purpose** | Let TA teams run at least one live junior role through listing → assessment → shortlist before committing |
+
+*Prototype app:* demo checkout simulates card capture; `trialEndsAt` stored client-side for HR profile display.
 
 ---
 
@@ -205,7 +221,7 @@ Not yet measured in-app: listing rewrite (“Apply suggestions”), extra listin
 
 ## 4. Proposed monthly subscription tiers
 
-Gate on **active job slots** + **graded candidates/month**. **Unlimited HR/hiring-manager seats** (recommended).
+Gate on **active job slots** + **graded candidates/month**. **Unlimited HR/hiring-manager seats** (recommended). **Every tier includes a 1-month free trial** before the prices below apply.
 
 | Tier | Target size | Monthly (EUR) | Monthly (USD) | Annual prepay (EUR, −20%) | Active jobs | Graded candidates/mo | Overage |
 |------|-------------|--------------:|--------------:|--------------------------:|------------:|---------------------:|---------|

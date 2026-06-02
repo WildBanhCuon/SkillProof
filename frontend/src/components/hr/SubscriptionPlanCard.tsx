@@ -2,11 +2,12 @@ import { Link } from 'react-router-dom';
 import { CreditCard } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import {
-  formatPlanPrice,
   getPlanById,
-  planPriceSubline,
+  isSubscriptionOnTrial,
+  planPriceSublineWithTrial,
 } from '../../data/pricingPlans';
 import {
+  formatTrialEndsAt,
   getCompanySubscription,
   getPlanLabel,
 } from '../../utils/companySubscription';
@@ -49,8 +50,13 @@ export function SubscriptionPlanCard() {
             </p>
             {plan && (
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                {formatPlanPrice(plan, sub.billing)} {planPriceSubline(plan, sub.billing)} ·{' '}
-                {plan.activeJobs} jobs · {plan.gradedCandidatesPerMonth} graded candidates/mo
+                {planPriceSublineWithTrial(plan, sub.billing)} · {plan.activeJobs} jobs ·{' '}
+                {plan.gradedCandidatesPerMonth} graded candidates/mo
+              </p>
+            )}
+            {isSubscriptionOnTrial(sub.trialEndsAt) && (
+              <p className="mt-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                Free trial active until {formatTrialEndsAt(sub.trialEndsAt)}
               </p>
             )}
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">

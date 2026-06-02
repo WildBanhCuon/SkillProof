@@ -69,7 +69,7 @@ export function LandingNav({ standalone = false }: { standalone?: boolean }) {
                 <Button variant="outline">Log in</Button>
               </Link>
               <Link to="/register/company">
-                <Button>Get started</Button>
+                <Button>Start free trial</Button>
               </Link>
             </>
           )}
@@ -122,7 +122,7 @@ export function LandingNav({ standalone = false }: { standalone?: boolean }) {
                   </Button>
                 </Link>
                 <Link to="/register/company" onClick={() => setOpen(false)}>
-                  <Button className="w-full">Get started</Button>
+                  <Button className="w-full">Start free trial</Button>
                 </Link>
               </>
             )}

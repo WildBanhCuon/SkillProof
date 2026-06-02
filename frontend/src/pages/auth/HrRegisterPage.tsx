@@ -12,12 +12,15 @@ import { Alert } from '../../components/ui/Alert';
 import { Card } from '../../components/ui/Card';
 import { ThemeToggle } from '../../components/ui/ThemeToggle';
 import {
+  computeTrialEndsAt,
   formatPlanPrice,
+  freeTrialLabel,
   getPlanById,
-  planPriceSubline,
+  planPriceSublineWithTrial,
   type BillingPeriod,
   type PlanId,
 } from '../../data/pricingPlans';
+import { formatTrialEndsAt } from '../../utils/companySubscription';
 import {
   clearPendingCheckout,
   getPendingCheckout,
@@ -165,7 +168,8 @@ export function HrRegisterPage() {
             Create your company account
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Choose a plan, complete demo checkout, then set up your login.
+            Choose a plan — every tier includes a {freeTrialLabel()} — then complete demo
+            checkout and set up your login.
           </p>
         </div>
 
@@ -197,8 +201,9 @@ export function HrRegisterPage() {
 
         <div className="mx-auto mt-6 max-w-3xl">
           <Alert variant="info">
-            <strong>Demo mode:</strong> Payment is simulated for presentations. No card is charged
-            and no data is sent to a payment provider.
+            <strong>1-month free trial on all plans.</strong>{' '}
+            You are not charged today; billing starts after the trial. Demo checkout is
+            simulated — no real payment provider.
           </Alert>
         </div>
 
@@ -249,11 +254,18 @@ export function HrRegisterPage() {
               <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
                 Order summary — {plan.name}
               </p>
-              <p className="mt-1 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                {formatPlanPrice(plan, billing)}
+              <p className="mt-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                Due today: €0 · {freeTrialLabel()}
+              </p>
+              <p className="mt-2 text-lg font-bold text-slate-900 dark:text-slate-100">
+                Then {formatPlanPrice(plan, billing)}
                 <span className="ml-2 text-sm font-normal text-slate-500">
-                  {planPriceSubline(plan, billing)}
+                  {billing === 'annual' ? 'per year' : 'per month'}
                 </span>
+              </p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Trial ends {formatTrialEndsAt(computeTrialEndsAt())} ·{' '}
+                {planPriceSublineWithTrial(plan, billing)}
               </p>
               <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                 {plan.activeJobs} active jobs · {plan.gradedCandidatesPerMonth} graded
@@ -299,8 +311,9 @@ export function HrRegisterPage() {
                 />
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Demo: leave fields empty and click <strong>Pay &amp; continue</strong>, or optionally
-                use <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">4242 4242 4242 4242</code>
+                Card is saved for billing after your free month (demo: leave empty or use{' '}
+                <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">4242 4242 4242 4242</code>
+                ), then click <strong>Start free trial</strong>.
               </p>
               <div className="flex gap-3 pt-2">
                 <Button type="button" variant="outline" onClick={() => setStep(0)}>
@@ -313,7 +326,7 @@ export function HrRegisterPage() {
                       Processing…
                     </>
                   ) : (
-                    'Pay & continue'
+                    'Start free trial'
                   )}
                 </Button>
               </div>
@@ -324,7 +337,8 @@ export function HrRegisterPage() {
         {step === 2 && plan && (
           <Card className="mx-auto mt-8 max-w-md p-6 sm:p-8">
             <div className="mb-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200">
-              Payment successful (demo) · {plan.name} plan
+              Free trial started (demo) · {plan.name} · billing from{' '}
+              {formatTrialEndsAt(computeTrialEndsAt())}
             </div>
             <form onSubmit={onCreateAccount} className="space-y-4">
               <Input

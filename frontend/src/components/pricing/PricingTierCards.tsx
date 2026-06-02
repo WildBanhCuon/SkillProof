@@ -3,7 +3,8 @@ import { Check } from 'lucide-react';
 import {
   PRICING_PLANS,
   formatPlanPrice,
-  planPriceSubline,
+  freeTrialLabel,
+  planPriceSublineWithTrial,
   type BillingPeriod,
   type PlanId,
 } from '../../data/pricingPlans';
@@ -75,15 +76,18 @@ export function PricingTierCards({
               </p>
             </div>
             <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                {freeTrialLabel()}
+              </p>
               <p
-                className={`font-bold tracking-tight text-slate-900 dark:text-slate-100 ${
+                className={`mt-1 font-bold tracking-tight text-slate-900 dark:text-slate-100 ${
                   fourInRow ? 'text-2xl sm:text-3xl' : 'text-3xl'
                 }`}
               >
                 {formatPlanPrice(plan, billing)}
               </p>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                {planPriceSubline(plan, billing)}
+                {planPriceSublineWithTrial(plan, billing)}
               </p>
             </div>
             <ul
@@ -111,7 +115,7 @@ export function PricingTierCards({
                     className="w-full"
                     variant={highlighted ? 'primary' : 'outline'}
                   >
-                    Get started
+                    Start free trial
                   </Button>
                 </Link>
               </div>

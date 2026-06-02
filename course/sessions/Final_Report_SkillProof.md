@@ -20,7 +20,7 @@ Junior tech roles attract hundreds of applications per posting, yet recruiters s
 
 The **buyer** is the Head of Talent or HR lead; **daily users** are recruiters and hiring managers. Our functional prototype demonstrates the full chain (listing analysis, assessment generation, candidate practice and application tests, AI-assisted grading, and an HR results dashboard) deployed on Render with a React frontend and NestJS API backed by PostgreSQL, Redis, and **Google Gemini 3.1 Flash Lite**.
 
-Commercially, SkillProof is positioned as a **wedge** between applicant tracking systems and the interview stage: we do not replace Greenhouse or Workable, but we own the step from “posted a junior role” to “here is who to interview, and why.” Revenue is modeled as a **monthly subscription** tiered by active job slots and graded candidate volume (€149 to €899 per month), anchored on recruiter labor saved rather than API cost.
+Commercially, SkillProof is positioned as a **wedge** between applicant tracking systems and the interview stage: we do not replace Greenhouse or Workable, but we own the step from “posted a junior role” to “here is who to interview, and why.” Revenue is modeled as a **monthly subscription** tiered by active job slots and graded candidate volume (€149 to €899 per month after a **one-month free trial** on every plan), anchored on recruiter labor saved rather than API cost.
 
 This report documents the problem, solution, AI justification, technical implementation, market and business model, risks, and known limitations of the MVP. Success metrics (60 to 70% screening time reduction, improved interview-to-hire conversion) are **design targets** for pilots, not yet validated with production customers.
 
@@ -290,16 +290,18 @@ Focus wedge: **junior tech hiring evidence**, not all HR software.
 
 This aligns spend with hiring volume and avoids punitive per-candidate surprises at junior-role scale.
 
+**Free trial:** Every company plan includes **one month free** at signup (payment method on file; billing starts after the trial). This lowers friction versus annual-only assessment vendors and lets teams validate one live junior hire before paying.
+
 ### 6.2 Pricing tiers (prototype)
 
-| Tier | Target size | Monthly (EUR) | Active jobs | Graded / month |
-|------|-------------|---------------|-------------|----------------|
+| Tier | Target size | After trial (EUR/mo) | Active jobs | Graded / month |
+|------|-------------|----------------------|-------------|----------------|
 | Starter | 20-50 emp | €149 | 2 | 100 |
 | Growth | 50-100 emp | €299 | 5 | 300 |
 | Scale | 100-250 emp | €549 | 10 | 800 |
 | Pro | 250-500 emp | €899 | 20 | 2,000 |
 
-Annual prepay (~20% discount) optional. Overage fees apply above quota (tiered per plan).
+Annual prepay (~20% discount) optional after the trial month. Overage fees apply above quota (tiered per plan).
 
 **Positioning:** Above lightweight tools that only capture video or MCQ; below full ATS transformation and legacy enterprise assessment contracts.
 

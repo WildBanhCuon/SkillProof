@@ -166,7 +166,7 @@ export function LandingPage() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/register/company">
                 <Button size="lg">
-                  Get started
+                  Start free trial
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
@@ -376,7 +376,7 @@ export function LandingPage() {
                 <li>Build an audit-friendly decision trail for DE&I and internal review</li>
               </ul>
               <Link to="/register/company" className="mt-6 inline-block">
-                <Button>Get started</Button>
+                <Button>Start free trial</Button>
               </Link>
               <blockquote className="mt-6 border-l-2 border-indigo-300 pl-4 text-sm italic text-slate-600 dark:border-indigo-700 dark:text-slate-400">
                 &ldquo;I spend two weeks filtering noise per posting. I need juniors who can
@@ -459,7 +459,8 @@ export function LandingPage() {
               Plans that scale with your hiring
             </h2>
             <p className="mt-3 text-lg text-slate-600 dark:text-slate-400">
-              Active job slots and graded candidates per month. Unlimited seats for your team.
+              Try every plan free for one month. Active job slots and graded candidates per
+              month — unlimited seats for your team.
             </p>
             <div className="mt-6 inline-flex rounded-lg border border-slate-200 p-1 dark:border-slate-700">
               {(['monthly', 'annual'] as const).map((b) => (
@@ -515,7 +516,7 @@ export function LandingPage() {
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link to="/register/company">
-              <Button size="lg">Get started</Button>
+              <Button size="lg">Start free trial</Button>
             </Link>
             <Link to="/login">
               <Button size="lg" variant="outline">

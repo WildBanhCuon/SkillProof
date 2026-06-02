@@ -4,7 +4,7 @@ import { LandingNav } from '../../components/landing/LandingNav';
 import { PricingTierCards } from '../../components/pricing/PricingTierCards';
 import { Logo } from '../../components/ui/Logo';
 import { Button } from '../../components/ui/Button';
-import type { BillingPeriod } from '../../data/pricingPlans';
+import { freeTrialHeadline, type BillingPeriod } from '../../data/pricingPlans';
 
 export function PricingPage() {
   const [billing, setBilling] = useState<BillingPeriod>('monthly');
@@ -19,8 +19,8 @@ export function PricingPage() {
             Simple plans for hiring teams
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-600 dark:text-slate-300">
-            Monthly subscriptions based on active job slots and graded candidates.
-            Unlimited recruiter seats on every plan.
+            {freeTrialHeadline()}. Then monthly subscriptions based on active job slots
+            and graded candidates — unlimited recruiter seats on every plan.
           </p>
 
           <div className="mt-8 inline-flex rounded-lg border border-slate-200 p-1 dark:border-slate-700">
@@ -45,7 +45,8 @@ export function PricingPage() {
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:py-16">
         <PricingTierCards billing={billing} showCta />
         <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
-          All prices in EUR · Demo checkout only — no real charges in this prototype
+          All prices in EUR · {freeTrialHeadline()} on all tiers · Demo checkout only in
+          this prototype
         </p>
       </section>
 
@@ -60,7 +61,7 @@ export function PricingPage() {
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link to="/register/company?plan=growth">
-              <Button size="lg">Start company signup</Button>
+              <Button size="lg">Start free trial</Button>
             </Link>
             <Link to="/">
               <Button size="lg" variant="outline">
